@@ -1,0 +1,82 @@
+using System;
+using System.Collections.Generic;
+using HangeulAdventure.Engine;
+using UnityEngine;
+
+namespace HangeulAdventure.Game
+{
+    /// <summary>
+    /// 스테이지 JSON 포맷 (Resources/Stages/*.json):
+    /// {
+    ///   "id": 1, "title": "첫 글자",
+    ///   "rows": ["ㄱ.ㅏ", "#.."],        // 위→아래. '.'=빈칸, '#'=없는 칸
+    ///   "goals": [{"display":"가", "slots":"가"}],
+    ///   "minMoves": 3,                    // 솔버 검증값 (루비 별 기준)
+    ///   "stars": [0, 5, 4]                // [1별, 2별, 3별] 이동 수 상한. 0=기본 공식 사용
+    /// }
+    /// </summary>
+    [Serializable]
+    public class StageJson
+    {
+        public int id;
+        public string title = "";
+        public string[] rows;
+        public GoalJson[] goals;
+        public int minMoves;
+        public int[] stars;
+    }
+
+    [Serializable]
+    public class GoalJson
+    {
+        public string display = "";
+        public string slots = "";
+    }
+
+    public static class StageLoader
+    {
+        public const string ResourceFolder = "Stages";
+
+        public static StageData FromJson(string json)
+        {
+            var sj = JsonUtility.FromJson<StageJson>(json);
+            if (sj == null || sj.rows == null || sj.rows.Length == 0)
+                throw new ArgumentException("스테이지 JSON 형식 오류: rows 없음");
+
+            var groups = new GoalGroup[sj.goals?.Length ?? 0];
+            for (int i = 0; i < groups.Length; i++)
+            {
+                var g = sj.goals[i];
+                groups[i] = new GoalGroup
+                {
+                    display = string.IsNullOrEmpty(g.display) ? g.slots : g.display,
+                    slots = g.slots.ToCharArray(),
+                };
+            }
+
+            var stage = StageBuilder.FromRows(sj.rows, groups);
+            stage.id = sj.id;
+            stage.title = sj.title ?? "";
+            stage.minMoves = sj.minMoves;
+            stage.starThresholds = (sj.stars != null && sj.stars.Length == 3 && sj.stars[2] > 0)
+                ? sj.stars
+                : StageData.DefaultStarThresholds(sj.minMoves);
+            if (stage.starThresholds[0] <= 0) stage.starThresholds[0] = int.MaxValue;
+            return stage;
+        }
+
+        /// <summary>Resources/Stages의 모든 스테이지를 id 순으로 로드.</summary>
+        public static List<StageData> LoadAll()
+        {
+            var assets = Resources.LoadAll<TextAsset>(ResourceFolder);
+            var list = new List<StageData>(assets.Length);
+            foreach (var a in assets)
+            {
+                try { list.Add(FromJson(a.text)); }
+                catch (Exception e) { Debug.LogError($"스테이지 로드 실패 ({a.name}): {e.Message}"); }
+            }
+            list.Sort((a, b) => a.id.CompareTo(b.id));
+            return list;
+        }
+    }
+}

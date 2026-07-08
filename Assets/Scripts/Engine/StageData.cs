@@ -1,0 +1,72 @@
+using System;
+using System.Collections.Generic;
+
+namespace HangeulAdventure.Engine
+{
+    /// <summary>
+    /// 스테이지 정의 (명세 1, 7, 8, 10장). 직렬화 포맷과 무관한 순수 데이터.
+    /// 좌표계: x는 오른쪽+, y는 위쪽+. (0,0)이 왼쪽 아래.
+    /// </summary>
+    [Serializable]
+    public class StageData
+    {
+        public int id;
+        public string title = "";
+        public int width;
+        public int height;
+
+        /// <summary>칸 존재 여부 (없는 칸=false). 길이 = width*height. index = y*width + x.</summary>
+        public bool[] mask;
+
+        /// <summary>초기 타일. '\0'=빈칸. 길이 = width*height.</summary>
+        public char[] cells;
+
+        /// <summary>목표 그룹 (표시 단위). 단일 글자면 슬롯 1개, 단어면 글자당 슬롯.</summary>
+        public GoalGroup[] goals;
+
+        /// <summary>솔버 검증 최소 수. 루비 별 기준.</summary>
+        public int minMoves;
+
+        /// <summary>별 기준: 이동 수 <= 값. [1별, 2별, 3별]</summary>
+        public int[] starThresholds;
+
+        public int Index(int x, int y) => y * width + x;
+
+        public bool InBounds(int x, int y) => x >= 0 && x < width && y >= 0 && y < height;
+
+        public bool CellExists(int x, int y) => InBounds(x, y) && mask[Index(x, y)];
+
+        /// <summary>모든 목표 슬롯을 평탄화한 목록.</summary>
+        public IReadOnlyList<char> AllSlots()
+        {
+            var list = new List<char>();
+            if (goals == null) return list;
+            foreach (var g in goals)
+            {
+                if (g?.slots == null) continue;
+                foreach (var s in g.slots)
+                    list.Add(s);
+            }
+            return list;
+        }
+
+        /// <summary>기본 별 기준 공식 (명세 7장): 3별 = 최소수 + max(1, round(최소수*0.1))</summary>
+        public static int[] DefaultStarThresholds(int minMoves)
+        {
+            int three = minMoves + Math.Max(1, (int)Math.Round(minMoves * 0.1));
+            int two = minMoves + Math.Max(2, (int)Math.Round(minMoves * 0.3));
+            int one = int.MaxValue; // 1별 = 클리어 자체
+            return new[] { one, two, three };
+        }
+    }
+
+    [Serializable]
+    public class GoalGroup
+    {
+        /// <summary>진행도 판에 표시할 이름 (예: "사과", "가").</summary>
+        public string display = "";
+
+        /// <summary>수집해야 하는 타일들 (정확 일치).</summary>
+        public char[] slots;
+    }
+}
