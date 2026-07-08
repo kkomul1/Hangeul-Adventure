@@ -1,0 +1,8 @@
+{
+  "id": 4,
+  "title": "자리 바꾸기",
+  "rows": ["ㅏㄱ", ".."],
+  "goals": [{ "display": "가", "slots": "가" }],
+  "minMoves": 6,
+  "stars": [0, 0, 0]
+}

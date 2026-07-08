@@ -14,6 +14,7 @@ namespace HangeulAdventure.Game
     public class GameHud : MonoBehaviour
     {
         private GameSession _session;
+        private Canvas _canvas;
         private TextMeshProUGUI _moveText;
         private TextMeshProUGUI _stageText;
         private RectTransform _goalBar;
@@ -35,6 +36,7 @@ namespace HangeulAdventure.Game
 
         public void Build(Canvas canvas)
         {
+            _canvas = canvas;
             var root = UiFactory.CreateEmpty(canvas.transform, "Hud");
             UiFactory.Stretch(root);
 
@@ -144,7 +146,7 @@ namespace HangeulAdventure.Game
             int stars = _session.Stars();
             bool ruby = _session.IsRuby;
 
-            _popup = UiFactory.CreatePanel(transform.GetComponentInChildren<Canvas>()?.transform ?? transform, "ClearPopup", new Color(0, 0, 0, 0.55f));
+            _popup = UiFactory.CreatePanel(_canvas.transform, "ClearPopup", new Color(0, 0, 0, 0.55f));
             UiFactory.Stretch(_popup);
 
             var box = UiFactory.CreatePanel(_popup, "Box", UiFactory.Paper);

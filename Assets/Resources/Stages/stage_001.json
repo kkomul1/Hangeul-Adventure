@@ -1,0 +1,8 @@
+{
+  "id": 1,
+  "title": "첫 글자",
+  "rows": ["ㄱㅏ"],
+  "goals": [{ "display": "가", "slots": "가" }],
+  "minMoves": 2,
+  "stars": [0, 0, 0]
+}
