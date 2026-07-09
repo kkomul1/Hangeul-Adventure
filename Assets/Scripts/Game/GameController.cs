@@ -24,6 +24,11 @@ namespace HangeulAdventure.Game
 
         private bool _finished;
 
+        /// <summary>전투 모드: 클리어 시 기록/팝업 대신 콜백만 호출 (BattleScreen이 처리).</summary>
+        public bool BattleMode;
+        public event System.Action<GameSession> PuzzleCleared;
+        public event System.Action ActionTaken; // 성공한 행동마다 (전투의 이동 수 감시용)
+
         public void Bind(GameSession session, BoardView board, GameHud hud, Camera cam)
         {
             _session = session;
@@ -165,6 +170,15 @@ namespace HangeulAdventure.Game
                 case PushResultType.SplitMove: SfxPlayer.Instance?.Split(); break;
             }
 
+            // 글자 도감: 합성으로 만든 완성 글자를 최초 등록 (모험 요소 1)
+            if ((report.Type == PushResultType.Compose || report.Type == PushResultType.SplitCompose)
+                && Hangul.IsSyllable(report.TargetAfter)
+                && ProgressStore.RegisterGlyph(report.TargetAfter))
+            {
+                // 최초 등록 연출: 해당 타일 팝
+                _board.GetTile(report.ToX, report.ToY)?.AnimatePop();
+            }
+
             // 선택 추적: 이동/합성이면 도착 칸, 분해면 제자리(남은 성분)
             if (report.Type == PushResultType.Move || report.Type == PushResultType.Compose)
                 Select(report.ToX, report.ToY);
@@ -218,11 +232,17 @@ namespace HangeulAdventure.Game
         {
             _hud.Refresh();
             RefreshHighlights();
+            ActionTaken?.Invoke();
 
             if (_session.IsCleared)
             {
                 _finished = true;
                 SfxPlayer.Instance?.Clear();
+                if (BattleMode)
+                {
+                    PuzzleCleared?.Invoke(_session); // 전투가 결과 판정 (기록/팝업 없음)
+                    return;
+                }
                 int earned = ProgressStore.Record(_session.Stage.id, _session.Stars(), _session.IsRuby,
                     _session.MoveCount, _session.Stage.difficulty);
                 _hud.ShowClearPopup(earned);

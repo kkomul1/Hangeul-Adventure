@@ -12,6 +12,47 @@ namespace HangeulAdventure.Game
             set { PlayerPrefs.SetInt("dev_mode", value ? 1 : 0); PlayerPrefs.Save(); }
         }
 
+        // ---- 글자 도감 (모험 요소 1) ----
+
+        /// <summary>지금까지 만들어본 모든 글자. 최초 합성 시 등록.</summary>
+        public static string Glyphs
+        {
+            get => PlayerPrefs.GetString("glyphs", "");
+            private set { PlayerPrefs.SetString("glyphs", value); PlayerPrefs.Save(); }
+        }
+
+        /// <summary>합성으로 만든 글자를 도감에 등록. 최초 등록이면 true.</summary>
+        public static bool RegisterGlyph(char c)
+        {
+            string g = Glyphs;
+            if (g.IndexOf(c) >= 0) return false;
+            Glyphs = g + c;
+            return true;
+        }
+
+        // ---- 자음 회수 (스토리 진행) ----
+
+        /// <summary>되찾은 자음들. 시작 상태 = ㄱㄴㄷ (스토리기획 1장).</summary>
+        public static string RecoveredConsonants
+        {
+            get => PlayerPrefs.GetString("consonants", "ㄱㄴㄷ");
+            private set { PlayerPrefs.SetString("consonants", value); PlayerPrefs.Save(); }
+        }
+
+        public static void RecoverConsonant(char c)
+        {
+            if (RecoveredConsonants.IndexOf(c) < 0)
+                RecoveredConsonants += c;
+        }
+
+        public static bool IsBossDefeated(string bossId) => PlayerPrefs.GetInt($"boss_{bossId}", 0) == 1;
+
+        public static void SetBossDefeated(string bossId)
+        {
+            PlayerPrefs.SetInt($"boss_{bossId}", 1);
+            PlayerPrefs.Save();
+        }
+
         public static int GetStars(int stageId) => PlayerPrefs.GetInt($"stage_{stageId}_stars", 0);
         public static bool GetRuby(int stageId) => PlayerPrefs.GetInt($"stage_{stageId}_ruby", 0) == 1;
         public static int GetBestMoves(int stageId) => PlayerPrefs.GetInt($"stage_{stageId}_best", -1);
