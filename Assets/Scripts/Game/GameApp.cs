@@ -124,11 +124,11 @@ namespace HangeulAdventure.Game
             var gridRect = UiFactory.CreateEmpty(_selectPanel, "Grid");
             UiFactory.SetRect(gridRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -30), new Vector2(1000, 520));
             var grid = gridRect.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(110, 110);
-            grid.spacing = new Vector2(14, 14);
+            grid.cellSize = new Vector2(88, 88);
+            grid.spacing = new Vector2(10, 10);
             grid.childAlignment = TextAnchor.UpperCenter;
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 8;
+            grid.constraintCount = 10; // 50개 = 10열 x 5행
 
             if (_stages.Count == 0)
             {
