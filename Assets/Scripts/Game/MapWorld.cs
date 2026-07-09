@@ -83,6 +83,7 @@ namespace HangeulAdventure.Game
 
         private void BuildTerrain()
         {
+            bool art = ArtLibrary.Available;
             for (int y = 0; y < _map.height; y++)
             {
                 for (int x = 0; x < _map.width; x++)
@@ -92,10 +93,26 @@ namespace HangeulAdventure.Game
                     go.transform.SetParent(transform, false);
                     go.transform.localPosition = new Vector3(x, y, 0);
                     var sr = go.GetComponent<SpriteRenderer>();
+                    sr.sortingOrder = 0;
+
+                    if (art)
+                    {
+                        // Ninja Adventure(CC0) 타일 (D-20). 좌표는 픽셀 분석으로 선정한 균일 셀.
+                        sr.sprite = t switch
+                        {
+                            '-' => ArtLibrary.Tile("TilesetField", 1, 1),   // 흙길
+                            '#' => ArtLibrary.Tile("TilesetField", 7, 1),   // 짙은 수풀 (통행 불가)
+                            '~' => ArtLibrary.Tile("TilesetWater", 1, 1),   // 물
+                            _ => ArtLibrary.Tile("TilesetField", 4, 1),     // 풀밭
+                        };
+                        if (t == '#') sr.color = new Color(0.72f, 0.72f, 0.72f); // 벽 구분용 어둡게
+                        continue;
+                    }
+
+                    // 폴백: 절차 생성 도형
                     sr.sprite = UiFactory.RoundedSprite();
                     sr.drawMode = SpriteDrawMode.Sliced;
                     sr.size = Vector2.one * 1.02f;
-                    sr.sortingOrder = 0;
                     sr.color = t switch
                     {
                         '-' => Road,
@@ -103,18 +120,6 @@ namespace HangeulAdventure.Game
                         '~' => Water,
                         _ => ((x + y) % 2 == 0) ? GrassA : GrassB,
                     };
-                    if (t == '#' && (x + y) % 3 == 0)
-                    {
-                        var roof = new GameObject("Roof", typeof(SpriteRenderer));
-                        roof.transform.SetParent(go.transform, false);
-                        roof.transform.localPosition = new Vector3(0, 0.18f, 0);
-                        var rs = roof.GetComponent<SpriteRenderer>();
-                        rs.sprite = UiFactory.RoundedSprite();
-                        rs.drawMode = SpriteDrawMode.Sliced;
-                        rs.size = new Vector2(0.95f, 0.45f);
-                        rs.color = new Color(0.30f, 0.30f, 0.36f);
-                        rs.sortingOrder = 1;
-                    }
                 }
             }
         }
@@ -167,29 +172,59 @@ namespace HangeulAdventure.Game
             return new SpotView { Go = go, Bg = bg, Label = tmp, StageId = stageId, ExitIndexil = exitIndex, IsShop = isShop, Pos = pos };
         }
 
+        private SpriteRenderer _playerSr;
+        private int _playerDir;   // 0=아래 1=위 2=왼쪽 3=오른쪽 (Walk 시트 열 순서 가정 — 시각 검증으로 확정)
+        private bool _playerMoving;
+
         private void BuildPlayer(Vector2 pos)
         {
             var go = new GameObject("Player", typeof(SpriteRenderer));
             go.transform.SetParent(transform, false);
             go.transform.localPosition = new Vector3(pos.x, pos.y, 0);
             var sr = go.GetComponent<SpriteRenderer>();
-            sr.sprite = UiFactory.RoundedSprite();
-            sr.drawMode = SpriteDrawMode.Sliced;
-            sr.size = new Vector2(0.62f, 0.62f);
-            sr.color = new Color(0.25f, 0.35f, 0.55f);
             sr.sortingOrder = 5;
+            _playerSr = sr;
 
-            var face = new GameObject("Face", typeof(SpriteRenderer));
-            face.transform.SetParent(go.transform, false);
-            face.transform.localPosition = new Vector3(0, 0.16f, 0);
-            var fs = face.GetComponent<SpriteRenderer>();
-            fs.sprite = UiFactory.RoundedSprite();
-            fs.drawMode = SpriteDrawMode.Sliced;
-            fs.size = new Vector2(0.34f, 0.28f);
-            fs.color = new Color(0.96f, 0.88f, 0.76f);
-            fs.sortingOrder = 6;
+            if (ArtLibrary.Available)
+            {
+                sr.sprite = ArtLibrary.Character("Noble", "Idle", 0, 0);
+            }
+            else
+            {
+                sr.sprite = UiFactory.RoundedSprite();
+                sr.drawMode = SpriteDrawMode.Sliced;
+                sr.size = new Vector2(0.62f, 0.62f);
+                sr.color = new Color(0.25f, 0.35f, 0.55f);
+
+                var face = new GameObject("Face", typeof(SpriteRenderer));
+                face.transform.SetParent(go.transform, false);
+                face.transform.localPosition = new Vector3(0, 0.16f, 0);
+                var fs = face.GetComponent<SpriteRenderer>();
+                fs.sprite = UiFactory.RoundedSprite();
+                fs.drawMode = SpriteDrawMode.Sliced;
+                fs.size = new Vector2(0.34f, 0.28f);
+                fs.color = new Color(0.96f, 0.88f, 0.76f);
+                fs.sortingOrder = 6;
+            }
 
             _playerT = go.transform;
+        }
+
+        /// <summary>4방향 걷기 애니메이션 (코드 구동, 초당 8프레임).</summary>
+        private void AnimatePlayer()
+        {
+            if (!ArtLibrary.Available || _playerSr == null) return;
+            if (_playerMoving)
+            {
+                int frame = (int)(Time.time * 8f) % 4;
+                var s = ArtLibrary.Character("Noble", "Walk", frame, _playerDir);
+                if (s != null) _playerSr.sprite = s;
+            }
+            else
+            {
+                var s = ArtLibrary.Character("Noble", "Idle", 0, _playerDir);
+                if (s != null) _playerSr.sprite = s;
+            }
         }
 
         private void BuildHud()
@@ -268,8 +303,15 @@ namespace HangeulAdventure.Game
             if (kb.leftArrowKey.isPressed || kb.aKey.isPressed) dir.x -= 1;
             if (kb.rightArrowKey.isPressed || kb.dKey.isPressed) dir.x += 1;
 
-            if (dir.sqrMagnitude > 0.01f)
+            _playerMoving = dir.sqrMagnitude > 0.01f;
+            if (_playerMoving)
             {
+                // 바라보는 방향 (지배 축 기준)
+                if (Mathf.Abs(dir.x) >= Mathf.Abs(dir.y))
+                    _playerDir = dir.x > 0 ? 3 : 2;
+                else
+                    _playerDir = dir.y > 0 ? 1 : 0;
+
                 dir.Normalize();
                 Vector2 pos = _playerT.localPosition;
                 Vector2 next = pos + dir * (MoveSpeed * Time.deltaTime);
@@ -278,6 +320,7 @@ namespace HangeulAdventure.Game
                 _playerT.localPosition = pos;
                 SnapCamera();
             }
+            AnimatePlayer();
 
             var near = NearestInteractable();
             UpdateHint(near);
