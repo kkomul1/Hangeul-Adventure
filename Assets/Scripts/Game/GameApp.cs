@@ -37,6 +37,7 @@ namespace HangeulAdventure.Game
             gameObject.AddComponent<SfxPlayer>();
 
             _canvas = UiFactory.CreateCanvas("UiCanvas");
+            LevelEditor.PurgeExpiredTrash(); // 휴지통 30일 자동 정리
             _stages = StageLoader.LoadAll();
 
             BuildTitle();
