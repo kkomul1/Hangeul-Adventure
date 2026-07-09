@@ -84,6 +84,26 @@ namespace HangeulAdventure.Engine.Tests
         }
 
         [Test]
+        public void 사슬칸_밀기불가_회전_합성대상_수집_가능()
+        {
+            // [ㄱ][ㅏ!]: ㅏ가 사슬 칸 — ㅏ는 못 밀지만 ㄱ이 ㅏ로 합성해 들어갈 수 있다
+            var stage = StageBuilder.FromRows(new[] { "ㄱㅏ" }, new[] { ".!" }, StageBuilder.Goal("가"));
+            var s = new GameSession(stage);
+            Assert.IsFalse(s.TryPush(1, 0, Direction.Left).Success);  // 사슬 타일 밀기 실패
+            Assert.IsTrue(s.TryRotate(1, 0));                          // 회전은 가능 (ㅏ→ㅜ)
+            Assert.IsTrue(s.Undo());
+            Assert.IsTrue(s.TryPush(0, 0, Direction.Right).Success);   // 사슬 칸으로 합성은 가능
+            Assert.AreEqual('가', s.GetCell(1, 0));
+            Assert.IsTrue(s.TryCollect(1, 0));                         // 수집도 가능
+            Assert.IsTrue(s.IsCleared);
+
+            // 솔버도 동일 판정: 합성 1수
+            var r = Solver.Solve(stage);
+            Assert.IsTrue(r.Solvable);
+            Assert.AreEqual(1, r.MinMoves);
+        }
+
+        [Test]
         public void 회전으로_풀리는_스테이지_솔버()
         {
             // [ㅏ][ㄱ]: 목표 고 — ㄱ은 못 움직이고(ㅏ가 옆에서 역순 배치) 회전으로 ㅏ→ㅗ 만들어

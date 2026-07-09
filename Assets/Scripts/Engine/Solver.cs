@@ -66,7 +66,8 @@ namespace HangeulAdventure.Engine
                         char tile = cells[y * w + x];
                         if (tile == Hangul.Empty) continue;
 
-                        // 밀기 4방향 (비용 1)
+                        // 밀기 4방향 (비용 1). 사슬 칸(D-24)의 타일은 밀 수 없다
+                        if (!stage.CellPinned(x, y))
                         foreach (Direction d in GameSession.DirectionsAll)
                         {
                             var (dx, dy) = d.Delta();

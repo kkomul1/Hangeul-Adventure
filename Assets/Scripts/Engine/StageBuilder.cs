@@ -10,6 +10,10 @@ namespace HangeulAdventure.Engine
     public static class StageBuilder
     {
         public static StageData FromRows(string[] rows, params GoalGroup[] goals)
+            => FromRows(rows, null, goals);
+
+        /// <summary>pins: rows와 같은 크기의 행 배열, '!' = 사슬 칸 (D-24). null이면 없음.</summary>
+        public static StageData FromRows(string[] rows, string[] pins, params GoalGroup[] goals)
         {
             if (rows == null || rows.Length == 0)
                 throw new ArgumentException("rows가 비어 있음");
@@ -42,12 +46,29 @@ namespace HangeulAdventure.Engine
                 }
             }
 
+            bool[] pinned = null;
+            if (pins != null && pins.Length > 0)
+            {
+                if (pins.Length != height)
+                    throw new ArgumentException("pins의 행 수가 rows와 다릅니다.");
+                pinned = new bool[width * height];
+                for (int rowIdx = 0; rowIdx < height; rowIdx++)
+                {
+                    if (pins[rowIdx].Length != width)
+                        throw new ArgumentException("pins의 행 길이가 rows와 다릅니다.");
+                    int y = height - 1 - rowIdx;
+                    for (int x = 0; x < width; x++)
+                        if (pins[rowIdx][x] == '!') pinned[y * width + x] = true;
+                }
+            }
+
             return new StageData
             {
                 width = width,
                 height = height,
                 mask = mask,
                 cells = cells,
+                pinnedMask = pinned,
                 goals = goals.Length > 0 ? goals : Array.Empty<GoalGroup>(),
             };
         }

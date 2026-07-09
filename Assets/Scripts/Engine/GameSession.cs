@@ -80,6 +80,8 @@ namespace HangeulAdventure.Engine
             int tx = x + dx, ty = y + dy;
 
             char mover = GetCell(x, y);
+            if (Stage.CellPinned(x, y)) // 사슬 칸 (D-24): 밀기 불가
+                return new PushReport(PushResultType.Fail, x, y, tx, ty, mover, GetCell(tx, ty));
             bool targetExists = Stage.CellExists(tx, ty);
             char target = targetExists ? _cells[Stage.Index(tx, ty)] : Hangul.Empty;
 
@@ -189,7 +191,7 @@ namespace HangeulAdventure.Engine
             {
                 for (int x = 0; x < Stage.width; x++)
                 {
-                    if (!Stage.CellExists(x, y)) continue;
+                    if (!Stage.CellExists(x, y) || Stage.CellPinned(x, y)) continue;
                     char tile = _cells[Stage.Index(x, y)];
                     if (tile == Hangul.Empty) continue;
 

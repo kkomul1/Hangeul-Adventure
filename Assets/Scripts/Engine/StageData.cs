@@ -21,6 +21,9 @@ namespace HangeulAdventure.Engine
         /// <summary>초기 타일. '\0'=빈칸. 길이 = width*height.</summary>
         public char[] cells;
 
+        /// <summary>사슬 칸 (D-24): 이 칸의 타일은 밀 수 없다 (회전·합성 대상·수집은 가능). null = 없음.</summary>
+        public bool[] pinnedMask;
+
         /// <summary>목표 그룹 (표시 단위). 단일 글자면 슬롯 1개, 단어면 글자당 슬롯.</summary>
         public GoalGroup[] goals;
 
@@ -44,6 +47,8 @@ namespace HangeulAdventure.Engine
         public bool InBounds(int x, int y) => x >= 0 && x < width && y >= 0 && y < height;
 
         public bool CellExists(int x, int y) => InBounds(x, y) && mask[Index(x, y)];
+
+        public bool CellPinned(int x, int y) => pinnedMask != null && InBounds(x, y) && pinnedMask[Index(x, y)];
 
         /// <summary>모든 목표 슬롯을 평탄화한 목록.</summary>
         public IReadOnlyList<char> AllSlots()

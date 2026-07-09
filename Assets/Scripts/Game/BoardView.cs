@@ -14,6 +14,7 @@ namespace HangeulAdventure.Game
         private readonly Dictionary<(int x, int y), TileView> _tiles = new Dictionary<(int, int), TileView>();
         private readonly List<GameObject> _floors = new List<GameObject>();
         private static readonly Color FloorColor = new Color(0.88f, 0.85f, 0.79f);
+        private static readonly Color PinnedFloorColor = new Color(0.72f, 0.64f, 0.52f); // 사슬 칸 (D-24)
 
         public GameSession Session => _session;
 
@@ -58,9 +59,23 @@ namespace HangeulAdventure.Game
                     sr.sprite = UiFactory.RoundedSprite();
                     sr.drawMode = SpriteDrawMode.Sliced;
                     sr.size = new Vector2(0.96f, 0.96f);
-                    sr.color = FloorColor;
+                    bool pinned = st.CellPinned(x, y);
+                    sr.color = pinned ? PinnedFloorColor : FloorColor;
                     sr.sortingOrder = 0;
                     _floors.Add(go);
+
+                    if (pinned) // 사슬 표식: 모서리에 작은 고리 마커
+                    {
+                        var mark = new GameObject("Pin", typeof(SpriteRenderer));
+                        mark.transform.SetParent(go.transform, false);
+                        mark.transform.localPosition = new Vector3(0.34f, 0.34f, 0);
+                        var ms = mark.GetComponent<SpriteRenderer>();
+                        ms.sprite = UiFactory.RoundedSprite();
+                        ms.drawMode = SpriteDrawMode.Sliced;
+                        ms.size = new Vector2(0.18f, 0.18f);
+                        ms.color = new Color(0.35f, 0.3f, 0.24f);
+                        ms.sortingOrder = 4; // 타일 위에 사슬 고리가 보이게
+                    }
                 }
             }
         }

@@ -21,6 +21,7 @@ namespace HangeulAdventure.Game
         public int id;
         public string title = "";
         public string[] rows;
+        public string[] pins;      // 사슬 칸 (D-24): rows와 같은 크기, '!' = 사슬. 생략 가능
         public GoalJson[] goals;
         public int minMoves;
         public int[] stars;
@@ -56,7 +57,7 @@ namespace HangeulAdventure.Game
                 };
             }
 
-            var stage = StageBuilder.FromRows(sj.rows, groups);
+            var stage = StageBuilder.FromRows(sj.rows, sj.pins, groups);
             stage.id = sj.id;
             stage.title = sj.title ?? "";
             stage.minMoves = sj.minMoves;
