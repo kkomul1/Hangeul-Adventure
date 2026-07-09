@@ -23,6 +23,16 @@ namespace HangeulAdventure.Game
         public ExitJson[] exits;
         public int[] shop;      // 상점 위치 (선택)
         public BossJson boss;   // 사천왕 (선택)
+        public RoomJson[] rooms; // 자음 회수 방 (선택, D-23)
+    }
+
+    /// <summary>자음 회수 방 (D-23): 묶인 스테이지를 전부 클리어하면 자음 하나를 되찾는다.</summary>
+    [Serializable]
+    public class RoomJson
+    {
+        public int[] stages;
+        public string reward = ""; // 되찾는 자음 1글자
+        public string label = "";  // 연출용 이름 (예: "웃마을")
     }
 
     [Serializable]
@@ -73,6 +83,7 @@ namespace HangeulAdventure.Game
         public Vector2Int? shop;
         public Vector2Int? bossPos;
         public string bossConfig;
+        public List<RoomJson> rooms = new List<RoomJson>();
 
         public char Tile(int x, int y)
             => (x < 0 || x >= width || y < 0 || y >= height) ? '#' : tiles[y * width + x];
@@ -138,6 +149,10 @@ namespace HangeulAdventure.Game
                 map.bossPos = P(mj.boss.pos);
                 map.bossConfig = mj.boss.config;
             }
+            if (mj.rooms != null)
+                foreach (var r in mj.rooms)
+                    if (r?.stages != null && r.stages.Length > 0 && !string.IsNullOrEmpty(r.reward))
+                        map.rooms.Add(r);
 
             return map;
 
@@ -187,5 +202,22 @@ namespace HangeulAdventure.Game
         /// <summary>출구 개방: 이 맵에서 required개 클리어 (개발자 모드는 전부).</summary>
         public static bool ExitOpen(MapData map, ExitData exit)
             => ProgressStore.DevMode || ClearedCount(map) >= exit.required;
+
+        /// <summary>
+        /// 방 보상 (D-23): 방의 스테이지를 전부 클리어했는데 아직 회수 안 된 자음이 있으면 그 방 반환.
+        /// 지급(RecoverConsonant)은 호출측에서 연출과 함께 수행.
+        /// </summary>
+        public static RoomJson PendingRoomReward(MapData map)
+        {
+            foreach (var room in map.rooms)
+            {
+                if (ProgressStore.RecoveredConsonants.IndexOf(room.reward[0]) >= 0) continue;
+                bool allClear = true;
+                foreach (int id in room.stages)
+                    if (ProgressStore.GetStars(id) == 0) { allClear = false; break; }
+                if (allClear) return room;
+            }
+            return null;
+        }
     }
 }

@@ -311,6 +311,38 @@ namespace HangeulAdventure.Game
             var go = new GameObject("MapWorld", typeof(MapWorld));
             _mapWorld = go.GetComponent<MapWorld>();
             _mapWorld.Enter(this, _maps[index], _stages, _cam, _canvas, playerPos);
+
+            // 방 보상 (D-23): 이 맵의 방을 완주했으면 자음 회수 연출
+            var room = MapProgress.PendingRoomReward(_maps[index]);
+            if (room != null)
+            {
+                ProgressStore.RecoverConsonant(room.reward[0]);
+                ShowConsonantPopup(room);
+            }
+        }
+
+        private void ShowConsonantPopup(RoomJson room)
+        {
+            var overlay = UiFactory.CreatePanel(_canvas.transform, "RoomRewardPopup", new Color(0, 0, 0, 0.6f));
+            UiFactory.Stretch(overlay);
+            var box = UiFactory.CreatePanel(overlay, "Box", UiFactory.Paper);
+            UiFactory.SetRect(box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(560, 300));
+
+            string where = string.IsNullOrEmpty(room.label) ? "이곳" : $"'{room.label}'";
+            var title = UiFactory.CreateText(box, "T", $"{where}의 글자 조각을 모두 맞췄다!", 30, UiFactory.Ink);
+            UiFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -34), new Vector2(520, 60));
+
+            var msg = UiFactory.CreateText(box, "M",
+                $"잃어버린 자음  '{room.reward}'  을(를) 되찾았다!\n깨져 있던 글자들이 조금 돌아왔다...", 24, UiFactory.Dim);
+            UiFactory.SetRect(msg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 0), new Vector2(500, 90));
+
+            var ok = UiFactory.CreateButton(box, "Ok", "계속", 24, UiFactory.Accent, Color.white, () =>
+            {
+                Destroy(overlay.gameObject);
+                if (_mapWorld != null) _mapWorld.RefreshStates();
+                RefreshTitleBrokenness();
+            });
+            UiFactory.SetRect((RectTransform)ok.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(180, 58));
         }
 
         // ---- 상점/가방 ----
