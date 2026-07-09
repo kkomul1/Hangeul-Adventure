@@ -1,0 +1,15 @@
+{
+  "id": "batchim",
+  "name": "받침 사범",
+  "intro": "받침도 못 다는 애송이가 이 고개를 넘겠다고? 내 시련을 받아라!",
+  "maxHp": 30,
+  "atk": 5,
+  "def": 1,
+  "rewardConsonant": "ㄹ",
+  "trials": [
+    { "rows": ["ㄱㅏ.", "..ㄴ"], "goals": "간", "moveLimit": 4 },
+    { "rows": ["ㅁㅏ.", "..ㄹ"], "goals": "말", "moveLimit": 4 },
+    { "rows": ["간", "ㅗ"], "goals": "노", "moveLimit": 2 },
+    { "rows": ["ㅂㅏㅂ", "..."], "goals": "밥", "moveLimit": 5 }
+  ]
+}
