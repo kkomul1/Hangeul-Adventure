@@ -30,6 +30,8 @@ namespace HangeulAdventure.Game
 
         private StageData _validated;   // 마지막 검증 통과 스테이지
         private int _validatedMin;
+        private Button _deleteAllBtn;
+        private bool _deleteArmed;      // 모두 삭제 2단계 확인
 
         private static readonly Color WallColor = new Color(0.45f, 0.43f, 0.40f);
         private static readonly Color FloorColor = new Color(0.90f, 0.88f, 0.83f);
@@ -103,8 +105,14 @@ namespace HangeulAdventure.Game
             var saveBtn = UiFactory.CreateButton(right, "SaveBtn", "저장", 24, UiFactory.Accent, Color.white, Save);
             UiFactory.SetRect((RectTransform)saveBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(390, -400), new Vector2(170, 58));
 
+            // 내 스테이지 관리
+            var openBtn = UiFactory.CreateButton(right, "OpenFolderBtn", "내 스테이지 폴더 열기", 18, UiFactory.Paper, UiFactory.Dim, OpenCustomFolder);
+            UiFactory.SetRect((RectTransform)openBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -466), new Vector2(230, 44));
+            _deleteAllBtn = UiFactory.CreateButton(right, "DeleteAllBtn", "내 스테이지 모두 삭제", 18, UiFactory.Paper, UiFactory.Dim, DeleteAllCustom);
+            UiFactory.SetRect((RectTransform)_deleteAllBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(240, -466), new Vector2(230, 44));
+
             _resultText = UiFactory.CreateText(right, "Result", "칸을 클릭해 현재 브러시를 놓습니다. 저장하면 스테이지 선택의 '내 스테이지'로 들어갑니다.", 19, UiFactory.Dim, TextAlignmentOptions.TopLeft);
-            UiFactory.SetRect(_resultText.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -474), new Vector2(560, 130));
+            UiFactory.SetRect(_resultText.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -520), new Vector2(560, 110));
 
             SetBrush('ㄱ');
             RebuildGrid();
@@ -297,6 +305,36 @@ namespace HangeulAdventure.Game
             string path = Path.Combine(CustomFolder, $"custom_{id - CustomIdBase:000}.json");
             File.WriteAllText(path, json);
             _resultText.text = $"✓ 저장됨 — 스테이지 선택의 '내 스테이지 C{id - CustomIdBase}'에서 플레이할 수 있습니다.\n{path}";
+        }
+
+        private void OpenCustomFolder()
+        {
+            Directory.CreateDirectory(CustomFolder);
+            Application.OpenURL("file://" + CustomFolder.Replace('\\', '/'));
+        }
+
+        private void DeleteAllCustom()
+        {
+            if (!_deleteArmed)
+            {
+                _deleteArmed = true;
+                _deleteAllBtn.GetComponentInChildren<TextMeshProUGUI>().text = "정말요? 한 번 더";
+                _resultText.text = "⚠ 한 번 더 누르면 내 스테이지가 전부 삭제됩니다 (되돌릴 수 없음).";
+                return;
+            }
+
+            _deleteArmed = false;
+            _deleteAllBtn.GetComponentInChildren<TextMeshProUGUI>().text = "내 스테이지 모두 삭제";
+            int count = 0;
+            if (Directory.Exists(CustomFolder))
+            {
+                foreach (string f in Directory.GetFiles(CustomFolder, "*.json"))
+                {
+                    File.Delete(f);
+                    count++;
+                }
+            }
+            _resultText.text = $"내 스테이지 {count}개 삭제됨.";
         }
 
         private static int NextCustomId()
