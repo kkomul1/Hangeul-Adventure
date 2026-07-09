@@ -135,7 +135,15 @@ namespace HangeulAdventure.Game
 
             if (_map.shop.HasValue)
                 _shopView = MakeSpot(_map.shop.Value, "상점", isShop: true);
+
+            if (_map.bossPos.HasValue)
+            {
+                _bossView = MakeSpot(_map.bossPos.Value, "王", isShop: false);
+                _bossView.Bg.size = new Vector2(1.0f, 1.0f);
+            }
         }
+
+        private SpotView _bossView;
 
         private string LabelFor(int stageId)
         {
@@ -281,6 +289,9 @@ namespace HangeulAdventure.Game
             }
 
             if (_shopView != null) _shopView.Bg.color = ShopColor;
+            if (_bossView != null)
+                _bossView.Bg.color = ProgressStore.IsBossDefeated(_map.bossConfig?.Replace("boss_", ""))
+                    ? SpotCleared : new Color(0.75f, 0.30f, 0.28f); // 미격파 = 붉은색
 
             _hudTitle.text = $"{_map.title}  —  {_map.theme}";
             _hudGold.text = $"골드  {ProgressStore.Gold}";
@@ -360,6 +371,7 @@ namespace HangeulAdventure.Game
             foreach (var v in _spotViews.Values) Consider(v);
             foreach (var v in _exitViews) Consider(v);
             if (_shopView != null) Consider(_shopView);
+            if (_bossView != null) Consider(_bossView);
             return best;
         }
 
@@ -367,6 +379,12 @@ namespace HangeulAdventure.Game
         {
             if (near == null) { _hudHint.text = "이동: WASD/방향키"; return; }
 
+            if (near == _bossView)
+            {
+                bool defeated = ProgressStore.IsBossDefeated(_map.bossConfig?.Replace("boss_", ""));
+                _hudHint.text = defeated ? "Space: 사천왕 재대결" : "Space: 사천왕에게 도전한다!";
+                return;
+            }
             if (near.IsShop)
             {
                 _hudHint.text = "Space: 상점 열기";
@@ -400,6 +418,11 @@ namespace HangeulAdventure.Game
 
         private void Interact(SpotView spot)
         {
+            if (spot == _bossView)
+            {
+                _app.StartMapBattle(_map.bossConfig, _playerT.localPosition);
+                return;
+            }
             if (spot.IsShop)
             {
                 _app.OpenShop();

@@ -21,7 +21,15 @@ namespace HangeulAdventure.Game
         public int[] tutorialStages;
         public SpotJson[] spots;
         public ExitJson[] exits;
-        public int[] shop; // 상점 위치 (선택)
+        public int[] shop;      // 상점 위치 (선택)
+        public BossJson boss;   // 사천왕 (선택)
+    }
+
+    [Serializable]
+    public class BossJson
+    {
+        public int[] pos;
+        public string config; // Resources/Battles/{config}.json
     }
 
     [Serializable]
@@ -63,6 +71,8 @@ namespace HangeulAdventure.Game
         public List<(int stageId, Vector2Int pos)> spots = new List<(int, Vector2Int)>();
         public List<ExitData> exits = new List<ExitData>();
         public Vector2Int? shop;
+        public Vector2Int? bossPos;
+        public string bossConfig;
 
         public char Tile(int x, int y)
             => (x < 0 || x >= width || y < 0 || y >= height) ? '#' : tiles[y * width + x];
@@ -123,6 +133,11 @@ namespace HangeulAdventure.Game
                     });
             if (mj.shop != null && mj.shop.Length == 2)
                 map.shop = P(mj.shop);
+            if (mj.boss != null && mj.boss.pos != null && mj.boss.pos.Length == 2)
+            {
+                map.bossPos = P(mj.boss.pos);
+                map.bossConfig = mj.boss.config;
+            }
 
             return map;
 
