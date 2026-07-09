@@ -169,8 +169,41 @@ namespace HangeulAdventure.Game
 
         public void ShowTitleFromEditor() => ShowTitle();
 
+        // ---- 내 스테이지 관리 ----
+
+        private CustomStageManager _manager;
+
+        public void ShowManagerFromEditor()
+        {
+            if (_editor != null) _editor.Hide();
+            if (_manager == null)
+            {
+                var go = new GameObject("CustomStageManager");
+                go.transform.SetParent(transform, false);
+                _manager = go.AddComponent<CustomStageManager>();
+                _manager.Build(_canvas, this, _editor);
+            }
+            _manager.Show();
+        }
+
+        public void ShowEditorFromManager()
+        {
+            if (_manager != null) _manager.Hide();
+            ShowLevelEditor();
+        }
+
+        private void ShowManagerAgain()
+        {
+            DestroyGame();
+            if (_manager != null) _manager.Show();
+            else ShowLevelEditor();
+        }
+
         /// <summary>에디터의 테스트 플레이: 클리어/나가기 시 에디터로 복귀.</summary>
         public void StartTestStage(Engine.StageData stage) => StartSession(stage, -1);
+
+        /// <summary>관리 화면에서 커스텀 스테이지 플레이: 종료 시 관리 화면 복귀. 별 기록됨.</summary>
+        public void StartCustomPlay(Engine.StageData stage) => StartSession(stage, -2);
 
         // ---- 스테이지 선택 ----
 
@@ -242,13 +275,14 @@ namespace HangeulAdventure.Game
 
         private void StartStage(int index) => StartSession(_stages[index], index);
 
-        /// <summary>index = -1이면 에디터 테스트 플레이 (종료 시 에디터로 복귀).</summary>
+        /// <summary>index: 0+ = 목록 스테이지, -1 = 에디터 테스트 (에디터 복귀), -2 = 관리 플레이 (관리 복귀).</summary>
         private void StartSession(Engine.StageData stage, int index)
         {
             DestroyGame();
             _titlePanel.gameObject.SetActive(false);
             if (_selectPanel != null) _selectPanel.gameObject.SetActive(false);
             if (_editor != null) _editor.Hide();
+            if (_manager != null) _manager.Hide();
 
             bool isTest = index < 0;
             _currentIndex = index;
@@ -265,11 +299,17 @@ namespace HangeulAdventure.Game
             _hud = _gameRoot.AddComponent<GameHud>();
             _hud.Build(_canvas);
             _hud.Bind(session, isTest ? 0 : index + 1, _stages.Count);
-            if (isTest)
+            if (index == -1)
             {
                 _hud.NextClicked += ShowLevelEditor;
                 _hud.ExitClicked += ShowLevelEditor;
                 _hud.RetryClicked += () => StartTestStage(stage);
+            }
+            else if (index == -2)
+            {
+                _hud.NextClicked += ShowManagerAgain;
+                _hud.ExitClicked += ShowManagerAgain;
+                _hud.RetryClicked += () => StartCustomPlay(stage);
             }
             else
             {

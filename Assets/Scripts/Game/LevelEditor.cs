@@ -30,9 +30,8 @@ namespace HangeulAdventure.Game
 
         private StageData _validated;   // 마지막 검증 통과 스테이지
         private int _validatedMin;
-        private Button _deleteAllBtn;
-        private Button _emptyTrashBtn;
-        private bool _emptyTrashArmed;  // 휴지통 비우기 2단계 확인
+        private string _editingPath;    // 수정 모드: 원본 파일 경로 (저장 시 덮어씀)
+        private int _editingId;
 
         private static readonly Color WallColor = new Color(0.45f, 0.43f, 0.40f);
         private static readonly Color FloorColor = new Color(0.90f, 0.88f, 0.83f);
@@ -61,6 +60,9 @@ namespace HangeulAdventure.Game
                 if (deletedAt < cutoff) File.Delete(f);
             }
         }
+
+        /// <summary>관리 GUI에서 사용.</summary>
+        public static void MoveToTrashPublic(string filePath) => MoveToTrash(filePath);
 
         private static void MoveToTrash(string filePath)
         {
@@ -140,15 +142,13 @@ namespace HangeulAdventure.Game
             var saveBtn = UiFactory.CreateButton(right, "SaveBtn", "저장", 24, UiFactory.Accent, Color.white, Save);
             UiFactory.SetRect((RectTransform)saveBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(390, -400), new Vector2(170, 58));
 
-            // 내 스테이지 관리 (삭제 = 휴지통 이동, 30일 후 자동 영구 삭제)
-            var openBtn = UiFactory.CreateButton(right, "OpenFolderBtn", "폴더 열기", 16, UiFactory.Paper, UiFactory.Dim, OpenCustomFolder);
-            UiFactory.SetRect((RectTransform)openBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -466), new Vector2(130, 44));
-            _deleteAllBtn = UiFactory.CreateButton(right, "DeleteAllBtn", "모두 휴지통으로", 16, UiFactory.Paper, UiFactory.Dim, DeleteAllCustom);
-            UiFactory.SetRect((RectTransform)_deleteAllBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(140, -466), new Vector2(140, 44));
-            var trashBtn = UiFactory.CreateButton(right, "OpenTrashBtn", "휴지통 열기", 16, UiFactory.Paper, UiFactory.Dim, OpenTrashFolder);
-            UiFactory.SetRect((RectTransform)trashBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(290, -466), new Vector2(130, 44));
-            _emptyTrashBtn = UiFactory.CreateButton(right, "EmptyTrashBtn", "휴지통 비우기", 16, UiFactory.Paper, UiFactory.Dim, EmptyTrash);
-            UiFactory.SetRect((RectTransform)_emptyTrashBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(430, -466), new Vector2(130, 44));
+            // 내 스테이지 관리 (목록/휴지통은 관리 GUI에서, 폴더는 백업·공유용)
+            var managerBtn = UiFactory.CreateButton(right, "ManagerBtn", "내 스테이지 관리", 17, UiFactory.Paper, UiFactory.Ink, () => _app.ShowManagerFromEditor());
+            UiFactory.SetRect((RectTransform)managerBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -466), new Vector2(190, 44));
+            var newBtn = UiFactory.CreateButton(right, "NewBtn", "새 스테이지", 17, UiFactory.Paper, UiFactory.Ink, ResetEditor);
+            UiFactory.SetRect((RectTransform)newBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(200, -466), new Vector2(150, 44));
+            var openBtn = UiFactory.CreateButton(right, "OpenFolderBtn", "폴더 열기", 17, UiFactory.Paper, UiFactory.Dim, OpenCustomFolder);
+            UiFactory.SetRect((RectTransform)openBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(360, -466), new Vector2(130, 44));
 
             _resultText = UiFactory.CreateText(right, "Result", "칸을 클릭해 현재 브러시를 놓습니다. 저장하면 스테이지 선택의 '내 스테이지'로 들어갑니다.", 19, UiFactory.Dim, TextAlignmentOptions.TopLeft);
             UiFactory.SetRect(_resultText.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -520), new Vector2(560, 110));
@@ -337,13 +337,18 @@ namespace HangeulAdventure.Game
             if (_validated == null) return;
 
             Directory.CreateDirectory(CustomFolder);
-            int id = NextCustomId();
+            bool overwrite = _editingPath != null && File.Exists(_editingPath);
+            int id = overwrite ? _editingId : NextCustomId();
             _validated.id = id;
 
             string json = ToJson(_validated, BuildRows());
-            string path = Path.Combine(CustomFolder, $"custom_{id - CustomIdBase:000}.json");
+            string path = overwrite ? _editingPath : Path.Combine(CustomFolder, $"custom_{id - CustomIdBase:000}.json");
             File.WriteAllText(path, json);
-            _resultText.text = $"✓ 저장됨 — 스테이지 선택의 '내 스테이지 C{id - CustomIdBase}'에서 플레이할 수 있습니다.\n{path}";
+            _editingPath = path;
+            _editingId = id;
+            _resultText.text = overwrite
+                ? $"✓ 덮어쓰기 저장됨 — C{id - CustomIdBase} '{_validated.title}'"
+                : $"✓ 저장됨 — 스테이지 선택의 '내 스테이지 C{id - CustomIdBase}'에서 플레이할 수 있습니다.\n{path}";
         }
 
         private void OpenCustomFolder()
@@ -352,51 +357,46 @@ namespace HangeulAdventure.Game
             Application.OpenURL("file://" + CustomFolder.Replace('\\', '/'));
         }
 
-        private void DeleteAllCustom()
+        /// <summary>편집 상태를 새 스테이지로 초기화.</summary>
+        private void ResetEditor()
         {
-            // 휴지통 이동은 복구 가능하므로 확인 없이 즉시
-            int count = 0;
-            if (Directory.Exists(CustomFolder))
-            {
-                foreach (string f in Directory.GetFiles(CustomFolder, "*.json"))
-                {
-                    MoveToTrash(f);
-                    count++;
-                }
-            }
-            _resultText.text = count > 0
-                ? $"내 스테이지 {count}개를 휴지통으로 옮겼습니다. {TrashRetentionDays}일 후 자동 영구 삭제되며, 그 전엔 '휴지통 열기'에서 파일을 상위 폴더로 옮기면 복원됩니다."
-                : "옮길 내 스테이지가 없습니다.";
+            _editingPath = null;
+            _editingId = 0;
+            _validated = null;
+            _cells = new char[MaxSize * MaxSize];
+            _w = _h = 3;
+            _titleInput.text = "";
+            _goalInput.text = "";
+            _resultText.text = "새 스테이지를 시작합니다.";
+            RebuildGrid();
         }
 
-        private void OpenTrashFolder()
+        /// <summary>기존 스테이지를 편집용으로 불러온다 (저장 시 같은 파일 덮어씀).</summary>
+        public void LoadForEdit(StageData stage, string path)
         {
-            Directory.CreateDirectory(TrashFolder);
-            Application.OpenURL("file://" + TrashFolder.Replace('\\', '/'));
-        }
+            ResetEditor();
+            _editingPath = path;
+            _editingId = stage.id;
+            _w = Mathf.Min(stage.width, MaxSize);
+            _h = Mathf.Min(stage.height, MaxSize);
 
-        private void EmptyTrash()
-        {
-            if (!_emptyTrashArmed)
+            for (int y = 0; y < _h; y++)
             {
-                _emptyTrashArmed = true;
-                _emptyTrashBtn.GetComponentInChildren<TextMeshProUGUI>().text = "정말요? 한 번 더";
-                _resultText.text = "⚠ 한 번 더 누르면 휴지통이 영구 삭제됩니다 (되돌릴 수 없음).";
-                return;
-            }
-
-            _emptyTrashArmed = false;
-            _emptyTrashBtn.GetComponentInChildren<TextMeshProUGUI>().text = "휴지통 비우기";
-            int count = 0;
-            if (Directory.Exists(TrashFolder))
-            {
-                foreach (string f in Directory.GetFiles(TrashFolder, "*.json"))
+                int row = _h - 1 - y; // 엔진 y위쪽+ → 에디터 row 위에서부터
+                for (int x = 0; x < _w; x++)
                 {
-                    File.Delete(f);
-                    count++;
+                    int i = row * MaxSize + x;
+                    _cells[i] = !stage.mask[stage.Index(x, y)] ? '#' : stage.cells[stage.Index(x, y)];
                 }
             }
-            _resultText.text = $"휴지통에서 {count}개 영구 삭제됨.";
+
+            _titleInput.text = stage.title;
+            var goals = new List<string>();
+            foreach (var g in stage.goals) goals.Add(g.display);
+            _goalInput.text = string.Join(",", goals);
+
+            _resultText.text = $"'{stage.title}' 수정 중 — 저장하면 원본을 덮어씁니다.";
+            RebuildGrid();
         }
 
         private static int NextCustomId()
