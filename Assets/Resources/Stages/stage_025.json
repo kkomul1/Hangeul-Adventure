@@ -1,0 +1,8 @@
+{
+  "id": 25,
+  "title": "있다!",
+  "rows": ["ㅇㅣ.", "ㅅㅅ."],
+  "goals": [{ "display": "있", "slots": "있" }],
+  "minMoves": 4,
+  "stars": [0, 0, 0]
+}

@@ -1,0 +1,11 @@
+{
+  "id": 18,
+  "title": "짝 바꾸기",
+  "rows": ["노..", "..이", "..."],
+  "goals": [
+    { "display": "오", "slots": "오" },
+    { "display": "니", "slots": "니" }
+  ],
+  "minMoves": 9,
+  "stars": [0, 0, 0]
+}

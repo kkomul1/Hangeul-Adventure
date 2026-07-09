@@ -1,0 +1,8 @@
+{
+  "id": 26,
+  "title": "삶",
+  "rows": ["ㅅㅏ.", "ㄹㅁ.", "..."],
+  "goals": [{ "display": "삶", "slots": "삶" }],
+  "minMoves": 4,
+  "stars": [0, 0, 0]
+}

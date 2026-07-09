@@ -1,0 +1,8 @@
+{
+  "id": 40,
+  "title": "왜?",
+  "rows": ["ㅗㅏㅣ", "ㅇ.."],
+  "goals": [{ "display": "왜", "slots": "왜" }],
+  "minMoves": 5,
+  "stars": [0, 0, 0]
+}

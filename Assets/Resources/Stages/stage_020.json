@@ -1,0 +1,8 @@
+{
+  "id": 20,
+  "title": "두 모음",
+  "rows": ["ㅇ..", "ㅗㅏ."],
+  "goals": [{ "display": "와", "slots": "와" }],
+  "minMoves": 3,
+  "stars": [0, 0, 0]
+}

@@ -1,0 +1,11 @@
+{
+  "id": 17,
+  "title": "연쇄 반응",
+  "rows": ["곡.", "ㅗ.", "ㄴ."],
+  "goals": [
+    { "display": "곤", "slots": "곤" },
+    { "display": "고", "slots": "고" }
+  ],
+  "minMoves": 4,
+  "stars": [0, 0, 0]
+}

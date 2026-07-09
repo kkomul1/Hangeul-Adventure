@@ -87,6 +87,13 @@ namespace HangeulAdventure.Game
 
             var start = UiFactory.CreateButton(_titlePanel, "StartBtn", "시작", 30, UiFactory.Accent, Color.white, ShowStageSelect);
             UiFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(240, 72));
+
+            var wipe = UiFactory.CreateButton(_titlePanel, "WipeBtn", "진행 초기화", 18, UiFactory.Paper, UiFactory.Dim, () =>
+            {
+                PlayerPrefs.DeleteAll();
+                PlayerPrefs.Save();
+            });
+            UiFactory.SetRect((RectTransform)wipe.transform, new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(170, 48));
         }
 
         private void ShowTitle()

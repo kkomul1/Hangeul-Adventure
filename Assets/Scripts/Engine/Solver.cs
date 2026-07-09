@@ -23,8 +23,10 @@ namespace HangeulAdventure.Engine
     public static class Solver
     {
         // 상한 500k: 4x4+슬롯 기준 visited 메모리 수십 MB 수준. 초과(Aborted)는 "풀이 불가 확정"이 아님.
-        public static SolveResult Solve(StageData stage, int maxStates = 500_000)
+        // timeBudgetMs: 탐색 시간 상한 (에디터 프리즈 방지, D-07). 초과 시 Aborted.
+        public static SolveResult Solve(StageData stage, int maxStates = 500_000, int timeBudgetMs = 30_000)
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             int w = stage.width, h = stage.height, n = w * h;
             var slotList = stage.AllSlots();
             int slotCount = slotList.Count;
@@ -43,6 +45,9 @@ namespace HangeulAdventure.Engine
 
             while (queue.Count > 0)
             {
+                if (sw.ElapsedMilliseconds > timeBudgetMs)
+                    return new SolveResult(false, -1, true, visited.Count);
+
                 var (state, depth) = queue.Dequeue();
                 Decode(state, cells, filled, n, slotCount);
 
