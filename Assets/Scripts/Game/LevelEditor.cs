@@ -116,6 +116,7 @@ namespace HangeulAdventure.Game
             UiFactory.SetRect(specialRow, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -46), new Vector2(560, 46));
             MakePaletteBtn(specialRow, "빈칸", 0, 90, () => SetBrush('\0'));
             MakePaletteBtn(specialRow, "벽", 96, 90, () => SetBrush('#'));
+            MakePaletteBtn(specialRow, "바위", 192, 90, () => SetBrush(Hangul.Rock));
 
             BuildPaletteRow(right, "ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ", -100);
             BuildPaletteRow(right, "ㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ", -152);
@@ -198,7 +199,7 @@ namespace HangeulAdventure.Game
         private void SetBrush(char c)
         {
             _brush = c;
-            _brushLabel.text = "브러시:  " + (c == '\0' ? "빈칸" : c == '#' ? "벽" : c.ToString());
+            _brushLabel.text = "브러시:  " + (c == '\0' ? "빈칸" : c == '#' ? "벽" : c == Hangul.Rock ? "바위" : c.ToString());
         }
 
         private void OnBrushTyped(string value)
@@ -233,8 +234,10 @@ namespace HangeulAdventure.Game
                     int r = row, c = col;
                     char cur = _cells[row * MaxSize + col];
                     var btn = UiFactory.CreateButton(_gridRect, $"Cell_{row}_{col}",
-                        cur == '\0' || cur == '#' ? "" : cur.ToString(), 30,
-                        cur == '#' ? WallColor : cur == '\0' ? FloorColor : UiFactory.Paper,
+                        cur == '\0' || cur == '#' || cur == Hangul.Rock ? "" : cur.ToString(), 30,
+                        cur == '#' ? WallColor
+                        : cur == Hangul.Rock ? new Color(0.42f, 0.4f, 0.38f)
+                        : cur == '\0' ? FloorColor : UiFactory.Paper,
                         UiFactory.Ink,
                         () => OnCellClicked(r, c));
                 }
