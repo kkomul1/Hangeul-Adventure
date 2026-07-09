@@ -134,7 +134,7 @@ namespace HangeulAdventure.Game
                 _exitViews.Add(MakeSpot(_map.exits[i].pos, "→", exitIndex: i));
 
             if (_map.shop.HasValue)
-                _shopView = MakeSpot(_map.shop.Value, "상점", isShop: true);
+                _shopView = MakeSpot(_map.shop.Value, BrokenText.Apply("상점"), isShop: true);
 
             if (_map.bossPos.HasValue)
             {
@@ -305,7 +305,8 @@ namespace HangeulAdventure.Game
                 _bossView.Bg.color = ProgressStore.IsBossDefeated(_map.bossConfig?.Replace("boss_", ""))
                     ? SpotCleared : new Color(0.75f, 0.30f, 0.28f); // 미격파 = 붉은색
 
-            _hudTitle.text = $"{_map.title}  —  {_map.theme}";
+            // 세계의 글자는 미회수 자음이 깨져 보인다 (D-22 확장: 장소 이름·간판)
+            _hudTitle.text = $"{BrokenText.Apply(_map.title)}  —  {BrokenText.Apply(_map.theme)}";
             _hudGold.text = $"골드  {ProgressStore.Gold}";
             int cleared2 = MapProgress.ClearedCount(_map);
             _hudProgress.text = tutorialDone
@@ -405,9 +406,10 @@ namespace HangeulAdventure.Game
             if (near.IsExit)
             {
                 var exit = _map.exits[near.ExitIndexil];
+                string exitName = BrokenText.Apply(exit.label); // 장소 이름도 깨진 글자로
                 _hudHint.text = MapProgress.ExitOpen(_map, exit)
-                    ? $"Space: {exit.label}(으)로 이동"
-                    : $"{exit.label} — 잠김 (이 지역 {MapProgress.ClearedCount(_map)}/{exit.required} 클리어)";
+                    ? $"Space: {exitName}(으)로 이동"
+                    : $"{exitName} — 잠김 (이 지역 {MapProgress.ClearedCount(_map)}/{exit.required} 클리어)";
                 return;
             }
 
