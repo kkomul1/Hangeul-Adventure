@@ -185,15 +185,21 @@ namespace HangeulAdventure.Game
             _maps ??= MapLoader.LoadAll();
             if (_maps.Count == 0) { Debug.LogError("맵이 없습니다 (Resources/Maps)"); return; }
 
-            // 해금된 맵 중 "아직 출구를 못 연" 첫 맵으로 (전부 열렸으면 마지막 맵)
-            int index = 0;
-            for (int i = 0; i < _maps.Count; i++)
-            {
-                if (!MapProgress.IsMapUnlocked(_maps, i)) break;
-                index = i;
-                if (!MapProgress.ExitOpen(_maps[i])) break;
-            }
+            // 마지막으로 있던 맵에서 이어서 (월드는 그래프라 이동은 출구로만)
+            int lastId = PlayerPrefs.GetInt("last_map", _maps[0].id);
+            int index = Mathf.Max(0, _maps.FindIndex(m => m.id == lastId));
             StartMap(index, null);
+        }
+
+        /// <summary>출구를 통한 맵 간 이동 (양방향, D-17).</summary>
+        public void TravelTo(ExitData exit)
+        {
+            int index = _maps.FindIndex(m => m.id == exit.toMapId);
+            if (index < 0) { Debug.LogError($"목적지 맵 없음: {exit.toMapId}"); return; }
+            Vector2? arrive = exit.arrive.HasValue
+                ? MapLoader.ResolveArrive(_maps[index], exit.arrive.Value)
+                : (Vector2?)null;
+            StartMap(index, arrive);
         }
 
         private void StartMap(int index, Vector2? playerPos)
@@ -205,10 +211,33 @@ namespace HangeulAdventure.Game
             if (_manager != null) _manager.Hide();
 
             _currentMapIndex = index;
+            PlayerPrefs.SetInt("last_map", _maps[index].id);
             var go = new GameObject("MapWorld", typeof(MapWorld));
             _mapWorld = go.GetComponent<MapWorld>();
             _mapWorld.Enter(this, _maps[index], _stages, _cam, _canvas, playerPos);
         }
+
+        // ---- 상점/가방 ----
+
+        private ItemPanels _itemPanels;
+
+        public bool IsPanelOpen => _itemPanels != null && _itemPanels.IsOpen;
+
+        private ItemPanels EnsurePanels()
+        {
+            if (_itemPanels == null)
+            {
+                var go = new GameObject("ItemPanels");
+                go.transform.SetParent(transform, false);
+                _itemPanels = go.AddComponent<ItemPanels>();
+                _itemPanels.Build(_canvas);
+                _itemPanels.Closed += () => { if (_mapWorld != null) _mapWorld.RefreshStates(); };
+            }
+            return _itemPanels;
+        }
+
+        public void OpenShop() => EnsurePanels().OpenShop();
+        public void OpenInventory() => EnsurePanels().OpenInventory();
 
         /// <summary>맵에서 퍼즐 지점 진입. 종료/클리어 시 같은 위치로 복귀.</summary>
         public void StartMapStage(Engine.StageData stage, Vector2 playerPos)
@@ -222,14 +251,6 @@ namespace HangeulAdventure.Game
         {
             DestroyGame();
             StartMap(_currentMapIndex, _mapReturnPos);
-        }
-
-        public void GoToNextMap()
-        {
-            if (_currentMapIndex + 1 < _maps.Count)
-                StartMap(_currentMapIndex + 1, null);
-            else
-                LeaveMapToTitle(); // 마지막 맵: 일단 타이틀로 (엔딩 연출은 이후 단계)
         }
 
         public void LeaveMapToTitle()
@@ -298,6 +319,9 @@ namespace HangeulAdventure.Game
             var header = UiFactory.CreateText(_selectPanel, "Header", "스테이지 선택", 42, UiFactory.Ink);
             UiFactory.SetRect(header.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -50), new Vector2(500, 70));
 
+            var gold = UiFactory.CreateText(_selectPanel, "Gold", $"골드  {ProgressStore.Gold}", 24, new Color(0.72f, 0.55f, 0.12f), TextAlignmentOptions.Right);
+            UiFactory.SetRect(gold.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -40), new Vector2(300, 44));
+
             var backBtn = UiFactory.CreateButton(_selectPanel, "BackBtn", "← 타이틀", 22, UiFactory.Paper, UiFactory.Ink, ShowTitle);
             UiFactory.SetRect((RectTransform)backBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -24), new Vector2(150, 52));
 
@@ -341,6 +365,14 @@ namespace HangeulAdventure.Game
                     var starText = UiFactory.CreateText((RectTransform)btn.transform, "Stars", starStr, 20,
                         ruby ? new Color(0.92f, 0.20f, 0.24f) : new Color(0.95f, 0.72f, 0.12f));
                     UiFactory.SetRect(starText.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 16), new Vector2(100, 28));
+                }
+
+                if (unlocked)
+                {
+                    // 난이도 표시 (오른쪽 아래)
+                    var diff = UiFactory.CreateText((RectTransform)btn.transform, "Diff", stage.difficulty.ToString(), 14,
+                        stage.difficulty >= 5 ? new Color(0.85f, 0.30f, 0.20f) : UiFactory.Dim, TextAlignmentOptions.BottomRight);
+                    UiFactory.SetRect(diff.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-7, 4), new Vector2(30, 20));
                 }
             }
         }

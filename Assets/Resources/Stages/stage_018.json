@@ -7,5 +7,6 @@
     { "display": "니", "slots": "니" }
   ],
   "minMoves": 7,
+  "difficulty": 2,
   "stars": [0, 0, 0]
 }

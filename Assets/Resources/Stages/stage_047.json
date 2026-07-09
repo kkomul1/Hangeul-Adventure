@@ -4,5 +4,6 @@
   "rows": ["ㄷㅗㅏㅣ", "....", "ㅈ..ㅣ", "...."],
   "goals": [{ "display": "돼지", "slots": "돼지" }],
   "minMoves": 6,
+  "difficulty": 2,
   "stars": [0, 0, 0]
 }

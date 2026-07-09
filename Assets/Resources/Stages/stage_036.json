@@ -4,5 +4,6 @@
   "rows": ["ㄱㅣ..", "ㅁ...", ".ㅂ..", ".ㅏㅂ."],
   "goals": [{ "display": "김밥", "slots": "김밥" }],
   "minMoves": 7,
+  "difficulty": 2,
   "stars": [0, 0, 0]
 }

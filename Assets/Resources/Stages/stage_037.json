@@ -4,5 +4,6 @@
   "rows": ["ㄴ..ㄹ", "ㅜ.ㅁ.", "..ㅜ.", "ㄴ..."],
   "goals": [{ "display": "눈물", "slots": "눈물" }],
   "minMoves": 8,
+  "difficulty": 2,
   "stars": [0, 0, 0]
 }

@@ -1,0 +1,9 @@
+{
+  "id": 52,
+  "title": "기와",
+  "rows": ["ㅗ.ㄱ", ".#.", "ㅇㅏㅣ"],
+  "goals": [{ "display": "기와", "slots": "기와" }],
+  "minMoves": 12,
+  "stars": [0, 0, 0],
+  "difficulty": 3
+}

@@ -5,10 +5,10 @@ using UnityEngine;
 namespace HangeulAdventure.Game
 {
     /// <summary>
-    /// 맵 정의 (Resources/Maps/map_XX.json).
+    /// 맵 정의 (Resources/Maps/map_XX.json). 월드는 exits로 연결된 그래프 (양방향 이동, D-17).
     /// terrain 문자: '.'=풀, '-'=길, '#'=나무/집(통행 불가), '~'=물(통행 불가)
-    /// 진행 규칙: 최초 진입 시 tutorialStages를 순서대로 강제 → 완료 시 전체 지점 개방
-    /// → unlockCount개 클리어 시 출구(다음 맵) 개방.
+    /// 진행 규칙: 최초 진입 시 tutorialStages를 순서대로 강제 → 완료 시 전체 지점 개방.
+    /// 각 출구는 "이 맵에서 required개 클리어" 시 개방.
     /// </summary>
     [Serializable]
     public class MapJson
@@ -17,33 +17,52 @@ namespace HangeulAdventure.Game
         public string title = "";
         public string theme = "";
         public string[] terrain;
-        public int[] spawn;          // [x, y] (y는 위에서부터 행 번호가 아니라 월드 y — 로더가 변환)
-        public int[] tutorialStages; // 스테이지 id, 직렬 순서
-        public SpotJson[] spots;     // 퍼즐 지점
-        public int unlockCount;      // 다음 맵 해금에 필요한 클리어 수 (튜토리얼 포함)
-        public int[] exit;           // 출구 위치 [x, y]
+        public int[] spawn;
+        public int[] tutorialStages;
+        public SpotJson[] spots;
+        public ExitJson[] exits;
+        public int[] shop; // 상점 위치 (선택)
     }
 
     [Serializable]
     public class SpotJson
     {
-        public int stage;  // 스테이지 id
-        public int[] pos;  // [x, y]
+        public int stage;
+        public int[] pos;
     }
 
-    /// <summary>파싱된 맵 (좌표계: x 오른쪽+, y 위쪽+ — 엔진/월드와 동일).</summary>
+    [Serializable]
+    public class ExitJson
+    {
+        public int[] pos;      // 출구 위치
+        public int toMap;      // 목적지 맵 id
+        public int[] arrive;   // 도착 위치 (생략 시 목적지 spawn)
+        public string label = "";
+        public int required;   // 이 맵에서 필요한 클리어 수 (0 = 항상 열림)
+    }
+
+    public class ExitData
+    {
+        public Vector2Int pos;
+        public int toMapId;
+        public Vector2Int? arrive;
+        public string label;
+        public int required;
+    }
+
+    /// <summary>파싱된 맵 (좌표계: x 오른쪽+, y 위쪽+).</summary>
     public class MapData
     {
         public int id;
         public string title;
         public string theme;
         public int width, height;
-        public char[] tiles;                  // index = y*width + x
+        public char[] tiles;
         public Vector2Int spawn;
         public int[] tutorialStages;
         public List<(int stageId, Vector2Int pos)> spots = new List<(int, Vector2Int)>();
-        public int unlockCount;
-        public Vector2Int exit;
+        public List<ExitData> exits = new List<ExitData>();
+        public Vector2Int? shop;
 
         public char Tile(int x, int y)
             => (x < 0 || x >= width || y < 0 || y >= height) ? '#' : tiles[y * width + x];
@@ -76,27 +95,45 @@ namespace HangeulAdventure.Game
                 height = h,
                 tiles = new char[w * h],
                 tutorialStages = mj.tutorialStages ?? Array.Empty<int>(),
-                unlockCount = mj.unlockCount,
             };
 
             for (int row = 0; row < h; row++)
             {
                 if (mj.terrain[row].Length != w)
                     throw new ArgumentException($"맵 {mj.id}: 행 길이 불일치 (행 {row})");
-                int y = h - 1 - row; // 첫 행이 가장 위
+                int y = h - 1 - row;
                 for (int x = 0; x < w; x++)
                     map.tiles[y * w + x] = mj.terrain[row][x];
             }
 
             Vector2Int P(int[] a) => new Vector2Int(a[0], h - 1 - a[1]); // JSON은 위에서부터 행 번호
             map.spawn = P(mj.spawn);
-            map.exit = P(mj.exit);
             if (mj.spots != null)
                 foreach (var s in mj.spots)
                     map.spots.Add((s.stage, P(s.pos)));
+            if (mj.exits != null)
+                foreach (var e in mj.exits)
+                    map.exits.Add(new ExitData
+                    {
+                        pos = P(e.pos),
+                        toMapId = e.toMap,
+                        arrive = (e.arrive != null && e.arrive.Length == 2) ? P2(e.arrive, e, mj) : (Vector2Int?)null,
+                        label = e.label ?? "",
+                        required = e.required,
+                    });
+            if (mj.shop != null && mj.shop.Length == 2)
+                map.shop = P(mj.shop);
 
             return map;
+
+            // arrive는 "목적지 맵" 좌표라 이 맵의 높이로 뒤집으면 안 됨 — 목적지 로드 시 뒤집기 위해
+            // JSON 행 좌표 그대로 보관하고 음수 y로 표시하는 대신, 여기서는 원시값 보관용 헬퍼 사용.
+            static Vector2Int P2(int[] a, ExitJson e, MapJson mj2) => new Vector2Int(a[0], a[1]);
         }
+
+        /// <summary>arrive(JSON 행 좌표)를 목적지 맵의 월드 좌표로 변환.</summary>
+        public static Vector2Int ResolveArrive(MapData destination, Vector2Int rawArrive)
+            => new Vector2Int(rawArrive.x, destination.height - 1 - rawArrive.y);
 
         public static List<MapData> LoadAll()
         {
@@ -112,10 +149,9 @@ namespace HangeulAdventure.Game
         }
     }
 
-    /// <summary>맵 진행 판정 (스테이지 별 기록 기반 — ProgressStore 재사용).</summary>
+    /// <summary>맵 진행 판정 (스테이지 별 기록 기반).</summary>
     public static class MapProgress
     {
-        /// <summary>튜토리얼 직렬 진행: 아직 못 깬 첫 튜토리얼 스테이지 id, 전부 깼으면 -1.</summary>
         public static int NextTutorialStage(MapData map)
         {
             foreach (int id in map.tutorialStages)
@@ -133,14 +169,8 @@ namespace HangeulAdventure.Game
             return n;
         }
 
-        public static bool ExitOpen(MapData map) => ClearedCount(map) >= map.unlockCount;
-
-        /// <summary>맵 잠금: 첫 맵은 항상, 이후는 이전 맵의 출구가 열렸으면. 개발자 모드는 전부.</summary>
-        public static bool IsMapUnlocked(List<MapData> maps, int index)
-        {
-            if (ProgressStore.DevMode) return true;
-            if (index <= 0) return true;
-            return ExitOpen(maps[index - 1]);
-        }
+        /// <summary>출구 개방: 이 맵에서 required개 클리어 (개발자 모드는 전부).</summary>
+        public static bool ExitOpen(MapData map, ExitData exit)
+            => ProgressStore.DevMode || ClearedCount(map) >= exit.required;
     }
 }

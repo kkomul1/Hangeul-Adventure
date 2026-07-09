@@ -1,0 +1,9 @@
+{
+  "id": 61,
+  "title": "첫 수집",
+  "rows": ["ㄱ."],
+  "goals": [{ "display": "ㄱ", "slots": "ㄱ" }],
+  "minMoves": 0,
+  "hint": "타일을 클릭한 뒤 Space를 누르면 위의 목표 칸에 수집됩니다.",
+  "stars": [0, 0, 0]
+}

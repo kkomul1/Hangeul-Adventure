@@ -1,5 +1,6 @@
-// HangeulAdventure 스테이지 솔버 (BFS)
+// HangeulAdventure 스테이지 솔버 (0-1 BFS)
 // 기준: Docs/퍼즐규칙명세.md (2026-07-09 확정본)
+// 2026-07-09 개정 반영: 수집은 이동 수에 포함되지 않음 (0수 간선) → 0-1 BFS로 탐색
 // 빌드: csc /codepage:65001 /out:solver.exe solver.cs   (.NET Framework 4 csc 호환, C# 5)
 // 사용: solver.exe stage_001.json stage_002.json ...
 //       각 스테이지의 풀이 가능성, 최소 수, 최적 경로 1개를 UTF-8 stdout으로 출력
@@ -43,7 +44,7 @@ class Solver {
         AddPair("ㄱㄱ", 'ㄲ'); AddPair("ㄷㄷ", 'ㄸ'); AddPair("ㅂㅂ", 'ㅃ'); AddPair("ㅅㅅ", 'ㅆ'); AddPair("ㅈㅈ", 'ㅉ');
         AddPair("ㄱㅅ", 'ㄳ'); AddPair("ㄴㅈ", 'ㄵ'); AddPair("ㄴㅎ", 'ㄶ');
         AddPair("ㄹㄱ", 'ㄺ'); AddPair("ㄹㅁ", 'ㄻ'); AddPair("ㄹㅂ", 'ㄼ'); AddPair("ㄹㅅ", 'ㄽ');
-        AddPair("ㄹㅌ", 'ㄾ'); AddPair("ㄹㅍ", 'ㄿ'); AddPair("ㄹㅎ", 'ㅀ');
+        AddPair("ㄹㅌ", 'ㄾ'); AddPair("ㄹㅍ", 'ㄿ'); AddPair("ㄹㅎ", 'ㅀ'); AddPair("ㅂㅅ", 'ㅄ');
     }
 
     static bool IsSyl(char c) { return c >= 0xAC00 && c <= 0xD7A3; }
@@ -215,15 +216,20 @@ class Solver {
         string goals = SortStr(st.Slots);
         string startKey = new string(board) + "|" + goals;
 
+        // 0-1 BFS: 수집 = 0수(앞에 삽입), 밀기 = 1수(뒤에 삽입)
         Dictionary<string, Node> visited = new Dictionary<string, Node>();
-        Queue<string> queue = new Queue<string>();
+        LinkedList<string> deque = new LinkedList<string>();
+        HashSet<string> settled = new HashSet<string>();
         visited[startKey] = new Node { Prev = null, Act = null, Depth = 0 };
-        queue.Enqueue(startKey);
+        deque.AddFirst(startKey);
         string goalKey = null;
         int expanded = 0;
 
-        while (queue.Count > 0) {
-            string key = queue.Dequeue();
+        while (deque.Count > 0) {
+            string key = deque.First.Value;
+            deque.RemoveFirst();
+            if (settled.Contains(key)) continue;
+            settled.Add(key);
             Node node = visited[key];
             int sep = key.LastIndexOf('|');
             string boardStr = key.Substring(0, sep);
@@ -233,7 +239,7 @@ class Solver {
             if (expanded > 3000000) { Console.WriteLine("!! 상태 폭발(300만 초과): " + st.File); return; }
             char[] cur = boardStr.ToCharArray();
 
-            // 수집
+            // 수집 (0수)
             for (int i = 0; i < cur.Length; i++) {
                 char t = cur[i];
                 if (t == '.' || t == '#') continue;
@@ -243,16 +249,16 @@ class Solver {
                 nb[i] = '.';
                 string nremain = remain.Remove(gi, 1);
                 string nkey = new string(nb) + "|" + nremain;
-                if (!visited.ContainsKey(nkey)) {
+                if (!visited.ContainsKey(nkey) || node.Depth < visited[nkey].Depth) {
                     visited[nkey] = new Node {
                         Prev = key,
                         Act = "수집 " + t + " @(" + (i / w) + "," + (i % w) + ")",
-                        Depth = node.Depth + 1
+                        Depth = node.Depth
                     };
-                    queue.Enqueue(nkey);
+                    deque.AddFirst(nkey);
                 }
             }
-            // 밀기
+            // 밀기 (1수)
             for (int r = 0; r < h; r++) for (int c = 0; c < w; c++) {
                 char t = cur[r * w + c];
                 if (t == '.' || t == '#') continue;
@@ -261,13 +267,13 @@ class Solver {
                     char[] nb = Push(cur, w, h, r, c, dir, out note);
                     if (nb == null) continue;
                     string nkey = new string(nb) + "|" + remain;
-                    if (!visited.ContainsKey(nkey)) {
+                    if (!visited.ContainsKey(nkey) || node.Depth + 1 < visited[nkey].Depth) {
                         visited[nkey] = new Node {
                             Prev = key,
                             Act = t + " @(" + r + "," + c + ") " + DIRNAME[dir] + " [" + note + "]",
                             Depth = node.Depth + 1
                         };
-                        queue.Enqueue(nkey);
+                        deque.AddLast(nkey);
                     }
                 }
             }
@@ -289,9 +295,14 @@ class Solver {
             k2 = visited[k2].Prev;
         }
         path.Reverse();
-        Console.WriteLine("  최소 수: " + path.Count + " (탐색 상태 " + visited.Count + "개)");
-        for (int i = 0; i < path.Count; i++)
-            Console.WriteLine("  " + (i + 1) + ". " + path[i]);
+        Console.WriteLine("  최소 수: " + visited[goalKey].Depth + " (수집 제외, 탐색 상태 " + visited.Count + "개)");
+        int mv = 0;
+        foreach (string act in path) {
+            if (act.StartsWith("수집"))
+                Console.WriteLine("     - " + act + " (0수)");
+            else
+                Console.WriteLine("  " + (++mv) + ". " + act);
+        }
         Console.WriteLine();
     }
 

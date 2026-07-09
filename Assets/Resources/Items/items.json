@@ -1,0 +1,10 @@
+{
+  "items": [
+    { "id": "w_mokgeom", "name": "목검", "type": "weapon", "price": 150, "atk": 1, "def": 0, "desc": "나무를 깎아 만든 연습용 검." },
+    { "id": "w_musoe", "name": "무쇠검", "type": "weapon", "price": 500, "atk": 3, "def": 0, "desc": "대장간에서 벼려낸 묵직한 검." },
+    { "id": "w_eunjangdo", "name": "은장도", "type": "weapon", "price": 1200, "atk": 6, "def": 0, "desc": "은으로 장식한 날카로운 장도." },
+    { "id": "a_mumyeong", "name": "무명 도포", "type": "armor", "price": 120, "atk": 0, "def": 1, "desc": "수수하지만 든든한 무명옷." },
+    { "id": "a_gajuk", "name": "가죽 배자", "type": "armor", "price": 400, "atk": 0, "def": 3, "desc": "가죽을 덧댄 조끼." },
+    { "id": "a_dujeonggap", "name": "두정갑", "type": "armor", "price": 1000, "atk": 0, "def": 6, "desc": "쇠못을 박아 만든 갑옷." }
+  ]
+}

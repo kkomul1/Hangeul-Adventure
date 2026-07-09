@@ -24,6 +24,8 @@ namespace HangeulAdventure.Game
         public GoalJson[] goals;
         public int minMoves;
         public int[] stars;
+        public int difficulty = 1; // 1~10, 생략 시 1
+        public string hint = "";   // 튜토리얼 안내 문구
     }
 
     [Serializable]
@@ -58,6 +60,8 @@ namespace HangeulAdventure.Game
             stage.id = sj.id;
             stage.title = sj.title ?? "";
             stage.minMoves = sj.minMoves;
+            stage.difficulty = Mathf.Clamp(sj.difficulty, 1, 5);
+            stage.hint = sj.hint ?? "";
             stage.starThresholds = (sj.stars != null && sj.stars.Length == 3 && sj.stars[2] > 0)
                 ? sj.stars
                 : StageData.DefaultStarThresholds(sj.minMoves);

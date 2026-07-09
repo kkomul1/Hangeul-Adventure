@@ -17,6 +17,7 @@ namespace HangeulAdventure.Game
         private Canvas _canvas;
         private RectTransform _root;
         private bool _isTest;
+        private TextMeshProUGUI _tutorialHint;
         private TextMeshProUGUI _moveText;
         private TextMeshProUGUI _stageText;
         private RectTransform _goalBar;
@@ -103,9 +104,20 @@ namespace HangeulAdventure.Game
             _isTest = stageNumber <= 0;
             _isLastStage = stageNumber >= stageCount;
             _nextLabelOverride = nextLabel;
-            _stageText.text = stageNumber <= 0
+            _stageText.text = (stageNumber <= 0
                 ? session.Stage.title
-                : $"스테이지 {stageNumber}/{stageCount}  {session.Stage.title}";
+                : $"스테이지 {stageNumber}/{stageCount}  {session.Stage.title}")
+                + $"  ·  난이도 {session.Stage.difficulty}";
+
+            // 튜토리얼 안내 문구 (목표 판 아래)
+            if (_tutorialHint != null) { Destroy(_tutorialHint.gameObject); _tutorialHint = null; }
+            if (!string.IsNullOrEmpty(session.Stage.hint))
+            {
+                _tutorialHint = UiFactory.CreateText(_root, "TutorialHint", session.Stage.hint, 21,
+                    new Color(0.55f, 0.35f, 0.15f));
+                UiFactory.SetRect(_tutorialHint.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1),
+                    new Vector2(0, -108), new Vector2(1000, 36));
+            }
             BuildGoalBar();
             Refresh();
             HidePopup();
@@ -160,7 +172,7 @@ namespace HangeulAdventure.Game
 
         // ---- 클리어 팝업 ----
 
-        public void ShowClearPopup()
+        public void ShowClearPopup(int earnedGold = 0)
         {
             HidePopup();
             int stars = _session.Stars();
@@ -192,7 +204,8 @@ namespace HangeulAdventure.Game
             }
 
             var info = UiFactory.CreateText(box, "Info",
-                $"이동 수 {_session.MoveCount}" + (ruby ? " · 루비!" : ""),
+                $"이동 수 {_session.MoveCount}" + (ruby ? " · 루비!" : "")
+                + (earnedGold > 0 ? $"  ·  +{earnedGold} 골드!" : $"  ·  보유 {ProgressStore.Gold} 골드"),
                 22, UiFactory.Dim);
             UiFactory.SetRect(info.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -38), new Vector2(440, 34));
 

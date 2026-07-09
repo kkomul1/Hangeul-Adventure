@@ -27,6 +27,15 @@ namespace HangeulAdventure.Engine
         /// <summary>솔버 검증 최소 수. 루비 별 기준.</summary>
         public int minMoves;
 
+        /// <summary>
+        /// 난이도 1~5. 기준은 "일반 클리어(별 1개)의 어려움" — 최적해가 아니라 클리어 자체가
+        /// 어려운 정도 (보드 밀집도, 이동 제약 등). 골드 배율 (별당 10×난이도, 루비 +20×난이도).
+        /// </summary>
+        public int difficulty = 1;
+
+        /// <summary>튜토리얼 안내 문구 (빈 문자열이면 미표시).</summary>
+        public string hint = "";
+
         /// <summary>별 기준: 이동 수 <= 값. [1별, 2별, 3별]</summary>
         public int[] starThresholds;
 

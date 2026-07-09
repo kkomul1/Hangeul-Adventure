@@ -223,8 +223,9 @@ namespace HangeulAdventure.Game
             {
                 _finished = true;
                 SfxPlayer.Instance?.Clear();
-                ProgressStore.Record(_session.Stage.id, _session.Stars(), _session.IsRuby, _session.MoveCount);
-                _hud.ShowClearPopup();
+                int earned = ProgressStore.Record(_session.Stage.id, _session.Stars(), _session.IsRuby,
+                    _session.MoveCount, _session.Stage.difficulty);
+                _hud.ShowClearPopup(earned);
             }
         }
     }

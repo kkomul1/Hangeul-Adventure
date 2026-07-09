@@ -4,5 +4,6 @@
   "rows": ["ㄱ..ㅅ", "ㅜ...", "....", "ㄱ.ㅜ."],
   "goals": [{ "display": "국수", "slots": "국수" }],
   "minMoves": 7,
+  "difficulty": 2,
   "stars": [0, 0, 0]
 }
