@@ -26,6 +26,7 @@ namespace HangeulAdventure.Game
         private RectTransform _hudRoot;
 
         private const float MoveSpeed = 6f;
+        private const float RunSpeed = 10.5f; // Shift 달리기
         private const float PlayerRadius = 0.30f;
         private const float InteractRadius = 0.65f;
 
@@ -175,6 +176,7 @@ namespace HangeulAdventure.Game
         private SpriteRenderer _playerSr;
         private int _playerDir;   // 0=아래 1=위 2=왼쪽 3=오른쪽 (Walk 시트 열 순서 가정 — 시각 검증으로 확정)
         private bool _playerMoving;
+        private bool _playerRunning;
 
         private void BuildPlayer(Vector2 pos)
         {
@@ -216,7 +218,7 @@ namespace HangeulAdventure.Game
             if (!ArtLibrary.Available || _playerSr == null) return;
             if (_playerMoving)
             {
-                int frame = (int)(Time.time * 8f) % 4;
+                int frame = (int)(Time.time * (_playerRunning ? 13f : 8f)) % 4;
                 var s = ArtLibrary.Character("Noble", "Walk", frame, _playerDir);
                 if (s != null) _playerSr.sprite = s;
             }
@@ -313,8 +315,10 @@ namespace HangeulAdventure.Game
                     _playerDir = dir.y > 0 ? 1 : 0;
 
                 dir.Normalize();
+                _playerRunning = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
+                float speed = _playerRunning ? RunSpeed : MoveSpeed;
                 Vector2 pos = _playerT.localPosition;
-                Vector2 next = pos + dir * (MoveSpeed * Time.deltaTime);
+                Vector2 next = pos + dir * (speed * Time.deltaTime);
                 if (CanStand(new Vector2(next.x, pos.y))) pos.x = next.x;
                 if (CanStand(new Vector2(pos.x, next.y))) pos.y = next.y;
                 _playerT.localPosition = pos;
