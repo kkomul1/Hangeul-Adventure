@@ -71,6 +71,7 @@ namespace HangeulAdventure.Game
                     else if (Pressed(kb.leftArrowKey, kb.aKey)) DoPush(Direction.Left);
                     else if (Pressed(kb.rightArrowKey, kb.dKey)) DoPush(Direction.Right);
                     else if (kb.spaceKey.wasPressedThisFrame) DoCollect(-1);
+                    else if (kb.xKey.wasPressedThisFrame) DoRotate();
                 }
             }
 
@@ -89,6 +90,11 @@ namespace HangeulAdventure.Game
                         _dragTileX = tile.X;
                         _dragTileY = tile.Y;
                     }
+                }
+                else if (mouse.rightButton.wasPressedThisFrame && !IsPointerOverUi())
+                {
+                    var tile = TileAt(world);
+                    if (tile != null) { Select(tile.X, tile.Y); DoRotate(); }
                 }
                 else if (_dragging && mouse.leftButton.wasReleasedThisFrame)
                 {
@@ -186,6 +192,23 @@ namespace HangeulAdventure.Game
                 Select(report.FromX, report.FromY);
 
             AfterAction();
+        }
+
+        /// <summary>선택 타일 회전 (X키/우클릭, D-21). 유효한 자모가 되는 회전만 성공.</summary>
+        private void DoRotate()
+        {
+            if (!HasSelection()) return;
+            if (_session.TryRotate(_selX, _selY))
+            {
+                SfxPlayer.Instance?.Move();
+                _board.SyncTiles(animate: true);
+                AfterAction();
+            }
+            else
+            {
+                _board.GetTile(_selX, _selY)?.AnimateShake();
+                SfxPlayer.Instance?.Fail();
+            }
         }
 
         private void DoCollect(int slotIndex)

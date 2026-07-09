@@ -79,9 +79,17 @@ namespace HangeulAdventure.Game
             X = x; Y = y;
         }
 
+        private static readonly Color RockColor = new Color(0.42f, 0.40f, 0.38f);
+
         public void SetChar(char tile)
         {
             Tile = tile;
+            if (tile == Hangul.Rock)
+            {
+                _label.text = "";
+                _bg.color = RockColor;
+                return;
+            }
             _label.text = tile == Hangul.Empty ? "" : tile.ToString();
             _bg.color = Hangul.IsSyllable(tile) ? LetterColor
                 : Hangul.IsVowel(tile) ? VowelColor

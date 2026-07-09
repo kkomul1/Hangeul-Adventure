@@ -92,7 +92,7 @@ namespace HangeulAdventure.Game
             var exitBtn = UiFactory.CreateButton(bottom, "ExitBtn", "나가기", 22, UiFactory.Paper, UiFactory.Ink, () => ExitClicked?.Invoke());
             UiFactory.SetRect((RectTransform)exitBtn.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-24, 0), new Vector2(150, 56));
 
-            var hint = UiFactory.CreateText(bottom, "Hint", "드래그/방향키: 밀기 · 클릭+Space: 수집 · Q: 합성 필터 · E: 분해 필터", 17, UiFactory.Dim);
+            var hint = UiFactory.CreateText(bottom, "Hint", "드래그/방향키: 밀기 · Space: 수집 · X/우클릭: 회전 · Q: 합성 필터 · E: 분해 필터", 17, UiFactory.Dim);
             UiFactory.SetRect(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, 14), new Vector2(900, 30));
         }
 

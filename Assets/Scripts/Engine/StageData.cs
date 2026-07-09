@@ -59,6 +59,41 @@ namespace HangeulAdventure.Engine
             return list;
         }
 
+        /// <summary>
+        /// 이 스테이지가 사용하는 기본 자음 집합 (보드 타일 + 목표, 복합 자모는 성분으로 분해).
+        /// 자음 게이트(D-22): 미회수 자음이 포함된 스테이지는 깨져 보이며 진입 불가.
+        /// </summary>
+        public string UsedBaseConsonants()
+        {
+            var set = new System.Collections.Generic.HashSet<char>();
+            foreach (char c in cells) Collect(c, set);
+            foreach (char s in AllSlots()) Collect(s, set);
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in "ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ")
+                if (set.Contains(c)) sb.Append(c);
+            return sb.ToString();
+
+            static void Collect(char c, System.Collections.Generic.HashSet<char> set)
+            {
+                if (c == Hangul.Empty || c == Hangul.Rock) return;
+                if (Hangul.IsSyllable(c))
+                {
+                    var (cho, jung, jong) = Hangul.DecomposeSyllable(c);
+                    Collect(cho, set);
+                    Collect(jung, set);
+                    if (jong != Hangul.Empty) Collect(jong, set);
+                    return;
+                }
+                if (Hangul.TrySplitCompound(c, out char l, out char r))
+                {
+                    Collect(l, set);
+                    Collect(r, set);
+                    return;
+                }
+                if (Hangul.IsConsonant(c)) set.Add(c);
+            }
+        }
+
         /// <summary>기본 별 기준 공식 (명세 7장): 3별 = 최소수 + max(1, round(최소수*0.1))</summary>
         public static int[] DefaultStarThresholds(int minMoves)
         {

@@ -87,6 +87,16 @@ namespace HangeulAdventure.Engine
                             Relax(next, depth + 1, front: false, dist, deque);
                         }
 
+                        // 회전 (비용 1, D-21)
+                        char rotated = Hangul.RotateCw(tile);
+                        if (rotated != Hangul.Empty)
+                        {
+                            cells[y * w + x] = rotated;
+                            string rotNext = Encode(cells, filled);
+                            cells[y * w + x] = tile;
+                            Relax(rotNext, depth + 1, front: false, dist, deque);
+                        }
+
                         // 수집: 일치하는 첫 빈 슬롯 (비용 0; 같은 문자 슬롯은 대칭이므로 대표 1개)
                         for (int i = 0; i < slotCount; i++)
                         {

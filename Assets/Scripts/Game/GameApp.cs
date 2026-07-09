@@ -492,13 +492,15 @@ namespace HangeulAdventure.Game
                 int index = i;
                 var stage = _stages[i];
                 bool isCustom = stage.id >= LevelEditor.CustomIdBase;
-                bool unlocked = isCustom || ProgressStore.IsUnlocked(_stages, i); // 내 스테이지는 항상 열림
+                bool consonantLocked = !isCustom && ProgressStore.GetStars(stage.id) == 0
+                    && ProgressStore.MissingConsonants(stage).Length > 0; // 자음 게이트 (D-22)
+                bool unlocked = (isCustom || ProgressStore.IsUnlocked(_stages, i)) && !consonantLocked;
                 int stars = ProgressStore.GetStars(stage.id);
                 bool ruby = ProgressStore.GetRuby(stage.id);
-                string label = isCustom ? $"C{stage.id - LevelEditor.CustomIdBase}" : stage.id.ToString();
+                string label = consonantLocked ? "▒" : isCustom ? $"C{stage.id - LevelEditor.CustomIdBase}" : stage.id.ToString();
 
                 var btn = UiFactory.CreateButton(gridRect, $"Stage_{stage.id}",
-                    unlocked ? label : "잠김", 30,
+                    unlocked ? label : consonantLocked ? "▒" : "잠김", 30,
                     unlocked ? UiFactory.Paper : new Color(0.82f, 0.80f, 0.76f),
                     unlocked ? UiFactory.Ink : UiFactory.Dim,
                     unlocked ? () => StartStage(index) : (System.Action)null);

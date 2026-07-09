@@ -274,6 +274,18 @@ namespace HangeulAdventure.Game
                 bool isTutorial = System.Array.IndexOf(_map.tutorialStages, v.StageId) >= 0;
                 bool open = tutorialDone || (isTutorial && (cleared || v.StageId == nextTutorial));
 
+                // 자음 게이트 (D-22): 미회수 자음 스테이지는 깨져 보임
+                var stage = _stageLookup.Find(s => s.id == v.StageId);
+                bool consonantLocked = stage != null && ProgressStore.MissingConsonants(stage).Length > 0;
+                if (consonantLocked && !cleared)
+                {
+                    v.Bg.color = new Color(0.35f, 0.33f, 0.31f);
+                    v.Label.text = "▒";
+                    v.Label.color = new Color(0.55f, 0.52f, 0.48f);
+                    continue;
+                }
+                v.Label.text = LabelFor(v.StageId);
+
                 v.Bg.color = cleared ? SpotCleared
                     : v.StageId == nextTutorial ? SpotNext
                     : open ? SpotOpen
@@ -401,6 +413,12 @@ namespace HangeulAdventure.Game
 
             bool open = IsSpotOpen(near.StageId);
             var stage = _stageLookup.Find(s => s.id == near.StageId);
+            string missing = stage != null ? ProgressStore.MissingConsonants(stage) : "";
+            if (missing.Length > 0 && ProgressStore.GetStars(near.StageId) == 0)
+            {
+                _hudHint.text = $"이 글자들은 깨져 있다... 필요한 자음: {string.Join(", ", missing.ToCharArray())}";
+                return;
+            }
             string title = stage != null ? stage.title : near.StageId.ToString();
             string diff = stage != null ? $" · 난이도 {stage.difficulty}" : "";
             _hudHint.text = open
@@ -439,6 +457,11 @@ namespace HangeulAdventure.Game
 
             var stage = _stageLookup.Find(s => s.id == spot.StageId);
             if (stage == null) return;
+            if (ProgressStore.MissingConsonants(stage).Length > 0 && ProgressStore.GetStars(spot.StageId) == 0)
+            {
+                SfxPlayer.Instance?.Fail(); // 자음 게이트: 진입 불가
+                return;
+            }
             _app.StartMapStage(stage, _playerT.localPosition);
         }
 

@@ -45,6 +45,17 @@ namespace HangeulAdventure.Game
                 RecoveredConsonants += c;
         }
 
+        /// <summary>자음 게이트 (D-22): 스테이지가 쓰는 자음이 전부 회수됐는가. 미회수 자음 목록 반환 (빈 문자열 = 통과).</summary>
+        public static string MissingConsonants(Engine.StageData stage)
+        {
+            if (DevMode) return "";
+            string recovered = RecoveredConsonants;
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in stage.UsedBaseConsonants())
+                if (recovered.IndexOf(c) < 0) sb.Append(c);
+            return sb.ToString();
+        }
+
         public static bool IsBossDefeated(string bossId) => PlayerPrefs.GetInt($"boss_{bossId}", 0) == 1;
 
         public static void SetBossDefeated(string bossId)

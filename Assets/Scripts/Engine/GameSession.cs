@@ -122,6 +122,21 @@ namespace HangeulAdventure.Engine
             return true;
         }
 
+        /// <summary>
+        /// (x,y) 타일을 시계 방향 90도 회전 (D-21). 유효한 자모가 되는 회전만 성공, 이동 수 +1.
+        /// </summary>
+        public bool TryRotate(int x, int y)
+        {
+            char tile = GetCell(x, y);
+            char rotated = Hangul.RotateCw(tile);
+            if (rotated == Hangul.Empty) return false;
+
+            PushUndo();
+            _cells[Stage.Index(x, y)] = rotated;
+            _moveCount++;
+            return true;
+        }
+
         public bool Undo()
         {
             if (_undo.Count == 0) return false;

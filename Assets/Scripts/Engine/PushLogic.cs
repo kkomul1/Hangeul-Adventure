@@ -53,8 +53,8 @@ namespace HangeulAdventure.Engine
             newSource = mover;
             newTarget = target;
 
-            if (!targetExists || mover == Hangul.Empty)
-                return PushResultType.Fail;
+            if (!targetExists || mover == Hangul.Empty || mover == Hangul.Rock)
+                return PushResultType.Fail; // 바위는 밀 수 없다 (D-21)
 
             // 1. 합성: 도착지 타일과 전체 합성
             if (target != Hangul.Empty)

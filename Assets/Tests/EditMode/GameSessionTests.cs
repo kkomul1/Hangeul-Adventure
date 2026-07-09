@@ -54,7 +54,49 @@ namespace HangeulAdventure.Engine.Tests
         }
 
         [Test]
-        public void 자모_단독_목표_수집()
+        public void 회전_유효한_모음만_이동수_포함()
+        {
+            var s = Session(new[] { "ㅏㄱ" }, "고");
+            // ㅏ 회전: ㅏ→ㅜ→ㅓ→ㅗ (시계방향 3회)
+            Assert.IsTrue(s.TryRotate(0, 0));
+            Assert.AreEqual('ㅜ', s.GetCell(0, 0));
+            Assert.IsTrue(s.TryRotate(0, 0));
+            Assert.IsTrue(s.TryRotate(0, 0));
+            Assert.AreEqual('ㅗ', s.GetCell(0, 0));
+            Assert.AreEqual(3, s.MoveCount);
+            // 자음은 회전 불가
+            Assert.IsFalse(s.TryRotate(1, 0));
+            Assert.AreEqual(3, s.MoveCount);
+            // undo로 복원
+            Assert.IsTrue(s.Undo());
+            Assert.AreEqual('ㅓ', s.GetCell(0, 0));
+        }
+
+        [Test]
+        public void 바위는_모든_상호작용_불가()
+        {
+            var s = Session(new[] { "ㄱ@ㅏ", "..." }, "가");
+            Assert.IsFalse(s.TryPush(0, 0, Direction.Right).Success); // 바위로 밀기 실패
+            Assert.IsFalse(s.TryPush(1, 0, Direction.Down).Success);  // 바위 자체를 밀기 실패
+            Assert.IsFalse(s.TryRotate(1, 0));                        // 바위 회전 불가
+            Assert.IsFalse(s.TryCollect(1, 0));                       // 바위 수집 불가
+            Assert.AreEqual(0, s.MoveCount);
+        }
+
+        [Test]
+        public void 회전으로_풀리는_스테이지_솔버()
+        {
+            // [ㅏ][ㄱ]: 목표 고 — ㄱ은 못 움직이고(ㅏ가 옆에서 역순 배치) 회전으로 ㅏ→ㅗ 만들어
+            // ㄱ 아래로... 보드 재설계: 세로 2칸 [ㄱ / ㅏ]: ㅏ를 3회전해 ㅗ → 자동으로 고? 인접 세로 배치라
+            // 회전 후 합성은 밀기가 필요. [ㄱ][.] / [ㅏ][.]: ㅏ 3회전(3) → ㄱ↓ 합성(4) → 수집 = 4
+            var stage = StageBuilder.FromRows(new[] { "ㄱ.", "ㅏ." }, StageBuilder.Goal("고"));
+            var r = Solver.Solve(stage);
+            Assert.IsTrue(r.Solvable);
+            Assert.AreEqual(4, r.MinMoves);
+        }
+
+        [Test]
+        public void 자음_단독_목표_수집()
         {
             // 명세 8장: 목표는 자모 단독일 수도 있음 (커리큘럼 초반 "자모 찾기")
             var s = Session(new[] { "ㄱㅏ" }, "ㄱ");

@@ -31,6 +31,7 @@ namespace HangeulAdventure.Engine
                     int i = y * width + x;
                     if (c == '#') { mask[i] = false; cells[i] = Hangul.Empty; }
                     else if (c == '.') { mask[i] = true; cells[i] = Hangul.Empty; }
+                    else if (c == Hangul.Rock) { mask[i] = true; cells[i] = Hangul.Rock; } // 바위 장애물
                     else
                     {
                         if (!Hangul.IsTile(c))

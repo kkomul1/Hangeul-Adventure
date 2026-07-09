@@ -128,6 +128,20 @@ namespace HangeulAdventure.Engine
             return false;
         }
 
+        // ---- 회전 (초안 4장 채용, D-21: 유효한 자모가 되는 회전만 허용) ----
+
+        /// <summary>시계 방향 90도 회전. 유효한 자모가 되지 않으면 '\0' (회전 불가).</summary>
+        public static char RotateCw(char c) => c switch
+        {
+            'ㅏ' => 'ㅜ', 'ㅜ' => 'ㅓ', 'ㅓ' => 'ㅗ', 'ㅗ' => 'ㅏ',
+            'ㅑ' => 'ㅠ', 'ㅠ' => 'ㅕ', 'ㅕ' => 'ㅛ', 'ㅛ' => 'ㅑ',
+            'ㅣ' => 'ㅡ', 'ㅡ' => 'ㅣ',
+            _ => Empty, // 자음·복합모음·글자·바위는 회전 불가
+        };
+
+        /// <summary>바위 (밀기·합성·수집·회전 전부 불가한 장애물 타일).</summary>
+        public const char Rock = '@';
+
         // ---- 축 분석 (이동 잠김 판정용, 명세 5장) ----
 
         /// <summary>
