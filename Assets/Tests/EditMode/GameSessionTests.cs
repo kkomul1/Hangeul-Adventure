@@ -54,6 +54,16 @@ namespace HangeulAdventure.Engine.Tests
         }
 
         [Test]
+        public void 자모_단독_목표_수집()
+        {
+            // 명세 8장: 목표는 자모 단독일 수도 있음 (커리큘럼 초반 "자모 찾기")
+            var s = Session(new[] { "ㄱㅏ" }, "ㄱ");
+            Assert.IsFalse(s.TryCollect(1, 0)); // ㅏ는 목표 아님
+            Assert.IsTrue(s.TryCollect(0, 0));  // ㄱ 수집
+            Assert.IsTrue(s.IsCleared);
+        }
+
+        [Test]
         public void 단어_슬롯_수집_순서무관_중복글자()
         {
             var s = Session(new[] { "수수" }, "수수");

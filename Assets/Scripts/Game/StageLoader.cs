@@ -76,6 +76,9 @@ namespace HangeulAdventure.Game
                 catch (Exception e) { Debug.LogError($"스테이지 로드 실패 ({a.name}): {e.Message}"); }
             }
             list.Sort((a, b) => a.id.CompareTo(b.id));
+            for (int i = 1; i < list.Count; i++)
+                if (list[i].id == list[i - 1].id)
+                    Debug.LogError($"스테이지 id 중복: {list[i].id} — 진행 저장이 섞입니다");
             return list;
         }
     }

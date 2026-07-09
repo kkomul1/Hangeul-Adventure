@@ -129,6 +129,7 @@ namespace HangeulAdventure.Game
             foreach (var t in _tiles.Values) t.SetFilterHighlight(false, false);
         }
 
+        // 엔진의 FindComposablePushes/FindSplittablePushes가 내부에서 Clear 후 채우는 계약이므로 재사용 안전
         private readonly List<(int x, int y, Direction d)> _filterBuffer = new List<(int, int, Direction)>();
 
         /// <summary>Q/E 필터 하이라이트 (명세 9장). 행동 이벤트 시에만 호출 (매 프레임 아님).</summary>

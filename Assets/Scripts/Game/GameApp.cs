@@ -179,6 +179,7 @@ namespace HangeulAdventure.Game
             _hud.Bind(session, index + 1, _stages.Count);
             _hud.NextClicked += OnNextStage;
             _hud.ExitClicked += ShowStageSelect;
+            _hud.RetryClicked += () => StartStage(index); // 클리어 후 재도전 = 완전 재시작 (소프트락 방지)
 
             _controller = _gameRoot.AddComponent<GameController>();
             _controller.Bind(session, _board, _hud, _cam);
@@ -201,12 +202,22 @@ namespace HangeulAdventure.Game
 
         private void DestroyGame()
         {
+            // HUD UI는 GameHud.OnDestroy가 스스로 정리 (소유권 일원화)
             if (_gameRoot != null) { Destroy(_gameRoot); _gameRoot = null; }
-            // HUD가 캔버스에 만든 UI 정리
-            var hudRoot = _canvas != null ? _canvas.transform.Find("Hud") : null;
-            if (hudRoot != null) Destroy(hudRoot.gameObject);
-            var popup = _canvas != null ? _canvas.transform.Find("ClearPopup") : null;
-            if (popup != null) Destroy(popup.gameObject);
+        }
+
+        private int _lastScreenW, _lastScreenH;
+
+        private void Update()
+        {
+            // 창 크기 변경 시 카메라 재핏
+            if (_board != null && _gameRoot != null
+                && (Screen.width != _lastScreenW || Screen.height != _lastScreenH))
+            {
+                _lastScreenW = Screen.width;
+                _lastScreenH = Screen.height;
+                FitCamera(_board.Session.Stage);
+            }
         }
     }
 }

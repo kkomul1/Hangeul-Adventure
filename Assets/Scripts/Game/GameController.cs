@@ -23,7 +23,6 @@ namespace HangeulAdventure.Game
         private const float DragThreshold = 0.35f;
 
         private bool _finished;
-        public System.Action StageCleared;
 
         public void Bind(GameSession session, BoardView board, GameHud hud, Camera cam)
         {
@@ -48,35 +47,33 @@ namespace HangeulAdventure.Game
             if (_session == null || _finished) return;
             var kb = Keyboard.current;
             var mouse = Mouse.current;
-            if (kb == null) return;
 
-            // Q/E 필터 (홀드) — 상태는 행동 시에만 변하므로 눌림/뗌 엣지에서만 재계산
-            if (kb.qKey.wasPressedThisFrame) _board.ShowFilter(true, false);
-            if (kb.eKey.wasPressedThisFrame) _board.ShowFilter(false, true);
-            if (kb.qKey.wasReleasedThisFrame || kb.eKey.wasReleasedThisFrame)
+            if (kb != null)
             {
-                _board.ClearHighlights();
-                ApplySelectionOutline();
+                // Q/E 필터 (홀드) — 눌림/뗌 엣지와 행동 시에만 재계산
+                if (kb.qKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame
+                    || kb.qKey.wasReleasedThisFrame || kb.eKey.wasReleasedThisFrame)
+                    RefreshHighlights();
+
+                if (kb.zKey.wasPressedThisFrame) OnUndo();
+                if (kb.rKey.wasPressedThisFrame) OnReset();
+
+                // 방향키/WASD: 선택 타일 밀기
+                if (HasSelection())
+                {
+                    if (Pressed(kb.upArrowKey, kb.wKey)) DoPush(Direction.Up);
+                    else if (Pressed(kb.downArrowKey, kb.sKey)) DoPush(Direction.Down);
+                    else if (Pressed(kb.leftArrowKey, kb.aKey)) DoPush(Direction.Left);
+                    else if (Pressed(kb.rightArrowKey, kb.dKey)) DoPush(Direction.Right);
+                    else if (kb.spaceKey.wasPressedThisFrame) DoCollect(-1);
+                }
             }
 
-            if (kb.zKey.wasPressedThisFrame) OnUndo();
-            if (kb.rKey.wasPressedThisFrame) OnReset();
-
-            // 방향키/WASD: 선택 타일 밀기
-            if (HasSelection())
-            {
-                if (Pressed(kb.upArrowKey, kb.wKey)) DoPush(Direction.Up);
-                else if (Pressed(kb.downArrowKey, kb.sKey)) DoPush(Direction.Down);
-                else if (Pressed(kb.leftArrowKey, kb.aKey)) DoPush(Direction.Left);
-                else if (Pressed(kb.rightArrowKey, kb.dKey)) DoPush(Direction.Right);
-                else if (kb.spaceKey.wasPressedThisFrame) DoCollect(-1);
-            }
-
-            // 마우스: 클릭 선택 + 드래그 밀기
+            // 마우스: 클릭 선택 + 드래그 밀기 (키보드 없어도 동작)
             if (mouse != null)
             {
                 Vector2 world = _cam.ScreenToWorldPoint(mouse.position.ReadValue());
-                if (mouse.leftButton.wasPressedThisFrame)
+                if (mouse.leftButton.wasPressedThisFrame && !IsPointerOverUi())
                 {
                     var tile = TileAt(world);
                     if (tile != null)
@@ -101,6 +98,28 @@ namespace HangeulAdventure.Game
                         DoPush(d);
                     }
                 }
+            }
+        }
+
+        /// <summary>UI 위 클릭이 보드까지 관통하지 않도록 (버튼/슬롯 클릭 보호).</summary>
+        private static bool IsPointerOverUi()
+            => UnityEngine.EventSystems.EventSystem.current != null
+               && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+
+        /// <summary>Q/E 홀드 상태를 반영해 하이라이트 갱신. 필터 미사용 시 선택 외곽선.</summary>
+        private void RefreshHighlights()
+        {
+            var kb = Keyboard.current;
+            bool q = kb != null && kb.qKey.isPressed;
+            bool e = kb != null && kb.eKey.isPressed;
+            if (q || e)
+            {
+                _board.ShowFilter(q, e);
+            }
+            else
+            {
+                _board.ClearHighlights();
+                ApplySelectionOutline();
             }
         }
 
@@ -181,7 +200,7 @@ namespace HangeulAdventure.Game
             {
                 _board.SyncTiles(animate: false);
                 _selX = _selY = -1;
-                ApplySelectionOutline();
+                RefreshHighlights();
                 _hud.Refresh();
             }
         }
@@ -198,7 +217,7 @@ namespace HangeulAdventure.Game
         private void AfterAction()
         {
             _hud.Refresh();
-            ApplySelectionOutline();
+            RefreshHighlights();
 
             if (_session.IsCleared)
             {
@@ -206,7 +225,6 @@ namespace HangeulAdventure.Game
                 SfxPlayer.Instance?.Clear();
                 ProgressStore.Record(_session.Stage.id, _session.Stars(), _session.IsRuby, _session.MoveCount);
                 _hud.ShowClearPopup();
-                StageCleared?.Invoke();
             }
         }
     }

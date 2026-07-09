@@ -8,14 +8,22 @@ namespace HangeulAdventure.Game
     /// </summary>
     public class SfxPlayer : MonoBehaviour
     {
-        public static SfxPlayer Instance { get; private set; }
+        private static SfxPlayer _instance;
+
+        /// <summary>파괴된 경우 진짜 null을 반환해 ?. 호출이 안전하도록 함.</summary>
+        public static SfxPlayer Instance => _instance != null ? _instance : null;
 
         private AudioSource _source;
         private AudioClip _move, _compose, _split, _fail, _collect, _clear;
 
+        private void OnDestroy()
+        {
+            if (_instance == this) _instance = null;
+        }
+
         private void Awake()
         {
-            Instance = this;
+            _instance = this;
             _source = gameObject.AddComponent<AudioSource>();
             _source.playOnAwake = false;
             _source.volume = 0.5f;
