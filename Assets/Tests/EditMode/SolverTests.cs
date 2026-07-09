@@ -14,11 +14,11 @@ namespace HangeulAdventure.Engine.Tests
         }
 
         [Test]
-        public void 최소수_합성1_수집1()
+        public void 최소수_합성1_수집은_무료()
         {
             var r = Solver.Solve(Stage(new[] { "ㄱㅏ" }, "가"));
             Assert.IsTrue(r.Solvable);
-            Assert.AreEqual(2, r.MinMoves);
+            Assert.AreEqual(1, r.MinMoves); // 합성1 (수집 0)
         }
 
         [Test]
@@ -26,7 +26,7 @@ namespace HangeulAdventure.Engine.Tests
         {
             var r = Solver.Solve(Stage(new[] { "ㄱ.ㅏ" }, "가"));
             Assert.IsTrue(r.Solvable);
-            Assert.AreEqual(3, r.MinMoves); // 이동1 + 합성1 + 수집1
+            Assert.AreEqual(2, r.MinMoves); // 이동1 + 합성1 (수집 0)
         }
 
         [Test]
@@ -47,20 +47,19 @@ namespace HangeulAdventure.Engine.Tests
         [Test]
         public void 연쇄_경로_탐색()
         {
-            // 사ㅣ → (사→: ㅅ|ㅐ) → (ㅐ←: 새) → 수집 = 3수
+            // 사ㅣ → (사→: ㅅ|ㅐ) → (ㅐ←: 새) → 수집(무료) = 2수
             var r = Solver.Solve(Stage(new[] { "사ㅣ" }, "새"));
             Assert.IsTrue(r.Solvable);
-            Assert.AreEqual(3, r.MinMoves);
+            Assert.AreEqual(2, r.MinMoves);
         }
 
         [Test]
         public void 받침_왕복_경로()
         {
-            // 세로 1열: 간(위) ㅗ(아래). 목표 '노'... 간↓ 분해연쇄로 ㄴ+ㅗ=노!
-            // 상태: [간][ㅗ] → 간↓: 가 남고 ㄴ이 ㅗ와 결합해 노 → 수집 = 2수
+            // 세로 1열: 간(위) ㅗ(아래). 간↓: 가 남고 ㄴ이 ㅗ와 결합해 노 → 수집(무료) = 1수
             var r = Solver.Solve(Stage(new[] { "간", "ㅗ" }, "노"));
             Assert.IsTrue(r.Solvable);
-            Assert.AreEqual(2, r.MinMoves);
+            Assert.AreEqual(1, r.MinMoves);
         }
 
         [Test]
@@ -68,9 +67,9 @@ namespace HangeulAdventure.Engine.Tests
         {
             // L자: 오른쪽 위가 없는 칸
             var r = Solver.Solve(Stage(new[] { "ㄱ#", ".ㅏ" }, "가"));
-            // ㄱ(0,1)↓ 이동 → (0,0), ㄱ→ㅏ 합성 → 가, 수집 = 3수
+            // ㄱ(0,1)↓ 이동 → (0,0), ㄱ→ㅏ 합성 → 가, 수집(무료) = 2수
             Assert.IsTrue(r.Solvable);
-            Assert.AreEqual(3, r.MinMoves);
+            Assert.AreEqual(2, r.MinMoves);
         }
 
         [Test]
@@ -78,7 +77,7 @@ namespace HangeulAdventure.Engine.Tests
         {
             var r = Solver.Solve(Stage(new[] { "ㄱㅏ", "ㄴㅏ" }, "가", "나"));
             Assert.IsTrue(r.Solvable);
-            Assert.AreEqual(4, r.MinMoves); // 합성2 + 수집2
+            Assert.AreEqual(2, r.MinMoves); // 합성2 (수집 0)
         }
     }
 }

@@ -3,6 +3,6 @@
   "title": "다시 조립",
   "rows": ["수.", "..", "ㅗ."],
   "goals": [{ "display": "소", "slots": "소" }],
-  "minMoves": 5,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

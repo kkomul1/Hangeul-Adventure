@@ -3,6 +3,6 @@
   "title": "받침",
   "rows": ["ㄱㅏ.", "..ㄴ"],
   "goals": [{ "display": "간", "slots": "간" }],
-  "minMoves": 4,
+  "minMoves": 3,
   "stars": [0, 0, 0]
 }

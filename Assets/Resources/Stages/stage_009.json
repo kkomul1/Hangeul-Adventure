@@ -3,6 +3,6 @@
   "title": "엉뚱한 짝",
   "rows": ["ㅇㅏ.", "..ㅣ", "..."],
   "goals": [{ "display": "이", "slots": "이" }],
-  "minMoves": 4,
+  "minMoves": 3,
   "stars": [0, 0, 0]
 }

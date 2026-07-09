@@ -3,6 +3,6 @@
   "title": "닭",
   "rows": ["ㄷㅏ#", "ㄹ.ㄱ", "#.."],
   "goals": [{ "display": "닭", "slots": "닭" }],
-  "minMoves": 5,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

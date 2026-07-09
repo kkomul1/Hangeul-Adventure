@@ -3,6 +3,6 @@
   "title": "위아래 바꾸기",
   "rows": ["ㅜ.", "ㅁ.", ".."],
   "goals": [{ "display": "무", "slots": "무" }],
-  "minMoves": 6,
+  "minMoves": 5,
   "stars": [0, 0, 0]
 }

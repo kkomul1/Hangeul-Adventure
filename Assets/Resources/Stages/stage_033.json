@@ -3,6 +3,6 @@
   "title": "사자",
   "rows": ["ㅅ.ㅏ", ".ㅈ.", "ㅏ.."],
   "goals": [{ "display": "사자", "slots": "사자" }],
-  "minMoves": 8,
+  "minMoves": 6,
   "stars": [0, 0, 0]
 }

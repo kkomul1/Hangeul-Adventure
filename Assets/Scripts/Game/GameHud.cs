@@ -16,6 +16,7 @@ namespace HangeulAdventure.Game
         private GameSession _session;
         private Canvas _canvas;
         private RectTransform _root;
+        private bool _isTest;
         private TextMeshProUGUI _moveText;
         private TextMeshProUGUI _stageText;
         private RectTransform _goalBar;
@@ -97,8 +98,11 @@ namespace HangeulAdventure.Game
         public void Bind(GameSession session, int stageNumber, int stageCount)
         {
             _session = session;
+            _isTest = stageNumber <= 0;
             _isLastStage = stageNumber >= stageCount;
-            _stageText.text = $"스테이지 {stageNumber}/{stageCount}  {session.Stage.title}";
+            _stageText.text = stageNumber <= 0
+                ? $"테스트 플레이  {session.Stage.title}"
+                : $"스테이지 {stageNumber}/{stageCount}  {session.Stage.title}";
             BuildGoalBar();
             Refresh();
             HidePopup();
@@ -144,7 +148,9 @@ namespace HangeulAdventure.Game
             foreach (var (_, label, bg, idx) in _slotButtons)
             {
                 bool filled = _session.IsSlotFilled(idx);
-                label.text = filled ? _session.SlotChar(idx).ToString() : "";
+                // 미수집 슬롯에도 목표 글자를 흐릿하게 표시 (뭘 만들어야 하는지 항상 보이도록)
+                label.text = _session.SlotChar(idx).ToString();
+                label.color = filled ? UiFactory.Ink : new Color(UiFactory.Ink.r, UiFactory.Ink.g, UiFactory.Ink.b, 0.22f);
                 bg.color = filled ? SlotFilled : SlotEmpty;
             }
         }
@@ -183,11 +189,19 @@ namespace HangeulAdventure.Game
             }
 
             var info = UiFactory.CreateText(box, "Info",
-                $"이동 수 {_session.MoveCount} · 최소 {_session.Stage.minMoves}" + (ruby ? " · 루비!" : ""),
+                $"이동 수 {_session.MoveCount}" + (ruby ? " · 루비!" : ""),
                 22, UiFactory.Dim);
-            UiFactory.SetRect(info.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -45), new Vector2(440, 40));
+            UiFactory.SetRect(info.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -38), new Vector2(440, 34));
 
-            var next = UiFactory.CreateButton(box, "NextBtn", _isLastStage ? "스테이지 선택" : "다음 스테이지", 24,
+            // 별 기준 표시 (별별 요구 최대 이동 수)
+            int[] th = _session.Stage.starThresholds ?? Engine.StageData.DefaultStarThresholds(_session.Stage.minMoves);
+            var criteria = UiFactory.CreateText(box, "Criteria",
+                $"★★★ {th[2]}수 이하 · ★★ {th[1]}수 이하 · 루비 = 최소 {_session.Stage.minMoves}수",
+                18, UiFactory.Dim);
+            UiFactory.SetRect(criteria.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -68), new Vector2(460, 30));
+
+            var next = UiFactory.CreateButton(box, "NextBtn",
+                _isTest ? "에디터로" : _isLastStage ? "스테이지 선택" : "다음 스테이지", 24,
                 UiFactory.Accent, Color.white, () => NextClicked?.Invoke());
             UiFactory.SetRect((RectTransform)next.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-95, 28), new Vector2(200, 60));
 

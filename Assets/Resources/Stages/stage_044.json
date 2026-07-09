@@ -3,6 +3,6 @@
   "title": "의사",
   "rows": ["ㅇ...", ".ㅡㅣ.", "....", "ㅅ..ㅏ"],
   "goals": [{ "display": "의사", "slots": "의사" }],
-  "minMoves": 8,
+  "minMoves": 6,
   "stars": [0, 0, 0]
 }

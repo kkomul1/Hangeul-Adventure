@@ -3,6 +3,6 @@
   "title": "받침 갈아끼우기",
   "rows": ["각.", "..", "ㄴ."],
   "goals": [{ "display": "간", "slots": "간" }],
-  "minMoves": 5,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

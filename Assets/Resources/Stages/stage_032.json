@@ -3,6 +3,6 @@
   "title": "과일",
   "rows": ["ㄱㅗㅏ#", ".ㅇ.ㅣ", "#..ㄹ", "#..."],
   "goals": [{ "display": "과일", "slots": "과일" }],
-  "minMoves": 7,
+  "minMoves": 5,
   "stars": [0, 0, 0]
 }

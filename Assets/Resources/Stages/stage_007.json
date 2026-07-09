@@ -3,6 +3,6 @@
   "title": "길을 비켜라",
   "rows": ["ㄴ..", "ㅁ..", "ㅗ.."],
   "goals": [{ "display": "노", "slots": "노" }],
-  "minMoves": 4,
+  "minMoves": 3,
   "stars": [0, 0, 0]
 }

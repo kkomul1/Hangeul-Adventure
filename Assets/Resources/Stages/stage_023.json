@@ -3,6 +3,6 @@
   "title": "움직이지 않는 글자",
   "rows": ["ㅇ.ㄴ", "ㅗㅏ.", "..."],
   "goals": [{ "display": "완", "slots": "완" }],
-  "minMoves": 7,
+  "minMoves": 6,
   "stars": [0, 0, 0]
 }

@@ -3,6 +3,6 @@
   "title": "세 조각",
   "rows": ["ㅅ.ㄴ", ".ㅁ.", "ㅗ.."],
   "goals": [{ "display": "손", "slots": "손" }],
-  "minMoves": 7,
+  "minMoves": 6,
   "stars": [0, 0, 0]
 }

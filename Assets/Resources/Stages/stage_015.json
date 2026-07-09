@@ -3,6 +3,6 @@
   "title": "빌려 쓰기",
   "rows": [".ㅁㅏ", ".간.", "..."],
   "goals": [{ "display": "만", "slots": "만" }],
-  "minMoves": 5,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

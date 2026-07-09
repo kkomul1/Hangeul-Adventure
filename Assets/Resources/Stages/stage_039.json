@@ -3,6 +3,6 @@
   "title": "딸기",
   "rows": ["ㄷㄷㅏ", "..ㄹ", "ㄱ.ㅣ"],
   "goals": [{ "display": "딸기", "slots": "딸기" }],
-  "minMoves": 7,
+  "minMoves": 5,
   "stars": [0, 0, 0]
 }

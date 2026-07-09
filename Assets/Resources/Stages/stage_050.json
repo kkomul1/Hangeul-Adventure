@@ -3,6 +3,6 @@
   "title": "하늘",
   "rows": ["ㅎ.ㄴㄹ", ".ㅏ..", ".ㅡ..", "#..#"],
   "goals": [{ "display": "하늘", "slots": "하늘" }],
-  "minMoves": 10,
+  "minMoves": 8,
   "stars": [0, 0, 0]
 }

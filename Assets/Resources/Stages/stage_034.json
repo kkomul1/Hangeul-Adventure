@@ -3,6 +3,6 @@
   "title": "두부",
   "rows": ["ㄷㅂ.", "...", "ㅜㅜ."],
   "goals": [{ "display": "두부", "slots": "두부" }],
-  "minMoves": 6,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

@@ -6,6 +6,6 @@
     { "display": "곤", "slots": "곤" },
     { "display": "고", "slots": "고" }
   ],
-  "minMoves": 4,
+  "minMoves": 2,
   "stars": [0, 0, 0]
 }

@@ -3,6 +3,6 @@
   "title": "모음의 방향",
   "rows": ["ㄷㅗ", ".."],
   "goals": [{ "display": "도", "slots": "도" }],
-  "minMoves": 4,
+  "minMoves": 3,
   "stars": [0, 0, 0]
 }

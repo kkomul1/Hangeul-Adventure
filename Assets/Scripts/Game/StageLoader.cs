@@ -65,6 +65,21 @@ namespace HangeulAdventure.Game
             return stage;
         }
 
+        /// <summary>내 스테이지 (persistentDataPath/CustomStages)를 id 순으로 로드.</summary>
+        public static List<StageData> LoadCustom()
+        {
+            var list = new List<StageData>();
+            string dir = System.IO.Path.Combine(Application.persistentDataPath, "CustomStages");
+            if (!System.IO.Directory.Exists(dir)) return list;
+            foreach (string path in System.IO.Directory.GetFiles(dir, "*.json"))
+            {
+                try { list.Add(FromJson(System.IO.File.ReadAllText(path))); }
+                catch (Exception e) { Debug.LogError($"내 스테이지 로드 실패 ({System.IO.Path.GetFileName(path)}): {e.Message}"); }
+            }
+            list.Sort((a, b) => a.id.CompareTo(b.id));
+            return list;
+        }
+
         /// <summary>Resources/Stages의 모든 스테이지를 id 순으로 로드.</summary>
         public static List<StageData> LoadAll()
         {

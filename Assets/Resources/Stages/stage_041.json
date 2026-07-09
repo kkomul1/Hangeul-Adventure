@@ -3,6 +3,6 @@
   "title": "과자",
   "rows": ["ㄱㅗㅏ", ".ㅈ.", "..ㅏ"],
   "goals": [{ "display": "과자", "slots": "과자" }],
-  "minMoves": 6,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

@@ -3,6 +3,6 @@
   "title": "쥐 잡기",
   "rows": ["ㅈㅣ.", "ㅜ..", "..."],
   "goals": [{ "display": "쥐", "slots": "쥐" }],
-  "minMoves": 4,
+  "minMoves": 3,
   "stars": [0, 0, 0]
 }

@@ -3,6 +3,6 @@
   "title": "초성 갈아타기",
   "rows": [".과ㅎ", "...", "..."],
   "goals": [{ "display": "화", "slots": "화" }],
-  "minMoves": 5,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

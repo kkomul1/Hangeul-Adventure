@@ -3,6 +3,6 @@
   "title": "두 모음",
   "rows": ["ㅇ..", "ㅗㅏ."],
   "goals": [{ "display": "와", "slots": "와" }],
-  "minMoves": 3,
+  "minMoves": 2,
   "stars": [0, 0, 0]
 }

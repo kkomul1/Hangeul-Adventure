@@ -3,6 +3,6 @@
   "title": "내 몫",
   "rows": ["ㅁㄱㅅ", "ㅗ..", "..."],
   "goals": [{ "display": "몫", "slots": "몫" }],
-  "minMoves": 6,
+  "minMoves": 5,
   "stars": [0, 0, 0]
 }

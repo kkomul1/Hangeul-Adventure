@@ -3,6 +3,6 @@
   "title": "김밥",
   "rows": ["ㄱㅣ..", "ㅁ...", ".ㅂ..", ".ㅏㅂ."],
   "goals": [{ "display": "김밥", "slots": "김밥" }],
-  "minMoves": 9,
+  "minMoves": 7,
   "stars": [0, 0, 0]
 }

@@ -3,6 +3,6 @@
   "title": "오이 밭",
   "rows": ["ㅇㅗ", "ㅇㅣ"],
   "goals": [{ "display": "오이", "slots": "오이" }],
-  "minMoves": 6,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

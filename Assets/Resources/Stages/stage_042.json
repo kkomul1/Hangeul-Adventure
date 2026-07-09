@@ -3,6 +3,6 @@
   "title": "토끼",
   "rows": ["ㅌ.ㄱ", "ㅗ..", "ㄱ.ㅣ"],
   "goals": [{ "display": "토끼", "slots": "토끼" }],
-  "minMoves": 8,
+  "minMoves": 6,
   "stars": [0, 0, 0]
 }

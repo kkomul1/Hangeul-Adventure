@@ -89,6 +89,26 @@ namespace HangeulAdventure.Game
             rt.sizeDelta = size;
         }
 
+        public static TMP_InputField CreateInput(Transform parent, string name, string placeholder, float fontSize)
+        {
+            var rect = CreatePanel(parent, name, Color.white);
+            var input = rect.gameObject.AddComponent<TMP_InputField>();
+
+            var area = CreateEmpty(rect, "TextArea");
+            Stretch(area, 8);
+            area.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();
+
+            var ph = CreateText(area, "Placeholder", placeholder, fontSize, Dim, TextAlignmentOptions.Left);
+            Stretch(ph.rectTransform);
+            var txt = CreateText(area, "Text", "", fontSize, Ink, TextAlignmentOptions.Left);
+            Stretch(txt.rectTransform);
+
+            input.textViewport = area;
+            input.textComponent = txt;
+            input.placeholder = ph;
+            return input;
+        }
+
         // ---- 절차 생성 스프라이트 ----
 
         private static Sprite _roundedSprite;

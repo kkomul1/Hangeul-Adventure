@@ -3,6 +3,6 @@
   "title": "물길 내기",
   "rows": ["ㅁ.ㄹ", "ㅜ..", "..."],
   "goals": [{ "display": "물", "slots": "물" }],
-  "minMoves": 6,
+  "minMoves": 5,
   "stars": [0, 0, 0]
 }

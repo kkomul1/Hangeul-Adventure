@@ -3,6 +3,6 @@
   "title": "첫 글자",
   "rows": ["ㄱㅏ"],
   "goals": [{ "display": "가", "slots": "가" }],
-  "minMoves": 2,
+  "minMoves": 1,
   "stars": [0, 0, 0]
 }

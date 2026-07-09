@@ -3,6 +3,6 @@
   "title": "곧 간다",
   "rows": [".ㄱㄷ", "...", "ㄷㅗ."],
   "goals": [{ "display": "곧", "slots": "곧" }],
-  "minMoves": 5,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

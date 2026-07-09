@@ -3,6 +3,6 @@
   "title": "아래로",
   "rows": ["ㄱ", ".", "ㅗ"],
   "goals": [{ "display": "고", "slots": "고" }],
-  "minMoves": 3,
+  "minMoves": 2,
   "stars": [0, 0, 0]
 }

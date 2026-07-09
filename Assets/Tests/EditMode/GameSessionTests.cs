@@ -40,15 +40,15 @@ namespace HangeulAdventure.Engine.Tests
         }
 
         [Test]
-        public void 수집_정확일치만_이동수_포함()
+        public void 수집_정확일치만_이동수_미포함()
         {
             var s = Session(new[] { "가나" }, "가");
             // '나'는 목표가 아님 → 수집 실패
             Assert.IsFalse(s.TryCollect(1, 0));
             Assert.AreEqual(0, s.MoveCount);
-            // '가' 수집 성공 → +1, 클리어
+            // '가' 수집 성공 → 클리어. 수집은 이동 수 미포함 (D-15)
             Assert.IsTrue(s.TryCollect(0, 0));
-            Assert.AreEqual(1, s.MoveCount);
+            Assert.AreEqual(0, s.MoveCount);
             Assert.AreEqual('\0', s.GetCell(0, 0));
             Assert.IsTrue(s.IsCleared);
         }
@@ -73,7 +73,7 @@ namespace HangeulAdventure.Engine.Tests
             Assert.IsFalse(s.IsCleared);
             Assert.IsTrue(s.TryCollect(0, 0));
             Assert.IsTrue(s.IsCleared);
-            Assert.AreEqual(2, s.MoveCount);
+            Assert.AreEqual(0, s.MoveCount); // 수집은 미카운트
         }
 
         [Test]
@@ -124,34 +124,34 @@ namespace HangeulAdventure.Engine.Tests
         public void 별_판정()
         {
             var stage = StageBuilder.FromRows(new[] { "ㄱㅏ" }, StageBuilder.Goal("가"));
-            stage.minMoves = 2; // 합성 1 + 수집 1
-            stage.starThresholds = StageData.DefaultStarThresholds(2); // 3별<=3, 2별<=4
+            stage.minMoves = 1; // 합성 1 (수집은 미카운트)
+            stage.starThresholds = StageData.DefaultStarThresholds(1); // 3별<=2
 
             var s = new GameSession(stage);
             Assert.IsTrue(s.TryPush(0, 0, Direction.Right).Success);
             Assert.IsTrue(s.TryCollect(1, 0));
             Assert.IsTrue(s.IsCleared);
-            Assert.AreEqual(2, s.MoveCount);
+            Assert.AreEqual(1, s.MoveCount);
             Assert.AreEqual(3, s.Stars());
             Assert.IsTrue(s.IsRuby); // 정확히 최소 수
         }
 
         [Test]
-        public void 루비아닌_3별()
+        public void 루비아닌_별()
         {
             var stage = StageBuilder.FromRows(new[] { "ㄱ.ㅏ" }, StageBuilder.Goal("가"));
-            stage.minMoves = 3;
-            stage.starThresholds = StageData.DefaultStarThresholds(3); // 3별<=4
+            stage.minMoves = 2; // 이동 1 + 합성 1
+            stage.starThresholds = StageData.DefaultStarThresholds(2); // 3별<=3, 2별<=4
 
             var s = new GameSession(stage);
             s.TryPush(0, 0, Direction.Right);  // 1
             s.TryPush(1, 0, Direction.Left);   // 2 (되돌아감 — 낭비)
             s.TryPush(0, 0, Direction.Right);  // 3
             s.TryPush(1, 0, Direction.Right);  // 4 합성
-            Assert.IsTrue(s.TryCollect(2, 0)); // 5 — 잠깐, 3별 기준 4 초과
+            Assert.IsTrue(s.TryCollect(2, 0)); // 수집 미카운트
             Assert.IsTrue(s.IsCleared);
-            Assert.AreEqual(5, s.MoveCount);
-            Assert.AreEqual(2, s.Stars());
+            Assert.AreEqual(4, s.MoveCount);
+            Assert.AreEqual(2, s.Stars()); // 3별 기준(3) 초과, 2별 기준(4) 이내
             Assert.IsFalse(s.IsRuby);
         }
 

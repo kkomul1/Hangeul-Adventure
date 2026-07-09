@@ -3,6 +3,6 @@
   "title": "한 걸음",
   "rows": ["ㄴ.ㅏ"],
   "goals": [{ "display": "나", "slots": "나" }],
-  "minMoves": 3,
+  "minMoves": 2,
   "stars": [0, 0, 0]
 }

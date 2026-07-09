@@ -3,6 +3,6 @@
   "title": "빵",
   "rows": ["ㅂ..", "..ㅂ", "ㅏ..", "..ㅇ"],
   "goals": [{ "display": "빵", "slots": "빵" }],
-  "minMoves": 9,
+  "minMoves": 8,
   "stars": [0, 0, 0]
 }

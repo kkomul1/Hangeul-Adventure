@@ -3,6 +3,6 @@
   "title": "쌍둥이 ㄱ",
   "rows": ["ㄱ.ㄱ", "...", "ㅗ.."],
   "goals": [{ "display": "꼬", "slots": "꼬" }],
-  "minMoves": 5,
+  "minMoves": 4,
   "stars": [0, 0, 0]
 }

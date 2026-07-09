@@ -96,7 +96,7 @@ namespace HangeulAdventure.Engine
 
         /// <summary>
         /// (x,y)의 타일을 수집한다 (명세 8장). slotIndex=-1이면 첫 번째 일치 빈 슬롯.
-        /// 정확 일치하는 미수집 슬롯이 있어야 성공. 성공 시 이동 수 +1.
+        /// 정확 일치하는 미수집 슬롯이 있어야 성공. 수집은 이동 수에 포함되지 않는다 (D-15).
         /// </summary>
         public bool TryCollect(int x, int y, int slotIndex = -1)
         {
@@ -119,7 +119,6 @@ namespace HangeulAdventure.Engine
             PushUndo();
             _cells[Stage.Index(x, y)] = Hangul.Empty;
             _slotFilled[idx] = true;
-            _moveCount++;
             return true;
         }
 

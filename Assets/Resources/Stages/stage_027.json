@@ -3,6 +3,6 @@
   "title": "나무",
   "rows": ["ㄴㅏ.", "ㅁ..", "ㅜ.."],
   "goals": [{ "display": "나무", "slots": "나무" }],
-  "minMoves": 4,
+  "minMoves": 2,
   "stars": [0, 0, 0]
 }

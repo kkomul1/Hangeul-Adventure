@@ -399,10 +399,10 @@ namespace HangeulAdventure.Engine.Tests
             Assert.AreEqual(2, s.MoveCount);
 
             Assert.IsTrue(s.TryCollect(1, 0));
-            Assert.AreEqual(3, s.MoveCount);
+            Assert.AreEqual(2, s.MoveCount); // 수집은 미카운트 (D-15)
             Assert.IsTrue(s.IsCleared);
 
-            // undo 3회로 초기 상태 완전 복원
+            // undo 3회로 초기 상태 완전 복원 (수집도 undo 대상)
             Assert.IsTrue(s.Undo()); // 수집 취소
             Assert.IsFalse(s.IsCleared);
             Assert.AreEqual('간', s.GetCell(1, 0));
@@ -428,18 +428,18 @@ namespace HangeulAdventure.Engine.Tests
         public void 수집으로_공간을_열어야_풀리는_배치_최소수()
         {
             // 1x3 보드 [ㄱ][가][ㅏ], 목표: 가 2개.
-            // 손계산:
-            //  - 첫 수 후보는 둘뿐: (a) 가운데 '가' 수집, (b) 가←ㄱ = 분해연쇄로 ㄲ 생성.
+            // 손계산 (수집=무료, D-15):
+            //  - 첫 행동 후보는 둘뿐: (a) 가운데 '가' 수집(0수), (b) 가←ㄱ = 분해연쇄로 ㄲ 생성.
             //    (ㄱ→가: 합성 규칙 없음+줄밀기 없음=실패, ㅏ←가: 실패, 가→ㅏ: ㅏ+ㅏ 연쇄 불가=실패)
             //  - (b)는 함정: ㄱ+ㄱ이 ㄲ로 잠기고, ㄲ 옆에 ㅏ가 오면 합성 우선으로 까만 생김.
             //    까 분해는 표준쌍 ㄲ+ㅏ로만 → 이 가지에선 '가'를 두 번 다시 못 만듦.
-            //  - 정해: 수집(1) → ㄱ 이동(2) → ㄱ+ㅏ 합성(3) → 수집(4). 합성엔 인접이 필요해 3수는 불가.
+            //  - 정해: 수집(0) → ㄱ 이동(1) → ㄱ+ㅏ 합성(2) → 수집(0) = 2수. 합성엔 인접이 필요해 1수는 불가.
             var stage = StageBuilder.FromRows(new[] { "ㄱ가ㅏ" },
                 StageBuilder.Goal("가"), StageBuilder.Goal("가"));
 
             var r = Solver.Solve(stage);
             Assert.IsTrue(r.Solvable);
-            Assert.AreEqual(4, r.MinMoves, "가운데 '가'를 먼저 수집해 공간을 열어야 최단");
+            Assert.AreEqual(2, r.MinMoves, "가운데 '가'를 먼저 수집(무료)해 공간을 열어야 최단");
 
             // 같은 풀이를 세션으로 재현
             var s = new GameSession(stage);
@@ -450,7 +450,7 @@ namespace HangeulAdventure.Engine.Tests
             Assert.AreEqual(PushResultType.Compose, s.TryPush(1, 0, Direction.Right).Type);
             Assert.IsTrue(s.TryCollect(2, 0));
             Assert.IsTrue(s.IsCleared);
-            Assert.AreEqual(4, s.MoveCount);
+            Assert.AreEqual(2, s.MoveCount);
         }
     }
 }

@@ -3,6 +3,6 @@
   "title": "화가",
   "rows": ["#ㅎ..", "ㅗㅏ.ㄱ", "#..ㅏ", "#..."],
   "goals": [{ "display": "화가", "slots": "화가" }],
-  "minMoves": 7,
+  "minMoves": 5,
   "stars": [0, 0, 0]
 }
