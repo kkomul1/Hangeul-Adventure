@@ -116,6 +116,7 @@ namespace HangeulAdventure.Game
                 PlayerPrefs.DeleteAll();
                 PlayerPrefs.Save();
                 _subtitle.text = SubtitleDefault;
+                RefreshTitleBrokenness(); // 인트로 전 상태로 돌아가므로 온전한 타이틀 복원
             });
             UiFactory.SetRect((RectTransform)wipe.transform, new Vector2(0.5f, 0.11f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(170, 48));
         }
