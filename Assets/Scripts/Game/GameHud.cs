@@ -95,13 +95,16 @@ namespace HangeulAdventure.Game
             UiFactory.SetRect(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, 14), new Vector2(900, 30));
         }
 
-        public void Bind(GameSession session, int stageNumber, int stageCount)
+        private string _nextLabelOverride;
+
+        public void Bind(GameSession session, int stageNumber, int stageCount, string nextLabel = null)
         {
             _session = session;
             _isTest = stageNumber <= 0;
             _isLastStage = stageNumber >= stageCount;
+            _nextLabelOverride = nextLabel;
             _stageText.text = stageNumber <= 0
-                ? $"테스트 플레이  {session.Stage.title}"
+                ? session.Stage.title
                 : $"스테이지 {stageNumber}/{stageCount}  {session.Stage.title}";
             BuildGoalBar();
             Refresh();
@@ -201,7 +204,7 @@ namespace HangeulAdventure.Game
             UiFactory.SetRect(criteria.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -68), new Vector2(460, 30));
 
             var next = UiFactory.CreateButton(box, "NextBtn",
-                _isTest ? "에디터로" : _isLastStage ? "스테이지 선택" : "다음 스테이지", 24,
+                _nextLabelOverride ?? (_isTest ? "에디터로" : _isLastStage ? "스테이지 선택" : "다음 스테이지"), 24,
                 UiFactory.Accent, Color.white, () => NextClicked?.Invoke());
             UiFactory.SetRect((RectTransform)next.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-95, 28), new Vector2(200, 60));
 

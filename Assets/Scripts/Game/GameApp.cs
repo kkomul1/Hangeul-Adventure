@@ -93,11 +93,14 @@ namespace HangeulAdventure.Game
             // 히든 개발자 모드 토글: 타이틀의 '어' 글자 위에 투명 버튼 배치 (TMP 글리프 좌표 기반)
             StartCoroutine(PlaceDevToggle(title));
 
-            var start = UiFactory.CreateButton(_titlePanel, "StartBtn", "시작", 30, UiFactory.Accent, Color.white, ShowStageSelect);
-            UiFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(240, 72));
+            var adventure = UiFactory.CreateButton(_titlePanel, "AdventureBtn", "모험 시작", 30, UiFactory.Accent, Color.white, StartAdventure);
+            UiFactory.SetRect((RectTransform)adventure.transform, new Vector2(0.5f, 0.38f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(240, 72));
 
-            var editorBtn = UiFactory.CreateButton(_titlePanel, "EditorBtn", "레벨 에디터", 24, UiFactory.Paper, UiFactory.Ink, ShowLevelEditor);
-            UiFactory.SetRect((RectTransform)editorBtn.transform, new Vector2(0.5f, 0.26f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(200, 58));
+            var start = UiFactory.CreateButton(_titlePanel, "StartBtn", "스테이지 목록", 22, UiFactory.Paper, UiFactory.Ink, ShowStageSelect);
+            UiFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0.28f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(200, 56));
+
+            var editorBtn = UiFactory.CreateButton(_titlePanel, "EditorBtn", "레벨 에디터", 22, UiFactory.Paper, UiFactory.Ink, ShowLevelEditor);
+            UiFactory.SetRect((RectTransform)editorBtn.transform, new Vector2(0.5f, 0.20f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(200, 56));
 
             var wipe = UiFactory.CreateButton(_titlePanel, "WipeBtn", "진행 초기화", 18, UiFactory.Paper, UiFactory.Dim, () =>
             {
@@ -105,7 +108,7 @@ namespace HangeulAdventure.Game
                 PlayerPrefs.Save();
                 _subtitle.text = SubtitleDefault;
             });
-            UiFactory.SetRect((RectTransform)wipe.transform, new Vector2(0.5f, 0.16f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(170, 48));
+            UiFactory.SetRect((RectTransform)wipe.transform, new Vector2(0.5f, 0.11f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(170, 48));
         }
 
         private System.Collections.IEnumerator PlaceDevToggle(TMPro.TextMeshProUGUI title)
@@ -168,6 +171,77 @@ namespace HangeulAdventure.Game
         }
 
         public void ShowTitleFromEditor() => ShowTitle();
+
+        // ---- 맵 모드 (모험) ----
+
+        private List<MapData> _maps;
+        private MapWorld _mapWorld;
+        private int _currentMapIndex;
+        private Vector2? _mapReturnPos;
+        private Engine.StageData _mapStage; // 맵에서 진입한 스테이지 (재도전용)
+
+        private void StartAdventure()
+        {
+            _maps ??= MapLoader.LoadAll();
+            if (_maps.Count == 0) { Debug.LogError("맵이 없습니다 (Resources/Maps)"); return; }
+
+            // 해금된 맵 중 "아직 출구를 못 연" 첫 맵으로 (전부 열렸으면 마지막 맵)
+            int index = 0;
+            for (int i = 0; i < _maps.Count; i++)
+            {
+                if (!MapProgress.IsMapUnlocked(_maps, i)) break;
+                index = i;
+                if (!MapProgress.ExitOpen(_maps[i])) break;
+            }
+            StartMap(index, null);
+        }
+
+        private void StartMap(int index, Vector2? playerPos)
+        {
+            DestroyGame();
+            _titlePanel.gameObject.SetActive(false);
+            if (_selectPanel != null) _selectPanel.gameObject.SetActive(false);
+            if (_editor != null) _editor.Hide();
+            if (_manager != null) _manager.Hide();
+
+            _currentMapIndex = index;
+            var go = new GameObject("MapWorld", typeof(MapWorld));
+            _mapWorld = go.GetComponent<MapWorld>();
+            _mapWorld.Enter(this, _maps[index], _stages, _cam, _canvas, playerPos);
+        }
+
+        /// <summary>맵에서 퍼즐 지점 진입. 종료/클리어 시 같은 위치로 복귀.</summary>
+        public void StartMapStage(Engine.StageData stage, Vector2 playerPos)
+        {
+            _mapReturnPos = playerPos;
+            _mapStage = stage;
+            StartSession(stage, -3);
+        }
+
+        private void ReturnToMap()
+        {
+            DestroyGame();
+            StartMap(_currentMapIndex, _mapReturnPos);
+        }
+
+        public void GoToNextMap()
+        {
+            if (_currentMapIndex + 1 < _maps.Count)
+                StartMap(_currentMapIndex + 1, null);
+            else
+                LeaveMapToTitle(); // 마지막 맵: 일단 타이틀로 (엔딩 연출은 이후 단계)
+        }
+
+        public void LeaveMapToTitle()
+        {
+            DestroyMapWorld();
+            ShowTitle();
+        }
+
+        private void DestroyMapWorld()
+        {
+            if (_mapWorld != null) { Destroy(_mapWorld.gameObject); _mapWorld = null; }
+        }
 
         // ---- 내 스테이지 관리 ----
 
@@ -298,7 +372,8 @@ namespace HangeulAdventure.Game
 
             _hud = _gameRoot.AddComponent<GameHud>();
             _hud.Build(_canvas);
-            _hud.Bind(session, isTest ? 0 : index + 1, _stages.Count);
+            string nextLabel = index == -1 ? "에디터로" : index == -2 ? "목록으로" : index == -3 ? "지도로" : null;
+            _hud.Bind(session, isTest ? 0 : index + 1, _stages.Count, nextLabel);
             if (index == -1)
             {
                 _hud.NextClicked += ShowLevelEditor;
@@ -310,6 +385,12 @@ namespace HangeulAdventure.Game
                 _hud.NextClicked += ShowManagerAgain;
                 _hud.ExitClicked += ShowManagerAgain;
                 _hud.RetryClicked += () => StartCustomPlay(stage);
+            }
+            else if (index == -3)
+            {
+                _hud.NextClicked += ReturnToMap;
+                _hud.ExitClicked += ReturnToMap;
+                _hud.RetryClicked += () => StartSession(_mapStage, -3);
             }
             else
             {
@@ -341,6 +422,7 @@ namespace HangeulAdventure.Game
         {
             // HUD UI는 GameHud.OnDestroy가 스스로 정리 (소유권 일원화)
             if (_gameRoot != null) { Destroy(_gameRoot); _gameRoot = null; }
+            DestroyMapWorld();
         }
 
         private int _lastScreenW, _lastScreenH;
