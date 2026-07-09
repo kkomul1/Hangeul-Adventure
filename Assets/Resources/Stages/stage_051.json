@@ -1,9 +1,1 @@
-{
-  "id": 51,
-  "title": "값",
-  "rows": ["ㄱ..ㅏ", "###.", "ㅂ...", "..ㅅ#"],
-  "goals": [{ "display": "값", "slots": "값" }],
-  "minMoves": 10,
-  "stars": [0, 0, 0],
-  "difficulty": 2
-}
+{ "id": 51, "title": "값", "rows": ["ㅂㅅㄱ.", "ㅏ@ㅏㅅ", ".ㄱㅂ."], "goals": [{ "display": "값", "slots": "값" }], "minMoves": 6, "stars": [0,0,0], "difficulty": 3 }

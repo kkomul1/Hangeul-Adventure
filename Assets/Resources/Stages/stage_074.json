@@ -1,0 +1,9 @@
+{
+  "id": 74,
+  "title": "굳게 닫힌 문",
+  "rows": ["ㅁㅏ.", "@ㄴㅏ", "ㄴ.@"],
+  "goals": [{ "display": "문", "slots": "문" }],
+  "minMoves": 6,
+  "stars": [0, 0, 0],
+  "difficulty": 3
+}

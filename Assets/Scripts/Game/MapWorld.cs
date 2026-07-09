@@ -265,7 +265,7 @@ namespace HangeulAdventure.Game
 
         public void RefreshStates()
         {
-            int nextTutorial = MapProgress.NextTutorialStage(_map);
+            int nextTutorial = MapProgress.NextTutorialStage(_map, _stageLookup);
             bool tutorialDone = nextTutorial < 0;
 
             foreach (var v in _spotViews.Values)
@@ -430,7 +430,7 @@ namespace HangeulAdventure.Game
 
         private bool IsSpotOpen(int stageId)
         {
-            int next = MapProgress.NextTutorialStage(_map);
+            int next = MapProgress.NextTutorialStage(_map, _stageLookup);
             if (next < 0) return true;
             bool isTutorial = System.Array.IndexOf(_map.tutorialStages, stageId) >= 0;
             return isTutorial && (ProgressStore.GetStars(stageId) > 0 || stageId == next);

@@ -30,9 +30,17 @@
     { "stage": 7, "pos": [12, 6] },
     { "stage": 8, "pos": [4, 3] },
     { "stage": 9, "pos": [8, 3] },
-    { "stage": 10, "pos": [12, 3] }
+    { "stage": 10, "pos": [12, 3] },
+    { "stage": 69, "pos": [15, 6] },
+    { "stage": 70, "pos": [18, 6] },
+    { "stage": 71, "pos": [15, 3] },
+    { "stage": 72, "pos": [18, 3] }
   ],
   "shop": [17, 9],
+  "rooms": [
+    { "stages": [1, 2, 3, 4, 5], "reward": "ㅁ", "label": "아랫마을" },
+    { "stages": [6, 7, 8, 9, 10], "reward": "ㅂ", "label": "웃마을" }
+  ],
   "exits": [
     { "pos": [1, 11], "toMap": 1, "arrive": [26, 3], "label": "시작의 숲", "required": 0 },
     { "pos": [22, 11], "toMap": 3, "arrive": [2, 10], "label": "받침 고개", "required": 3 },

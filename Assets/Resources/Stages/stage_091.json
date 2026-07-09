@@ -1,0 +1,1 @@
+{ "id": 91, "title": "곶감 꼬치", "rows": ["ㄱㅈㄱㅏ", "ㅗ@.ㅁ", "ㄱㅏ@ㅈ", ".ㅁ.."], "goals": [{ "display": "곶감", "slots": "곶감" }], "minMoves": 8, "stars": [0,0,0], "difficulty": 4 }

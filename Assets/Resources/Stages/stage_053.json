@@ -1,9 +1,1 @@
-{
-  "id": 53,
-  "title": "새우",
-  "rows": ["ㅇ사ㅣ.", "###.", "..ㅣ.", "#ㅜ##"],
-  "goals": [{ "display": "새우", "slots": "새우" }],
-  "minMoves": 12,
-  "stars": [0, 0, 0],
-  "difficulty": 3
-}
+{ "id": 53, "title": "새우", "rows": ["ㅜ사ㅣ.", "ㅇ@ㅅ.", ".ㅅㅇㅜ"], "goals": [{ "display": "새우", "slots": "새우" }], "minMoves": 6, "stars": [0,0,0], "difficulty": 3 }

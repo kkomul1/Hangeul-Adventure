@@ -1,0 +1,9 @@
+{
+  "id": 75,
+  "title": "만두 빚기",
+  "rows": ["ㄷㅏㄷ.", "ㅁ@ㅜㄴ", "ㅏㄴ@.", ".ㅁㅜ."],
+  "goals": [{ "display": "만두", "slots": "만두" }],
+  "minMoves": 7,
+  "stars": [0, 0, 0],
+  "difficulty": 4
+}

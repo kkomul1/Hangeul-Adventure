@@ -1,0 +1,9 @@
+{
+  "id": 83,
+  "title": "바위 절벽",
+  "rows": ["ㅇ.ㄴㅣ", "ㅏ@ㅜ.", "ㅂㅂ@ㅣ", "ㅇ.ㅏ."],
+  "goals": [{ "display": "바위", "slots": "바위" }],
+  "minMoves": 8,
+  "stars": [0, 0, 0],
+  "difficulty": 4
+}

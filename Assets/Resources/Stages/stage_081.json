@@ -1,0 +1,9 @@
+{
+  "id": 81,
+  "title": "여덟 걸음",
+  "rows": ["ㅇㅠ.ㄷ", "@.ㅂㅜ", "ㄹ.@.", ".ㅂㄹ."],
+  "goals": [{ "display": "여덟", "slots": "여덟" }],
+  "minMoves": 10,
+  "stars": [0, 0, 0],
+  "difficulty": 4
+}

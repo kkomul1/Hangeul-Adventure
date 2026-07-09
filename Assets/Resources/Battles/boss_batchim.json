@@ -5,7 +5,7 @@
   "maxHp": 30,
   "atk": 5,
   "def": 1,
-  "rewardConsonant": "ㄹ",
+  "rewardConsonant": "ㅇ",
   "trials": [
     { "rows": ["ㄱㅏ.", "..ㄴ"], "goals": "간", "moveLimit": 4 },
     { "rows": ["ㅁㅏ.", "..ㄹ"], "goals": "말", "moveLimit": 4 },

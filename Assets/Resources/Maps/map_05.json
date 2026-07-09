@@ -44,7 +44,26 @@
     { "stage": 47, "pos": [14, 3] },
     { "stage": 48, "pos": [17, 3] },
     { "stage": 49, "pos": [20, 3] },
-    { "stage": 50, "pos": [22, 3] }
+    { "stage": 50, "pos": [22, 3] },
+    { "stage": 51, "pos": [4, 8] },
+    { "stage": 52, "pos": [8, 8] },
+    { "stage": 53, "pos": [12, 8] },
+    { "stage": 54, "pos": [16, 8] },
+    { "stage": 84, "pos": [5, 12] },
+    { "stage": 85, "pos": [7, 12] },
+    { "stage": 86, "pos": [9, 12] },
+    { "stage": 87, "pos": [11, 12] },
+    { "stage": 88, "pos": [13, 12] },
+    { "stage": 89, "pos": [15, 12] },
+    { "stage": 90, "pos": [17, 12] },
+    { "stage": 91, "pos": [19, 12] },
+    { "stage": 92, "pos": [21, 12] },
+    { "stage": 93, "pos": [23, 12] }
+  ],
+  "boss": { "pos": [24, 12], "config": "boss_word" },
+  "rooms": [
+    { "stages": [27, 28, 29, 30, 31, 32, 33, 34], "reward": "ㅌ", "label": "장터 초입" },
+    { "stages": [35, 36, 37, 38, 39, 40, 41, 42], "reward": "ㅍ", "label": "장터 안쪽" }
   ],
   "exits": [
     { "pos": [1, 11], "toMap": 2, "arrive": [21, 6], "label": "시작의 마을", "required": 0 }

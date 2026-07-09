@@ -1,0 +1,10 @@
+{
+  "id": 73,
+  "title": "묶인 소",
+  "rows": ["ㅅㄴㅅ", "ㄴㅗ@", "..ㅜ"],
+  "pins": ["...", ".!.", "..."],
+  "goals": [{ "display": "손", "slots": "손" }],
+  "minMoves": 7,
+  "stars": [0, 0, 0],
+  "difficulty": 3
+}

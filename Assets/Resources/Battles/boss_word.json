@@ -1,0 +1,16 @@
+{
+  "id": "word",
+  "name": "낱말 장사꾼",
+  "intro": "어서 오시게~ 글자 한 자에 엽전 열 냥, 낱말 하나엔 백 냥이라네. 뭐? 'ㅎ'을 그냥 내놓으라고? 흥, 세상에 공짜는 없지. 자네 솜씨를 값으로 쳐주겠네!",
+  "maxHp": 50,
+  "atk": 7,
+  "def": 2,
+  "rewardConsonant": "ㅎ",
+  "trials": [
+    { "rows": ["ㄱㅏ..", "ㄱㅓㅣ."], "goals": "가게", "moveLimit": 4 },
+    { "rows": ["ㄷㅈ.", "ㅗㅜ.", "ㄴㄹ."], "goals": "돈줄", "moveLimit": 5 },
+    { "rows": ["ㅎ.", "ㅣ.", "ㅇ."], "goals": "흥", "moveLimit": 4 },
+    { "rows": ["ㅈㅏ.ㅂ", "ㅇ..ㅜ"], "goals": "장부", "moveLimit": 4 },
+    { "rows": ["ㅎㅏ.", "..ㄱ"], "goals": "학", "moveLimit": 4 }
+  ]
+}

@@ -1,0 +1,1 @@
+{ "id": 85, "title": "부엌 살림", "rows": ["ㅂ.ㅏㅇ", "@ㅏㅋ@", "ㅇ..ㅂ"], "goals": [{ "display": "부엌", "slots": "부엌" }], "minMoves": 10, "stars": [0,0,0], "difficulty": 4 }

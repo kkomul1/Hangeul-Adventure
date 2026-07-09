@@ -1,0 +1,10 @@
+{
+  "id": 76,
+  "title": "얼음 눈",
+  "rows": ["ㄴㄷㄷ", "ㅅㅏ@", ".ㄴㅜ"],
+  "pins": ["...", ".!.", "..."],
+  "goals": [{ "display": "눈", "slots": "눈" }],
+  "minMoves": 5,
+  "stars": [0, 0, 0],
+  "difficulty": 3
+}

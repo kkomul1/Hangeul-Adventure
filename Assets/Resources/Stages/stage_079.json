@@ -1,0 +1,9 @@
+{
+  "id": 79,
+  "title": "돌 틈의 괴물",
+  "rows": ["ㄱㅣ.", "@ㅗㅣ", ".ㅇ@"],
+  "goals": [{ "display": "괴", "slots": "괴" }],
+  "minMoves": 4,
+  "stars": [0, 0, 0],
+  "difficulty": 3
+}

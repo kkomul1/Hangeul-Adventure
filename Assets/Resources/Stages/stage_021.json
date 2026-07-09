@@ -1,8 +1,8 @@
 {
   "id": 21,
   "title": "초성 갈아타기",
-  "rows": [".과ㅎ", "...", "..."],
-  "goals": [{ "display": "화", "slots": "화" }],
+  "rows": [".과ㅂ", "...", "..."],
+  "goals": [{ "display": "봐", "slots": "봐" }],
   "minMoves": 4,
   "stars": [0, 0, 0]
 }

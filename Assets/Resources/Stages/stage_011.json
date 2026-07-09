@@ -1,8 +1,8 @@
 {
   "id": 11,
   "title": "세 조각",
-  "rows": ["ㅅ.ㄴ", ".ㅁ.", "ㅗ.."],
-  "goals": [{ "display": "손", "slots": "손" }],
+  "rows": ["ㄷ.ㄴ", ".ㅁ.", "ㅗ.."],
+  "goals": [{ "display": "돈", "slots": "돈" }],
   "minMoves": 6,
   "stars": [0, 0, 0]
 }

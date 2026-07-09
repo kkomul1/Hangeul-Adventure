@@ -182,10 +182,24 @@ namespace HangeulAdventure.Game
     /// <summary>맵 진행 판정 (스테이지 별 기록 기반).</summary>
     public static class MapProgress
     {
-        public static int NextTutorialStage(MapData map)
+        public static int NextTutorialStage(MapData map) => NextTutorialStage(map, null);
+
+        /// <summary>
+        /// 다음 강제 튜토리얼 스테이지. stages를 주면 자음 게이트(D-22)에 잠긴 스테이지는
+        /// 건너뛴다 — 사다리를 이탈해 진입한 맵에서 튜토리얼이 ▒에 막혀 잠기는 것 방지.
+        /// </summary>
+        public static int NextTutorialStage(MapData map, List<Engine.StageData> stages)
         {
             foreach (int id in map.tutorialStages)
-                if (ProgressStore.GetStars(id) == 0) return id;
+            {
+                if (ProgressStore.GetStars(id) > 0) continue;
+                if (stages != null)
+                {
+                    var stage = stages.Find(s => s.id == id);
+                    if (stage != null && ProgressStore.MissingConsonants(stage).Length > 0) continue;
+                }
+                return id;
+            }
             return -1;
         }
 

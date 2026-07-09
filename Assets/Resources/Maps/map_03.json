@@ -27,9 +27,17 @@
     { "stage": 16, "pos": [7, 6] },
     { "stage": 17, "pos": [11, 6] },
     { "stage": 18, "pos": [6, 3] },
-    { "stage": 19, "pos": [10, 3] }
+    { "stage": 19, "pos": [10, 3] },
+    { "stage": 73, "pos": [15, 9] },
+    { "stage": 74, "pos": [18, 9] },
+    { "stage": 75, "pos": [15, 6] },
+    { "stage": 76, "pos": [3, 3] },
+    { "stage": 77, "pos": [13, 3] }
   ],
   "boss": { "pos": [18, 3], "config": "boss_batchim" },
+  "rooms": [
+    { "stages": [11, 12, 13, 14, 15, 17], "reward": "ㅅ", "label": "받침 고개" }
+  ],
   "exits": [
     { "pos": [1, 8], "toMap": 2, "arrive": [21, 11], "label": "시작의 마을", "required": 0 }
   ]

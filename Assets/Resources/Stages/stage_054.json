@@ -1,9 +1,9 @@
 {
   "id": 54,
   "title": "여왕",
-  "rows": ["ㅇ.ㅕ.", ".##ㅇ", "ㅗ...", "ㅏ.ㅇ#"],
+  "rows": ["ㅇㅠㅇ.", "ㅗ@ㅏㅇ", ".ㅇ.."],
   "goals": [{ "display": "여왕", "slots": "여왕" }],
-  "minMoves": 11,
+  "minMoves": 12,
   "stars": [0, 0, 0],
   "difficulty": 3
 }

@@ -25,7 +25,18 @@
     { "stage": 23, "pos": [3, 6] },
     { "stage": 24, "pos": [7, 6] },
     { "stage": 25, "pos": [6, 3] },
-    { "stage": 26, "pos": [10, 3] }
+    { "stage": 26, "pos": [10, 3] },
+    { "stage": 78, "pos": [12, 9] },
+    { "stage": 79, "pos": [15, 9] },
+    { "stage": 80, "pos": [11, 6] },
+    { "stage": 81, "pos": [15, 6] },
+    { "stage": 82, "pos": [14, 3] },
+    { "stage": 83, "pos": [18, 3] }
+  ],
+  "boss": { "pos": [19, 6], "config": "boss_jamo" },
+  "rooms": [
+    { "stages": [20, 21, 23, 24], "reward": "ㅈ", "label": "바깥마당" },
+    { "stages": [22, 25, 26], "reward": "ㅊ", "label": "안마당" }
   ],
   "exits": [
     { "pos": [1, 8], "toMap": 2, "arrive": [12, 2], "label": "시작의 마을", "required": 0 }

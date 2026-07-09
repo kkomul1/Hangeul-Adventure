@@ -1,0 +1,1 @@
+{ "id": 84, "title": "김치 한 포기", "rows": ["ㅁㄱㅣㅊ", "ㅣ@ㄱㅣ", ".ㅁ.."], "goals": [{ "display": "김치", "slots": "김치" }], "minMoves": 8, "stars": [0,0,0], "difficulty": 3 }

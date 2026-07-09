@@ -24,6 +24,9 @@
     { "stage": 67, "pos": [21, 3] },
     { "stage": 68, "pos": [24, 3] }
   ],
+  "rooms": [
+    { "stages": [61, 62, 63, 64, 65, 66, 67, 68], "reward": "ㄹ", "label": "시작의 숲" }
+  ],
   "exits": [
     { "pos": [27, 3], "toMap": 2, "arrive": [2, 11], "label": "시작의 마을", "required": 8 }
   ]
