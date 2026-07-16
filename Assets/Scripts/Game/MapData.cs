@@ -16,6 +16,7 @@ namespace HangeulAdventure.Game
         public int id;
         public string title = "";
         public string theme = "";
+        public string bgm = "";   // 배경음악 트랙 (선택, Resources/Audio/{bgm}. 생략 시 bgm_forest)
         public string[] terrain;
         public int[] spawn;
         public int[] tutorialStages;
@@ -74,6 +75,7 @@ namespace HangeulAdventure.Game
         public int id;
         public string title;
         public string theme;
+        public string bgm;
         public int width, height;
         public char[] tiles;
         public Vector2Int spawn;
@@ -112,6 +114,7 @@ namespace HangeulAdventure.Game
                 id = mj.id,
                 title = mj.title ?? "",
                 theme = mj.theme ?? "",
+                bgm = mj.bgm ?? "",
                 width = w,
                 height = h,
                 tiles = new char[w * h],

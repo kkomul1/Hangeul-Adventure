@@ -37,6 +37,7 @@ namespace HangeulAdventure.Game
             SetupCamera();
             SetupEventSystem();
             gameObject.AddComponent<SfxPlayer>();
+            gameObject.AddComponent<BgmPlayer>();
 
             _canvas = UiFactory.CreateCanvas("UiCanvas");
             LevelEditor.PurgeExpiredTrash(); // 휴지통 30일 자동 정리
@@ -81,6 +82,7 @@ namespace HangeulAdventure.Game
             DestroyGame();
             if (_selectPanel != null) _selectPanel.gameObject.SetActive(false);
             _titlePanel.gameObject.SetActive(true);
+            BgmPlayer.Instance?.Play("bgm_title");
         }
 
         // ---- 레벨 에디터 ----
@@ -156,6 +158,7 @@ namespace HangeulAdventure.Game
             var go = new GameObject("MapWorld", typeof(MapWorld));
             _mapWorld = go.GetComponent<MapWorld>();
             _mapWorld.Enter(this, _maps[index], _stages, _cam, _canvas, playerPos);
+            BgmPlayer.Instance?.Play(string.IsNullOrEmpty(_maps[index].bgm) ? "bgm_forest" : _maps[index].bgm);
 
             // 방 보상 (D-23): 이 맵의 방을 완주했으면 자음 회수 연출
             var room = MapProgress.PendingRoomReward(_maps[index]);
@@ -204,6 +207,7 @@ namespace HangeulAdventure.Game
 
             var go = new GameObject("BattleScreen");
             go.transform.SetParent(transform, false);
+            BgmPlayer.Instance?.Play("bgm_boss"); // 곡 미도착 시 현재 곡 유지
             var screen = go.AddComponent<BattleScreen>();
             screen.Finished += victory =>
             {
