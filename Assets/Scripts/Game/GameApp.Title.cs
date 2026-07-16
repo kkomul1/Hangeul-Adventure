@@ -17,6 +17,15 @@ namespace HangeulAdventure.Game
 
         private void BuildTitle()
         {
+            // 프리팹 전환 (M3-2): Resources/UiPrefabs/TitlePanel이 있으면 프리팹 사용, 없으면 코드 생성.
+            // 프리팹은 에디터 메뉴 "UI 프리팹 추출 (플레이 중 현재 화면)"로 만든다.
+            var prefab = Resources.Load<GameObject>("UiPrefabs/TitlePanel");
+            if (prefab != null)
+            {
+                BuildTitleFromPrefab(prefab);
+                return;
+            }
+
             _titlePanel = UiFactory.CreatePanel(_canvas.transform, "TitlePanel", BgColor);
             UiFactory.Stretch(_titlePanel);
 
@@ -75,6 +84,59 @@ namespace HangeulAdventure.Game
                 RefreshTitleBrokenness(); // 인트로 전 상태로 돌아가므로 온전한 타이틀 복원
             });
             UiFactory.SetRect((RectTransform)wipe.transform, new Vector2(0.5f, 0.11f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(170, 48));
+        }
+
+        /// <summary>추출된 프리팹으로 타이틀 구성: 이름으로 텍스트·버튼을 다시 배선한다
+        /// (런타임 AddListener는 프리팹에 저장되지 않음).</summary>
+        private void BuildTitleFromPrefab(GameObject prefab)
+        {
+            var go = Instantiate(prefab, _canvas.transform);
+            go.name = "TitlePanel";
+            _titlePanel = (RectTransform)go.transform;
+
+            // 절차 생성 스프라이트(RoundedSprite)는 에셋이 아니라 프리팹에 비어 있음 — 복원
+            foreach (var img in go.GetComponentsInChildren<Image>(true))
+                if (img.sprite == null)
+                {
+                    img.sprite = UiFactory.RoundedSprite();
+                    img.type = Image.Type.Sliced;
+                }
+
+            _titleText = FindDeep(go.transform, "Title")?.GetComponent<TMPro.TextMeshProUGUI>();
+            _subtitle = FindDeep(go.transform, "Subtitle")?.GetComponent<TMPro.TextMeshProUGUI>();
+            if (_subtitle != null && ProgressStore.DevMode) _subtitle.text = "개발자 모드 ON — 전체 스테이지 잠금 해제";
+
+            BindButton(go, "AdventureBtn", StartAdventure);
+            BindButton(go, "StartBtn", ShowStageSelect);
+            BindButton(go, "EditorBtn", ShowLevelEditor);
+            BindButton(go, "CodexBtn", OpenCodex);
+            BindButton(go, "SettingsBtn", ShowSettings);
+            BindButton(go, "DevToggle", ToggleDevMode);
+            BindButton(go, "WipeBtn", () =>
+            {
+                PlayerPrefs.DeleteAll();
+                PlayerPrefs.Save();
+                if (_subtitle != null) _subtitle.text = SubtitleDefault;
+                RefreshTitleBrokenness();
+            });
+
+            RefreshTitleBrokenness();
+        }
+
+        private static Transform FindDeep(Transform root, string name)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                if (t.name == name) return t;
+            return null;
+        }
+
+        private static void BindButton(GameObject root, string name, System.Action onClick)
+        {
+            var t = FindDeep(root.transform, name);
+            var btn = t != null ? t.GetComponent<Button>() : null;
+            if (btn == null) return;
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() => onClick());
         }
 
         private System.Collections.IEnumerator PlaceDevToggle(TMPro.TextMeshProUGUI title)
