@@ -99,11 +99,16 @@ namespace HangeulAdventure.Engine
             }
         }
 
-        /// <summary>기본 별 기준 공식 (명세 7장): 3별 = 최소수 + max(1, round(최소수*0.1))</summary>
+        /// <summary>
+        /// 기본 별 기준 공식 (명세 7장, 2026-07-16 완화 개정): 효율 기준 + 소형 스테이지 하한.
+        /// 3별 = 이동 수 ≤ max(최소수+1, ⌈최소수/0.9⌉) (효율 90% 이상),
+        /// 2별 = ≤ max(최소수+2, ⌈최소수/0.7⌉) (효율 70% 이상), 1별 = 클리어 자체.
+        /// 올림은 정수 연산으로 정확히: ⌈n/0.9⌉ = (n*10+8)/9, ⌈n/0.7⌉ = (n*10+6)/7.
+        /// </summary>
         public static int[] DefaultStarThresholds(int minMoves)
         {
-            int three = minMoves + Math.Max(1, (int)Math.Round(minMoves * 0.1));
-            int two = minMoves + Math.Max(2, (int)Math.Round(minMoves * 0.3));
+            int three = Math.Max(minMoves + 1, (minMoves * 10 + 8) / 9);
+            int two = Math.Max(minMoves + 2, (minMoves * 10 + 6) / 7);
             int one = int.MaxValue; // 1별 = 클리어 자체
             return new[] { one, two, three };
         }
