@@ -8,7 +8,8 @@ namespace HangeulAdventure.Game
     {
         private void BuildTerrain()
         {
-            bool art = ArtLibrary.Available;
+            bool joseon = ArtLibrary.JoseonAvailable;
+            bool art = !joseon && ArtLibrary.Available;
             for (int y = 0; y < _map.height; y++)
             {
                 for (int x = 0; x < _map.width; x++)
@@ -19,6 +20,27 @@ namespace HangeulAdventure.Game
                     go.transform.localPosition = new Vector3(x, y, 0);
                     var sr = go.GetComponent<SpriteRenderer>();
                     sr.sortingOrder = 0;
+
+                    if (joseon)
+                    {
+                        // 조선풍 타일 (M3-6, PixelLab). 순수 타일만 사용 — 전이 타일은 코너 지형값 로직이 필요해 추후
+                        sr.sprite = t switch
+                        {
+                            '-' => ArtLibrary.JoseonTile("TilesetGrassDirt", 3, 0),  // 흙길
+                            '~' => ArtLibrary.JoseonTile("TilesetGrassWater", 3, 0), // 물
+                            _ => ArtLibrary.JoseonTile("TilesetGrassDirt", 1, 2),    // 풀밭 (수풀 벽의 바닥 포함)
+                        };
+                        if (t == '#')
+                        {
+                            // 수풀 벽: 풀밭 위에 겹쳐 배치 (가장자리 투명 요철 아래로 풀이 비침)
+                            var bushGo = new GameObject("Bush", typeof(SpriteRenderer));
+                            bushGo.transform.SetParent(go.transform, false);
+                            var bush = bushGo.GetComponent<SpriteRenderer>();
+                            bush.sprite = ArtLibrary.JoseonBush();
+                            bush.sortingOrder = 1;
+                        }
+                        continue;
+                    }
 
                     if (art)
                     {
@@ -112,7 +134,11 @@ namespace HangeulAdventure.Game
             sr.sortingOrder = 5;
             _playerSr = sr;
 
-            if (ArtLibrary.Available)
+            if (ArtLibrary.JoseonAvailable)
+            {
+                sr.sprite = ArtLibrary.JoseonSeonbi("Idle", 0, 0); // 남향
+            }
+            else if (ArtLibrary.Available)
             {
                 sr.sprite = ArtLibrary.Character("Noble", "Idle", 0, 0);
             }
@@ -137,10 +163,31 @@ namespace HangeulAdventure.Game
             _playerT = go.transform;
         }
 
+        /// <summary>_playerDir(0아래 1위 2왼 3오른) → 조선 시트의 행/열(남0 동1 북2 서3)</summary>
+        private static readonly int[] JoseonDirMap = { 0, 2, 3, 1 };
+
         /// <summary>4방향 걷기 애니메이션 (코드 구동, 초당 8프레임).</summary>
         private void AnimatePlayer()
         {
-            if (!ArtLibrary.Available || _playerSr == null) return;
+            if (_playerSr == null) return;
+
+            if (ArtLibrary.JoseonAvailable)
+            {
+                if (_playerMoving)
+                {
+                    int frame = (int)(Time.time * (_playerRunning ? 13f : 8f)) % 4;
+                    var s = ArtLibrary.JoseonSeonbi("Walk", JoseonDirMap[_playerDir], frame);
+                    if (s != null) _playerSr.sprite = s;
+                }
+                else
+                {
+                    var s = ArtLibrary.JoseonSeonbi("Idle", 0, JoseonDirMap[_playerDir]);
+                    if (s != null) _playerSr.sprite = s;
+                }
+                return;
+            }
+
+            if (!ArtLibrary.Available) return;
             if (_playerMoving)
             {
                 int frame = (int)(Time.time * (_playerRunning ? 13f : 8f)) % 4;

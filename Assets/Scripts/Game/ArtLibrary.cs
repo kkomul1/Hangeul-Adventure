@@ -24,6 +24,25 @@ namespace HangeulAdventure.Game
         public static Sprite Character(string who, string anim, int row, int col)
             => Get($"{Root}/Character/{who}/{anim}", $"{anim}_{row}_{col}");
 
+        // ---- 조선풍 (PixelLab 생성, Art/Joseon — M3-6) ----
+
+        private const string JoseonRoot = "Art/Joseon";
+
+        public static bool JoseonAvailable
+            => Resources.Load<Texture2D>($"{JoseonRoot}/Tilesets/TilesetGrassDirt") != null;
+
+        /// <summary>조선풍 타일: JoseonTile("TilesetGrassDirt", 1, 2) = 순수 풀밭, (3, 0) = 순수 흙길/물</summary>
+        public static Sprite JoseonTile(string sheet, int row, int col)
+            => Get($"{JoseonRoot}/Tilesets/{sheet}", $"{sheet}_{row}_{col}");
+
+        /// <summary>수풀 벽 (단일 스프라이트, PPU 32 = 한 칸)</summary>
+        public static Sprite JoseonBush()
+            => Get($"{JoseonRoot}/Tilesets/BushWall", "BushWall");
+
+        /// <summary>선비 캐릭터: JoseonSeonbi("Walk", 행=방향(남0 동1 북2 서3), 열=프레임). Idle은 1행 4열(남동북서)</summary>
+        public static Sprite JoseonSeonbi(string anim, int row, int col)
+            => Get($"{JoseonRoot}/Character/Seonbi/{anim}", $"{anim}_{row}_{col}");
+
         private static Sprite Get(string path, string name)
         {
             if (!_sheets.TryGetValue(path, out var dict))
