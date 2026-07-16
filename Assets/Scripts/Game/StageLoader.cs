@@ -34,6 +34,7 @@ namespace HangeulAdventure.Game
     {
         public string display = "";
         public string slots = "";
+        public string clue = "";   // 뜻풀이 목표 (M3-3): 있으면 정답 글자를 숨기고 이 문구 표시
     }
 
     public static class StageLoader
@@ -54,6 +55,7 @@ namespace HangeulAdventure.Game
                 {
                     display = string.IsNullOrEmpty(g.display) ? g.slots : g.display,
                     slots = g.slots.ToCharArray(),
+                    clue = g.clue ?? "",
                 };
             }
 

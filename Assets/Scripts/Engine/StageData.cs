@@ -117,5 +117,11 @@ namespace HangeulAdventure.Engine
 
         /// <summary>수집해야 하는 타일들 (정확 일치).</summary>
         public char[] slots;
+
+        /// <summary>
+        /// 뜻풀이 목표 (M3-3): 비어 있지 않으면 미수집 슬롯의 정답 글자를 숨기고 이 문구를 표시.
+        /// 글자수 표기 "(N글자)"는 HUD가 slots.Length로 자동 생성 — 정답과 항상 정확히 일치.
+        /// </summary>
+        public string clue = "";
     }
 }

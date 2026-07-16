@@ -37,6 +37,7 @@
     { "stage": 72, "pos": [18, 3] }
   ],
   "shop": [17, 9],
+  "boss": { "pos": [21, 3], "config": "boss_crossword" },
   "rooms": [
     { "stages": [1, 2, 3, 4, 5], "reward": "ㅁ", "label": "아랫마을" },
     { "stages": [6, 7, 8, 9, 10], "reward": "ㅂ", "label": "웃마을" }

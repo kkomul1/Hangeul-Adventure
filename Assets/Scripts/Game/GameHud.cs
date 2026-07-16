@@ -25,6 +25,7 @@ namespace HangeulAdventure.Game
         private bool _isLastStage;
         private readonly List<(Button btn, TextMeshProUGUI label, Image bg, int slotIndex)> _slotButtons
             = new List<(Button, TextMeshProUGUI, Image, int)>();
+        private readonly HashSet<int> _clueSlots = new HashSet<int>(); // 뜻풀이 목표: 정답 글자 숨김 슬롯
 
         public event Action<int> SlotClicked;   // 진행도 판 슬롯 클릭 (수집 지정)
         public event Action UndoClicked;
@@ -127,11 +128,33 @@ namespace HangeulAdventure.Game
         {
             foreach (Transform child in _goalBar) Destroy(child.gameObject);
             _slotButtons.Clear();
+            _clueSlots.Clear();
 
             int slotIndex = 0;
             foreach (var group in _session.Stage.goals)
             {
-                var groupRect = UiFactory.CreateEmpty(_goalBar, $"Goal_{group.display}");
+                RectTransform host = _goalBar;
+                bool hasClue = !string.IsNullOrEmpty(group.clue);
+                if (hasClue)
+                {
+                    // 뜻풀이 목표 (M3-3): 힌트 문구 위, 빈 슬롯 아래. 글자수는 슬롯 수에서 자동 산출
+                    var wrap = UiFactory.CreateEmpty(_goalBar, $"Clue_{group.display}");
+                    var vLayout = wrap.gameObject.AddComponent<VerticalLayoutGroup>();
+                    vLayout.childAlignment = TextAnchor.MiddleCenter;
+                    vLayout.spacing = 2;
+                    vLayout.childForceExpandWidth = false;
+                    vLayout.childForceExpandHeight = false;
+                    var wrapFitter = wrap.gameObject.AddComponent<ContentSizeFitter>();
+                    wrapFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+                    wrapFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+                    var clueText = UiFactory.CreateText(wrap, "ClueText",
+                        $"{group.clue} ({group.slots.Length}글자)", 18, new Color(0.45f, 0.30f, 0.12f));
+                    clueText.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
+                    host = wrap;
+                }
+
+                var groupRect = UiFactory.CreateEmpty(host, $"Goal_{group.display}");
                 var groupLayout = groupRect.gameObject.AddComponent<HorizontalLayoutGroup>();
                 groupLayout.childAlignment = TextAnchor.MiddleCenter;
                 groupLayout.spacing = 4;
@@ -150,6 +173,7 @@ namespace HangeulAdventure.Game
                     le.preferredWidth = 68;
                     le.preferredHeight = 68;
                     var label = btn.GetComponentInChildren<TextMeshProUGUI>();
+                    if (hasClue) _clueSlots.Add(captured);
                     _slotButtons.Add((btn, label, btn.GetComponent<Image>(), captured));
                     slotIndex++;
                 }
@@ -163,8 +187,9 @@ namespace HangeulAdventure.Game
             foreach (var (_, label, bg, idx) in _slotButtons)
             {
                 bool filled = _session.IsSlotFilled(idx);
-                // 미수집 슬롯에도 목표 글자를 흐릿하게 표시 (뭘 만들어야 하는지 항상 보이도록)
-                label.text = _session.SlotChar(idx).ToString();
+                // 미수집 슬롯에도 목표 글자를 흐릿하게 표시 (뭘 만들어야 하는지 항상 보이도록).
+                // 뜻풀이 목표(clue) 슬롯은 정답이 퍼즐이므로 채워질 때까지 숨긴다 (M3-3)
+                label.text = !filled && _clueSlots.Contains(idx) ? "" : _session.SlotChar(idx).ToString();
                 label.color = filled ? UiFactory.Ink : new Color(UiFactory.Ink.r, UiFactory.Ink.g, UiFactory.Ink.b, 0.22f);
                 bg.color = filled ? SlotFilled : SlotEmpty;
             }
