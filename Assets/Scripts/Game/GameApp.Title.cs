@@ -44,6 +44,9 @@ namespace HangeulAdventure.Game
             var codexBtn = UiFactory.CreateButton(_titlePanel, "CodexBtn", "글자 도감", 22, UiFactory.Paper, UiFactory.Ink, OpenCodex);
             UiFactory.SetRect((RectTransform)codexBtn.transform, new Vector2(0.5f, 0.20f), new Vector2(0.5f, 0.5f), new Vector2(220, 0), new Vector2(180, 56));
 
+            var settings = UiFactory.CreateButton(_titlePanel, "SettingsBtn", "설정", 18, UiFactory.Paper, UiFactory.Ink, ShowSettings);
+            UiFactory.SetRect((RectTransform)settings.transform, new Vector2(0.5f, 0.11f), new Vector2(0.5f, 0.5f), new Vector2(185, 0), new Vector2(120, 48));
+
             var wipe = UiFactory.CreateButton(_titlePanel, "WipeBtn", "진행 초기화", 18, UiFactory.Paper, UiFactory.Dim, () =>
             {
                 PlayerPrefs.DeleteAll();

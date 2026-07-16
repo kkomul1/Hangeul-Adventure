@@ -13,6 +13,9 @@ namespace HangeulAdventure.Game
         /// <summary>파괴된 경우 진짜 null을 반환해 ?. 호출이 안전하도록 함.</summary>
         public static SfxPlayer Instance => _instance != null ? _instance : null;
 
+        public const string VolumePref = "sfx_volume";
+        private const float DefaultVolume = 0.5f;
+
         private AudioSource _source;
         private AudioClip _move, _compose, _split, _fail, _collect, _clear;
 
@@ -26,7 +29,7 @@ namespace HangeulAdventure.Game
             _instance = this;
             _source = gameObject.AddComponent<AudioSource>();
             _source.playOnAwake = false;
-            _source.volume = 0.5f;
+            _source.volume = PlayerPrefs.GetFloat(VolumePref, DefaultVolume);
 
             _move = Tone("sfx_move", new[] { (440f, 0.00f, 0.06f) });
             _compose = Tone("sfx_compose", new[] { (523f, 0.00f, 0.08f), (784f, 0.06f, 0.10f) });
@@ -34,6 +37,17 @@ namespace HangeulAdventure.Game
             _fail = Tone("sfx_fail", new[] { (180f, 0.00f, 0.12f) });
             _collect = Tone("sfx_collect", new[] { (880f, 0.00f, 0.07f), (1175f, 0.05f, 0.12f) });
             _clear = Tone("sfx_clear", new[] { (523f, 0.00f, 0.10f), (659f, 0.09f, 0.10f), (784f, 0.18f, 0.10f), (1047f, 0.27f, 0.22f) });
+        }
+
+        /// <summary>효과음 볼륨 (설정 화면에서 조절, PlayerPrefs 저장). PlayOneShot 배율의 기준값.</summary>
+        public float Volume
+        {
+            get => _source.volume;
+            set
+            {
+                _source.volume = Mathf.Clamp01(value);
+                PlayerPrefs.SetFloat(VolumePref, _source.volume);
+            }
         }
 
         public void Move() => Play(_move);
