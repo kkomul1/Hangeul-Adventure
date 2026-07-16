@@ -106,5 +106,10 @@ InitTestScene*.unity*
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
-# MCP ��ũ���� �ӽ� ����
+# MCP ��ũ���� �ӽ� ����
 /Captures/
+
+# SolverCli는 재현성 확보를 위해 저장소에 포함 (*.csproj 전역 무시의 예외)
+!Tools/SolverCli/SolverCli.csproj
+Tools/SolverCli/bin/
+Tools/SolverCli/obj/
