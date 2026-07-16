@@ -17,6 +17,7 @@ namespace HangeulAdventure.Game
         public int atk = 5;
         public int def = 1;
         public string rewardConsonant = ""; // 격파 시 회수하는 자음
+        public string portrait = "";        // 초상 (Resources/Art/Portraits/{portrait}, 생략 시 id로 탐색)
         public TrialConfig[] trials;
     }
 

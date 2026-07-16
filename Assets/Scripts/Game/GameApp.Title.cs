@@ -20,12 +20,32 @@ namespace HangeulAdventure.Game
             _titlePanel = UiFactory.CreatePanel(_canvas.transform, "TitlePanel", BgColor);
             UiFactory.Stretch(_titlePanel);
 
-            var title = UiFactory.CreateText(_titlePanel, "Title", TitleString, 72, UiFactory.Ink);
+            // 타이틀 키아트 (ArtDrop 임포트분): 비율 유지로 화면을 덮고, 텍스트 가독용 어둡기 오버레이
+            var art = Resources.Load<Sprite>("Art/title_art");
+            bool hasArt = art != null;
+            if (hasArt)
+            {
+                var artGo = new GameObject("TitleArt", typeof(Image), typeof(AspectRatioFitter));
+                artGo.transform.SetParent(_titlePanel, false);
+                artGo.GetComponent<Image>().sprite = art;
+                var fitter = artGo.GetComponent<AspectRatioFitter>();
+                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fitter.aspectRatio = art.rect.width / art.rect.height;
+
+                var dimGo = new GameObject("TitleArtDim", typeof(Image));
+                dimGo.transform.SetParent(_titlePanel, false);
+                dimGo.GetComponent<Image>().color = new Color(0, 0, 0, 0.30f);
+                UiFactory.Stretch((RectTransform)dimGo.transform);
+            }
+
+            var title = UiFactory.CreateText(_titlePanel, "Title", TitleString, 72,
+                hasArt ? new Color(0.97f, 0.94f, 0.87f) : UiFactory.Ink);
             UiFactory.SetRect(title.rectTransform, new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(800, 120));
             _titleText = title;
             RefreshTitleBrokenness();
 
-            _subtitle = UiFactory.CreateText(_titlePanel, "Subtitle", SubtitleDefault, 26, UiFactory.Dim);
+            _subtitle = UiFactory.CreateText(_titlePanel, "Subtitle", SubtitleDefault, 26,
+                hasArt ? new Color(0.86f, 0.83f, 0.76f) : UiFactory.Dim);
             UiFactory.SetRect(_subtitle.rectTransform, new Vector2(0.5f, 0.53f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(800, 50));
             if (ProgressStore.DevMode) _subtitle.text = "개발자 모드 ON — 전체 스테이지 잠금 해제";
 
@@ -122,12 +142,25 @@ namespace HangeulAdventure.Game
             var overlay = UiFactory.CreatePanel(_canvas.transform, "Intro", new Color(0.08f, 0.07f, 0.06f, 0.97f));
             UiFactory.Stretch(overlay);
 
+            // 대마왕 일러스트 (1~2페이지 등장 연출, 마지막 페이지에서 숨김)
+            Image villain = null;
+            var villainSprite = Resources.Load<Sprite>("Art/Portraits/boss_daemawang");
+            if (villainSprite != null)
+            {
+                var vGo = new GameObject("Villain", typeof(Image));
+                vGo.transform.SetParent(overlay, false);
+                villain = vGo.GetComponent<Image>();
+                villain.sprite = villainSprite;
+                villain.preserveAspect = true;
+                UiFactory.SetRect((RectTransform)vGo.transform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -30), new Vector2(320, 470));
+            }
+
             var text = UiFactory.CreateText(overlay, "Text", IntroPages[0], 30, new Color(0.92f, 0.89f, 0.82f));
-            UiFactory.SetRect(text.rectTransform, new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 240));
+            UiFactory.SetRect(text.rectTransform, new Vector2(0.5f, villain != null ? 0.32f : 0.55f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 240));
 
             int page = 0;
             var btn = UiFactory.CreateButton(overlay, "Next", "다음", 24, UiFactory.Accent, Color.white, null);
-            UiFactory.SetRect((RectTransform)btn.transform, new Vector2(0.5f, 0.22f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(180, 60));
+            UiFactory.SetRect((RectTransform)btn.transform, new Vector2(0.5f, villain != null ? 0.12f : 0.22f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(180, 60));
             btn.onClick.AddListener(() =>
             {
                 page++;
@@ -135,7 +168,15 @@ namespace HangeulAdventure.Game
                 {
                     text.text = IntroPages[page];
                     if (page == IntroPages.Length - 1)
+                    {
                         btn.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "출발";
+                        if (villain != null)
+                        {
+                            // 마지막 페이지(선비의 출발)에서는 대마왕을 치우고 본문을 중앙으로
+                            villain.gameObject.SetActive(false);
+                            UiFactory.SetRect(text.rectTransform, new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 240));
+                        }
+                    }
                     if (page == 1)
                     {
                         // 이 순간 세상의 글자가 깨진다

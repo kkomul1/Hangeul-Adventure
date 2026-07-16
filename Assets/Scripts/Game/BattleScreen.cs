@@ -52,11 +52,25 @@ namespace HangeulAdventure.Game
             _enemyName = UiFactory.CreateText(_panel, "EnemyName", config.name, 40, new Color(0.95f, 0.85f, 0.70f));
             UiFactory.SetRect(_enemyName.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -40), new Vector2(600, 60));
 
-            // 임시 초상 (AI 일러스트가 오면 교체)
-            var portrait = UiFactory.CreatePanel(_panel, "Portrait", new Color(0.35f, 0.22f, 0.20f));
-            UiFactory.SetRect(portrait, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -110), new Vector2(180, 180));
-            var face = UiFactory.CreateText(portrait, "Face", "巾", 80, new Color(0.95f, 0.85f, 0.70f));
-            UiFactory.Stretch(face.rectTransform);
+            // 보스 초상: Resources/Art/Portraits/{portrait|id}. 일러스트 미도착 보스는 임시 초상 유지
+            var portraitSprite = Resources.Load<Sprite>("Art/Portraits/" +
+                (string.IsNullOrEmpty(config.portrait) ? config.id : config.portrait));
+            if (portraitSprite != null)
+            {
+                var pGo = new GameObject("Portrait", typeof(Image));
+                pGo.transform.SetParent(_panel, false);
+                var img = pGo.GetComponent<Image>();
+                img.sprite = portraitSprite;
+                img.preserveAspect = true;
+                UiFactory.SetRect((RectTransform)pGo.transform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -110), new Vector2(180, 180));
+            }
+            else
+            {
+                var portrait = UiFactory.CreatePanel(_panel, "Portrait", new Color(0.35f, 0.22f, 0.20f));
+                UiFactory.SetRect(portrait, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -110), new Vector2(180, 180));
+                var face = UiFactory.CreateText(portrait, "Face", "巾", 80, new Color(0.95f, 0.85f, 0.70f));
+                UiFactory.Stretch(face.rectTransform);
+            }
 
             _enemyHpText = UiFactory.CreateText(_panel, "EnemyHp", "", 26, new Color(0.95f, 0.55f, 0.50f));
             UiFactory.SetRect(_enemyHpText.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -300), new Vector2(400, 40));
