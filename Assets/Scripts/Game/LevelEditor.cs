@@ -306,7 +306,8 @@ namespace HangeulAdventure.Game
             }
 
             _resultText.text = "검증 중...";
-            var r = Solver.Solve(stage, timeBudgetMs: 8_000);
+            // maxStates 2M: 패킹 솔버(M3-8) 처리량 기준 8초 예산과 균형 (구 50만은 상한이 먼저 걸림)
+            var r = Solver.Solve(stage, maxStates: 2_000_000, timeBudgetMs: 8_000);
             if (r.Aborted)
             {
                 _resultText.text = "⚠ 검증 시간 초과 — 보드가 너무 복잡합니다. 타일을 줄여보세요.";
