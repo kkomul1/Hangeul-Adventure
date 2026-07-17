@@ -1,1 +1,1 @@
-{ "id": 86, "title": "찻집 골목", "rows": ["ㅊㅏㅅ.", "ㅈ@ㅣㅂ", ".ㅅㅈ."], "goals": [{ "display": "찻집", "slots": "찻집" }], "minMoves": 10, "stars": [0,0,0], "difficulty": 5 }
+{ "id": 86, "title": "찻집 골목", "rows": ["ㅊㅏㅅ.", "ㅈ@ㅣㅂ", ".ㅅㅈ."], "goals": [{ "display": "찻집", "slots": "찻집" }], "minMoves": 10, "stars": [0,0,0], "difficulty": 3 }

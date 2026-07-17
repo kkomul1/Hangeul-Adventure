@@ -5,5 +5,5 @@
   "goals": [{ "display": "괴", "slots": "괴" }],
   "minMoves": 4,
   "stars": [0, 0, 0],
-  "difficulty": 3
+  "difficulty": 2
 }

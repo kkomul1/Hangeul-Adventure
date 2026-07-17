@@ -18,6 +18,7 @@ namespace HangeulAdventure.Game
         private float _jumpBufferTimer, _coyoteTimer;
         private bool _jumpCutQueued, _airJumpUsed;
         private int _ladderQueue; // +1=위로 진입 시도, -1=아래로 진입 시도
+        private int _horizPressLatch; // 좌우 "새로 눌림" 엣지 (-1/0/+1). 사다리 이탈 판정 전용 — 홀드로는 이탈하지 않는다
 
         // 접지·사다리·원웨이 상태
         private bool _grounded, _standingSolid;
@@ -42,6 +43,7 @@ namespace HangeulAdventure.Game
                 // 상점/가방 열림: 입력만 정지 (물리는 계속 — 낙하 중이면 착지까지 정리됨)
                 _inputX = 0f;
                 _running = _inputUpHeld = _inputDownHeld = false;
+                _horizPressLatch = 0;
                 return;
             }
 
@@ -57,6 +59,10 @@ namespace HangeulAdventure.Game
 
             bool upPressed = kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame;
             bool downPressed = kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame;
+
+            // 사다리 이탈은 "새로 눌린" 좌우만 (홀드 중 진입을 막지 않기 위해 — 홀드값 _inputX와 별개)
+            if (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame) _horizPressLatch = -1;
+            if (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame) _horizPressLatch = 1;
 
             var near = NearestInteractable();
             UpdateHint(near);
@@ -132,6 +138,7 @@ namespace HangeulAdventure.Game
 
             if (v.y < -MaxFallSpeed) v.y = -MaxFallSpeed;
             _rb.linearVelocity = v;
+            _horizPressLatch = 0; // 사다리 밖에서 누른 좌우가 남아 나중에 오작동 이탈을 일으키지 않도록 매 스텝 소비
         }
 
         /// <summary>접촉점에서 접지·딛고 있는 발판 종류 갱신 (법선이 위를 향하는 접촉 = 발밑).</summary>
@@ -242,6 +249,7 @@ namespace HangeulAdventure.Game
 
             _onLadder = true;
             _airJumpUsed = false; // 사다리 = 접지 취급, 2단 점프 리셋
+            _horizPressLatch = 0; // 진입 직전까지 눌려 있던 좌우는 이탈로 치지 않는다 (좌우 홀드 + W 동시 진입 허용)
             _rb.position = new Vector2(cx, Mathf.Clamp(feet.y - (up ? 0f : 0.05f), _ladderBottomY, _ladderTopY - 0.01f));
             _rb.linearVelocity = Vector2.zero;
             _rb.gravityScale = 0f; // 존 안 = 중력 해제
@@ -259,10 +267,12 @@ namespace HangeulAdventure.Game
                 ExitLadder(new Vector2(_inputX * LadderExitPushVx, LadderExitJumpVy));
                 return;
             }
-            // 이탈 ②: 좌우 입력
-            if (Mathf.Abs(_inputX) > 0.01f)
+            // 이탈 ②: 새로 눌린 좌우 입력 (홀드를 유지하는 동안에는 이탈하지 않는다)
+            if (_horizPressLatch != 0)
             {
-                ExitLadder(new Vector2(Mathf.Sign(_inputX) * LadderExitPushVx, 0f));
+                float dir = _horizPressLatch;
+                _horizPressLatch = 0;
+                ExitLadder(new Vector2(dir * LadderExitPushVx, 0f));
                 return;
             }
 
@@ -420,7 +430,8 @@ namespace HangeulAdventure.Game
 
         private void SnapCameraImmediate()
         {
-            Vector2 feet = _rb.position;
+            // autoSyncTransforms=false라 BuildPlayer 직후 _rb.position은 아직 (0,0)이다 — LateUpdate와 같은 transform을 읽는다
+            Vector2 feet = _playerT.position;
             _camBaseY = feet.y;
             _camVelX = _camVelY = 0f;
             var target = ClampToMap(feet.x, _camBaseY + CamYOffset);

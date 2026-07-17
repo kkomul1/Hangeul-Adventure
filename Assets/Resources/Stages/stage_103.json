@@ -6,5 +6,5 @@
   "goals": [{ "display": "온돌", "slots": "온돌" }],
   "minMoves": 12,
   "stars": [0, 0, 0],
-  "difficulty": 5
+  "difficulty": 2
 }
