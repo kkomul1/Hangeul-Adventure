@@ -201,6 +201,7 @@ namespace HangeulAdventure.Game
 
         private void ShowIntro(System.Action onDone)
         {
+            BgmPlayer.Instance?.Play("bgm_intro"); // 오프닝 전용 곡 (M4-2) — 미도착 시 현재 곡 유지
             var overlay = UiFactory.CreatePanel(_canvas.transform, "Intro", new Color(0.08f, 0.07f, 0.06f, 0.97f));
             UiFactory.Stretch(overlay);
 

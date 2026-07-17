@@ -30,15 +30,31 @@ namespace HangeulAdventure.Game
             var backBtn = UiFactory.CreateButton(_selectPanel, "BackBtn", "← 타이틀", 22, UiFactory.Paper, UiFactory.Ink, ShowTitle);
             UiFactory.SetRect((RectTransform)backBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -24), new Vector2(150, 52));
 
-            // 그리드
-            var gridRect = UiFactory.CreateEmpty(_selectPanel, "Grid");
-            UiFactory.SetRect(gridRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -30), new Vector2(1000, 520));
+            // 스크롤 그리드 (M4-5): 스테이지 98개+커스텀 — 고정 판에 안 들어가므로 세로 스크롤
+            var viewport = UiFactory.CreatePanel(_selectPanel, "GridView", new Color(0, 0, 0, 0)); // 투명하지만 휠/드래그 레이캐스트 대상
+            UiFactory.SetRect(viewport, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -30), new Vector2(1000, 520));
+            viewport.gameObject.AddComponent<RectMask2D>();
+
+            var gridRect = UiFactory.CreateEmpty(viewport, "Grid");
+            gridRect.anchorMin = new Vector2(0, 1);
+            gridRect.anchorMax = new Vector2(1, 1);
+            gridRect.pivot = new Vector2(0.5f, 1);
+            gridRect.sizeDelta = Vector2.zero; // CreateEmpty 기본 크기 잔여 제거 (도감 버그와 동일 함정)
             var grid = gridRect.gameObject.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(88, 88);
             grid.spacing = new Vector2(10, 10);
+            grid.padding = new RectOffset(0, 0, 4, 4);
             grid.childAlignment = TextAnchor.UpperCenter;
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 10; // 50개 = 10열 x 5행
+            grid.constraintCount = 10;
+            var fitter = gridRect.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
+            scroll.content = gridRect;
+            scroll.viewport = viewport;
+            scroll.horizontal = false;
+            scroll.scrollSensitivity = 30;
 
             if (_stages.Count == 0)
             {
