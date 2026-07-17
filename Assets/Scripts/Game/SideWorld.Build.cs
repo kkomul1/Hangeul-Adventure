@@ -49,7 +49,9 @@ namespace HangeulAdventure.Game
         private const float RidgeTopY = 6.0f;                // 원경 능선 상단
         private const float RidgeParallax = 0.25f;
         private const float FogTopY = 4.2f;                  // 안개 띠 윗변
-        private const float SignLabelY = 0.93f;              // 팻말 밑동 기준 한지 패널 중앙
+        // 팻말 밑동 기준 한지 패널 중앙 — 스프라이트 실측값이다 (102x95 캔버스, 한지 영역 y 18~70 → 중심 44px).
+        // 이전 값 0.93은 합성 이미지에서 눈대중한 것이라 글자가 패널보다 8.5px 위에 떠 있었다.
+        private const float SignLabelY = 0.797f;
         private const int TreeLargeMinWidth = 7;             // 배경 덩어리 이 폭 이상이면 큰 나무
 
         // ── 미니맵 배치 상수 (단위: UI px, 기준 해상도 1280x720) ──
@@ -562,9 +564,11 @@ namespace HangeulAdventure.Game
             labelGo.transform.SetParent(go.transform, false);
             labelGo.transform.localPosition = new Vector3(0, labelY, 0);
             var tmp = labelGo.GetComponent<TextMeshPro>();
-            if (UiFactory.KoreanFont != null) tmp.font = UiFactory.KoreanFont;
+            // 팻말·문의 글자는 조선 세계의 것이라 지명 서체(상주해례본체)를 쓴다. 없으면 본문 폰트로 폴백
+            var signFont = art != null ? (UiFactory.PlaceFont ?? UiFactory.KoreanFont) : UiFactory.KoreanFont;
+            if (signFont != null) tmp.font = signFont;
             tmp.text = label;
-            tmp.fontSize = art != null ? 3.4f : isShop ? 3.2f : 4.5f; // 한지 패널 안에 들어가는 크기
+            tmp.fontSize = art != null ? 3.4f : isShop ? 3.2f : 4.5f; // 한지 패널(1.20u x 0.83u) 안에 들어가는 크기
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = UiFactory.Ink;
             tmp.rectTransform.sizeDelta = new Vector2(1.4f, 1);

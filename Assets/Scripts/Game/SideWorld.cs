@@ -29,7 +29,9 @@ namespace HangeulAdventure.Game
         private const float CoyoteTime = 0.10f;        // 발판 끝에서 떨어진 직후 점프 허용 (s)
         private const float JumpBufferTime = 0.10f;    // 착지 직전 점프 입력 보존 (s)
         private const float ClimbSpeed = 4.0f;         // 사다리 승강 속도 (u/s)
-        private const float LadderSnapRange = 0.45f;   // 사다리 열 중심 부착 허용 오차 (u)
+        private const float LadderSnapRange = 0.5f;    // 사다리 열 중심 부착 허용 오차 (u). RoundToInt가 0.5에서 자르므로 이게 상한
+        private const float LadderBufferTime = 0.18f;  // W 입력 보존 (s). 점프 버퍼(0.10)보다 길다 —
+                                                       // 달리며(10.5u/s) 지나가면 부착 구간을 0.1초만에 통과해 프레임 단위로 놓친다
         private const float LadderExitJumpVy = 8.7f;   // 사다리 점프 이탈 수직 속도 (점프 초속의 60%)
         private const float LadderExitPushVx = 3.0f;   // 사다리 이탈 수평 속도
         private const float DropThroughTime = 0.25f;   // ↓+점프 원웨이 하강 시 충돌 무시 시간 (s)

@@ -18,6 +18,7 @@ namespace HangeulAdventure.Game
         private float _jumpBufferTimer, _coyoteTimer;
         private bool _jumpCutQueued, _airJumpUsed;
         private int _ladderQueue; // +1=위로 진입 시도, -1=아래로 진입 시도
+        private float _ladderBufferTimer; // W를 헛짚었을 때 입력을 잠시 보존 — 곧 사다리에 닿으면 붙는다 (점프 버퍼와 같은 취지)
         private int _horizPressLatch; // 좌우 "새로 눌림" 엣지 (-1/0/+1). 사다리 이탈 판정 전용 — 홀드로는 이탈하지 않는다
 
         // 접지·사다리·원웨이 상태
@@ -44,6 +45,7 @@ namespace HangeulAdventure.Game
                 _inputX = 0f;
                 _running = _inputUpHeld = _inputDownHeld = false;
                 _horizPressLatch = 0;
+                _ladderBufferTimer = 0f;
                 return;
             }
 
@@ -75,6 +77,7 @@ namespace HangeulAdventure.Game
                 // ↑ 중의성 해결 (14장 지시): 사다리 존 안에서는 사다리 우선, 존 밖에서만 상호작용
                 if (CanAttachLadderUp()) _ladderQueue = 1;
                 else if (near != null) Interact(near);
+                else _ladderBufferTimer = LadderBufferTime; // 헛손질 — 곧 사다리에 닿을 수 있다
             }
             if (downPressed && !_onLadder && CanAttachLadderDown()) _ladderQueue = -1;
         }
@@ -88,6 +91,14 @@ namespace HangeulAdventure.Game
 
             UpdateContacts();
             UpdateDropTimer(dt);
+
+            // 보존된 W: 아직 사다리 밖이면 매 스텝 재시도한다 (달리며 지나가는 5프레임을 놓치지 않게)
+            _ladderBufferTimer -= dt;
+            if (!_onLadder && _ladderQueue == 0 && _ladderBufferTimer > 0f && CanAttachLadderUp())
+            {
+                _ladderQueue = 1;
+                _ladderBufferTimer = 0f;
+            }
 
             if (!_onLadder && _ladderQueue != 0)
             {
@@ -255,6 +266,7 @@ namespace HangeulAdventure.Game
             LearnSide(ref _learnedLadder, ActSideLadder);
             _airJumpUsed = false; // 사다리 = 접지 취급, 2단 점프 리셋
             _horizPressLatch = 0; // 진입 직전까지 눌려 있던 좌우는 이탈로 치지 않는다 (좌우 홀드 + W 동시 진입 허용)
+            _ladderBufferTimer = 0f;
             _rb.position = new Vector2(cx, Mathf.Clamp(feet.y - (up ? 0f : 0.05f), _ladderBottomY, _ladderTopY - 0.01f));
             _rb.linearVelocity = Vector2.zero;
             _rb.gravityScale = 0f; // 존 안 = 중력 해제

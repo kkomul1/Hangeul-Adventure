@@ -55,6 +55,9 @@ namespace HangeulAdventure.Game
 
             // 타이틀·연출용 서체 (M4-4: 정묵바위체). 없으면 본문 폰트로 폴백
             UiFactory.TitleFont = Resources.Load<TMP_FontAsset>("Fonts/SSRockSDF");
+
+            // 지명·팻말용 서체 (상주해례본체). 없으면 본문 폰트로 폴백
+            UiFactory.PlaceFont = Resources.Load<TMP_FontAsset>("Fonts/SangjuHaeryeSDF");
         }
 
         private void SetupCamera()

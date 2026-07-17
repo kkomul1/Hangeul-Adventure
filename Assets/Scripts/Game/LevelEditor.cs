@@ -310,11 +310,15 @@ namespace HangeulAdventure.Game
             var r = Solver.Solve(stage, maxStates: 2_000_000, timeBudgetMs: 8_000);
             if (r.Aborted)
             {
-                _resultText.text = "⚠ 검증 시간 초과 — 보드가 너무 복잡합니다. 타일을 줄여보세요.";
+                // 검증 실패분이 남아 있으면 편집 중인 보드가 아니라 옛 보드로 테스트·저장된다
+                _validated = null;
+                _resultText.text = "⚠ 검증 시간 초과 — 빈칸이 많을수록 급격히 어려워집니다. 벽·바위로 칸을 줄여보세요.\n"
+                    + "(테스트 플레이는 검증 없이도 됩니다)";
                 return;
             }
             if (!r.Solvable)
             {
+                _validated = null;
                 _resultText.text = "✗ 풀이 불가능한 배치입니다.";
                 return;
             }
@@ -327,12 +331,29 @@ namespace HangeulAdventure.Game
             _resultText.text = $"✓ 풀이 가능 — 최소 {r.MinMoves}수 (★★★ {th[2]}수 이하 · ★★ {th[1]}수 이하 · 루비 = {r.MinMoves}수)";
         }
 
+        /// <summary>
+        /// 테스트 플레이는 솔버 검증을 요구하지 않는다 — 최소 수를 몰라도 보드는 굴러간다.
+        /// 검증은 저장할 때만 필수다(별 기준이 minMoves에서 나오므로).
+        /// 검증을 통과했으면 그 결과(별 기준)를 쓰고, 아니면 별 기준 없이 플레이한다.
+        /// </summary>
         private void TestPlay()
         {
-            Validate();
-            if (_validated == null) return;
+            if (!TryBuildStage(out var stage, out string error))
+            {
+                _resultText.text = "⚠ " + error;
+                return;
+            }
             Hide();
-            _app.StartTestStage(_validated);
+            _app.StartTestStage(_validated != null && SameRows(_validated, stage) ? _validated : stage);
+        }
+
+        /// <summary>검증 결과가 지금 편집 중인 보드의 것인지 — 다르면 옛 별 기준을 쓰면 안 된다.</summary>
+        private static bool SameRows(StageData a, StageData b)
+        {
+            if (a.width != b.width || a.height != b.height) return false;
+            for (int i = 0; i < a.cells.Length; i++)
+                if (a.cells[i] != b.cells[i] || a.mask[i] != b.mask[i]) return false;
+            return true;
         }
 
         private void Save()
