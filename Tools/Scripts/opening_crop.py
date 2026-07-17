@@ -48,7 +48,8 @@ def crop_one(path):
             print(f"  ※ 내용이 16:9보다 낮다({content_h} < {target_h}) — 자르지 않고 그대로 둔다")
 
     out = im.crop((0, t, w, b))
-    dst = path.replace(".png", "_16x9.png")
+    stem = os.path.splitext(path)[0]
+    dst = stem + "_16x9.png"
     out.save(dst)
     print(f"  저장: {os.path.basename(dst)}  {out.size[0]}x{out.size[1]}  (비율 {out.size[0]/out.size[1]:.4f})")
     return dst
@@ -56,7 +57,7 @@ def crop_one(path):
 
 def main():
     files = [f for f in os.listdir(SRC_DIR)
-             if f.endswith(".png") and not f.endswith("_16x9.png")]
+             if f.lower().endswith((".png", ".jpg", ".jpeg")) and "_16x9" not in f]
     if not files:
         print("크롭할 이미지가 없다:", SRC_DIR)
         return
