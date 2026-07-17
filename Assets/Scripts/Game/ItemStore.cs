@@ -8,13 +8,14 @@ namespace HangeulAdventure.Game
     /// 아이템 정의 (Resources/Items/items.json)와 보유/장착 저장.
     /// 무기/방어구의 공격력·방어력은 이후 보스전/전투 시스템을 전제로 한 스탯 (D-18) —
     /// 현재는 구매·장착·표시까지만 동작한다.
+    /// mobility(이동 능력)는 장착 슬롯 없는 패시브 — 보유 즉시 적용 (사이드뷰 전환 기획 14장-3).
     /// </summary>
     [Serializable]
     public class ItemJson
     {
         public string id;
         public string name;
-        public string type;   // "weapon" | "armor"
+        public string type;   // "weapon" | "armor" | "mobility"
         public int price;
         public int atk;
         public int def;
@@ -77,13 +78,16 @@ namespace HangeulAdventure.Game
         }
 
         public static bool IsEquipped(ItemJson item)
-            => item.type == "weapon" ? EquippedWeapon == item.id : EquippedArmor == item.id;
+            => item.type == "weapon" ? EquippedWeapon == item.id
+             : item.type == "armor" ? EquippedArmor == item.id
+             : false; // mobility 등 패시브는 장착 슬롯 없음
 
         public static void Equip(ItemJson item)
         {
             if (!IsOwned(item.id)) return;
             if (item.type == "weapon") EquippedWeapon = item.id;
-            else EquippedArmor = item.id;
+            else if (item.type == "armor") EquippedArmor = item.id;
+            // mobility는 보유 즉시 적용 — 장착 없음
         }
 
         public static void Unequip(ItemJson item)
@@ -92,6 +96,15 @@ namespace HangeulAdventure.Game
             if (item.type == "armor" && EquippedArmor == item.id) EquippedArmor = "";
         }
 
-        public static string TypeName(string type) => type == "weapon" ? "무기" : "방어구";
+        public static string TypeName(string type)
+            => type == "weapon" ? "무기" : type == "armor" ? "방어구" : "이동";
+
+        // ---- 이동 능력 (사이드뷰, 기획 14장-3) ----
+
+        /// <summary>2단 점프 아이템 id — 갖신 (상점 구매형).</summary>
+        public const string DoubleJumpId = "m_gatsin";
+
+        /// <summary>2단 점프 가능 여부. SideWorld가 공중 점프 허용 판정에 사용.</summary>
+        public static bool HasDoubleJump => IsOwned(DoubleJumpId);
     }
 }

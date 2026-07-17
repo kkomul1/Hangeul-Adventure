@@ -6,7 +6,9 @@ namespace HangeulAdventure.Game
 {
     /// <summary>
     /// 맵 정의 (Resources/Maps/map_XX.json). 월드는 exits로 연결된 그래프 (양방향 이동, D-17).
-    /// terrain 문자: '.'=풀, '-'=길, '#'=나무/집(통행 불가), '~'=물(통행 불가)
+    /// version 1 (탑다운) terrain 문자: '.'=풀, '-'=길, '#'=나무/집(통행 불가), '~'=물(통행 불가)
+    /// version 2 (사이드뷰, 사이드뷰 전환 기획 3장) terrain 문자: '.'=공기, '#'=솔리드, '='=원웨이 발판, 'H'=사다리.
+    ///   v2는 layers(전경 playfield + 배경 backdrop)로 지형을 정의할 수 있고, 생략 시 terrain을 전경으로 쓴다.
     /// 진행 규칙: 최초 진입 시 tutorialStages를 순서대로 강제 → 완료 시 전체 지점 개방.
     /// 각 출구는 "이 맵에서 required개 클리어" 시 개방.
     /// </summary>
@@ -14,10 +16,12 @@ namespace HangeulAdventure.Game
     public class MapJson
     {
         public int id;
+        public int version = 1;  // 1=탑다운(MapWorld), 2=사이드뷰(SideWorld) — 공존 스위치 (기획 10장)
         public string title = "";
         public string theme = "";
         public string bgm = "";   // 배경음악 트랙 (선택, Resources/Audio/{bgm}. 생략 시 bgm_forest)
         public string[] terrain;
+        public LayerJson[] layers; // v2 전용 (선택): playfield 1장 + backdrop n장 (기획 14장-5)
         public int[] spawn;
         public int[] tutorialStages;
         public SpotJson[] spots;
@@ -25,6 +29,18 @@ namespace HangeulAdventure.Game
         public int[] shop;      // 상점 위치 (선택)
         public BossJson boss;   // 사천왕 (선택)
         public RoomJson[] rooms; // 자음 회수 방 (선택, D-23)
+    }
+
+    /// <summary>
+    /// v2 지형 레이어 (사이드뷰 전환 기획 14장-5): 맨 앞 playfield에서 플레이하고
+    /// 뒤에 backdrop(패럴랙스 배경)을 쌓는다. 신규 지역·대형 맵은 레이어 추가만으로 확장.
+    /// </summary>
+    [Serializable]
+    public class LayerJson
+    {
+        public string type = "playfield"; // "playfield"(충돌 있음, 1장) | "backdrop"(장식, n장)
+        public float parallax = 0.5f;     // backdrop 전용: 카메라 이동 대비 배경 스크롤 비율 (1=전경과 동일, 0=고정)
+        public string[] terrain;
     }
 
     /// <summary>자음 회수 방 (D-23): 묶인 스테이지를 전부 클리어하면 자음 하나를 되찾는다.</summary>
@@ -69,15 +85,27 @@ namespace HangeulAdventure.Game
         public int required;
     }
 
+    /// <summary>v2 배경 레이어 (파싱 결과): 충돌 없는 장식 지형 + 패럴랙스 계수.</summary>
+    public class BackdropLayer
+    {
+        public int width, height;
+        public char[] tiles;
+        public float parallax = 0.5f;
+
+        public char Tile(int x, int y)
+            => (x < 0 || x >= width || y < 0 || y >= height) ? '.' : tiles[y * width + x];
+    }
+
     /// <summary>파싱된 맵 (좌표계: x 오른쪽+, y 위쪽+).</summary>
     public class MapData
     {
         public int id;
+        public int version = 1;
         public string title;
         public string theme;
         public string bgm;
         public int width, height;
-        public char[] tiles;
+        public char[] tiles;   // v1: 지형, v2: 전경(playfield) 충돌 그리드
         public Vector2Int spawn;
         public int[] tutorialStages;
         public List<(int stageId, Vector2Int pos)> spots = new List<(int, Vector2Int)>();
@@ -86,6 +114,7 @@ namespace HangeulAdventure.Game
         public Vector2Int? bossPos;
         public string bossConfig;
         public List<RoomJson> rooms = new List<RoomJson>();
+        public List<BackdropLayer> backdrops = new List<BackdropLayer>(); // v2 전용
 
         public char Tile(int x, int y)
             => (x < 0 || x >= width || y < 0 || y >= height) ? '#' : tiles[y * width + x];
@@ -95,6 +124,28 @@ namespace HangeulAdventure.Game
             char t = Tile(x, y);
             return t == '.' || t == '-';
         }
+
+        // ── v2 사이드뷰 충돌 질의 (사이드뷰 전환 기획 3.2장) ──
+
+        /// <summary>솔리드: 전방향 충돌 (지면·벽·천장). 맵 밖도 솔리드 취급.</summary>
+        public bool IsSolid(int x, int y) => Tile(x, y) == '#';
+
+        /// <summary>사다리 칸 (통과, W/S로 부착).</summary>
+        public bool IsLadder(int x, int y) => Tile(x, y) == 'H';
+
+        /// <summary>
+        /// 사다리 꼭대기 규칙: 'H' 칸의 좌 또는 우가 발판('='/'#')이면 그 칸 자체를
+        /// 원웨이 발판으로 취급 (발판을 사다리가 관통하는 메이플 구조를 한 문자로 표현).
+        /// </summary>
+        public bool IsLadderTop(int x, int y)
+        {
+            if (!IsLadder(x, y)) return false;
+            char l = Tile(x - 1, y), r = Tile(x + 1, y);
+            return l == '=' || l == '#' || r == '=' || r == '#';
+        }
+
+        /// <summary>원웨이 발판: 상면만, 하강 중만 충돌 ('=' + 사다리 꼭대기 'H').</summary>
+        public bool IsOneWay(int x, int y) => Tile(x, y) == '=' || IsLadderTop(x, y);
     }
 
     public static class MapLoader
@@ -104,14 +155,27 @@ namespace HangeulAdventure.Game
         public static MapData FromJson(string json)
         {
             var mj = JsonUtility.FromJson<MapJson>(json);
-            if (mj?.terrain == null || mj.terrain.Length == 0)
-                throw new ArgumentException("맵 JSON 형식 오류: terrain 없음");
+            if (mj == null)
+                throw new ArgumentException("맵 JSON 형식 오류");
 
-            int h = mj.terrain.Length;
-            int w = mj.terrain[0].Length;
+            // v2: layers에서 전경(playfield)을 찾는다. layers 생략 시 terrain을 전경으로 사용 (기획 3.1장)
+            string[] playfield = mj.terrain;
+            if (mj.version >= 2 && mj.layers != null)
+                foreach (var l in mj.layers)
+                    if (l != null && l.type == "playfield" && l.terrain != null && l.terrain.Length > 0)
+                    {
+                        playfield = l.terrain;
+                        break;
+                    }
+            if (playfield == null || playfield.Length == 0)
+                throw new ArgumentException("맵 JSON 형식 오류: terrain/playfield 없음");
+
+            int h = playfield.Length;
+            int w = playfield[0].Length;
             var map = new MapData
             {
                 id = mj.id,
+                version = mj.version,
                 title = mj.title ?? "",
                 theme = mj.theme ?? "",
                 bgm = mj.bgm ?? "",
@@ -123,12 +187,30 @@ namespace HangeulAdventure.Game
 
             for (int row = 0; row < h; row++)
             {
-                if (mj.terrain[row].Length != w)
+                if (playfield[row].Length != w)
                     throw new ArgumentException($"맵 {mj.id}: 행 길이 불일치 (행 {row})");
                 int y = h - 1 - row;
                 for (int x = 0; x < w; x++)
-                    map.tiles[y * w + x] = mj.terrain[row][x];
+                    map.tiles[y * w + x] = playfield[row][x];
             }
+
+            // v2 배경 레이어 (충돌 없음, 패럴랙스 계수는 데이터 소관 — 기획 14장-5)
+            if (mj.version >= 2 && mj.layers != null)
+                foreach (var l in mj.layers)
+                {
+                    if (l == null || l.type != "backdrop" || l.terrain == null || l.terrain.Length == 0) continue;
+                    int bh = l.terrain.Length, bw = l.terrain[0].Length;
+                    var bd = new BackdropLayer { width = bw, height = bh, tiles = new char[bw * bh], parallax = l.parallax };
+                    for (int row = 0; row < bh; row++)
+                    {
+                        if (l.terrain[row].Length != bw)
+                            throw new ArgumentException($"맵 {mj.id}: backdrop 행 길이 불일치 (행 {row})");
+                        int y = bh - 1 - row;
+                        for (int x = 0; x < bw; x++)
+                            bd.tiles[y * bw + x] = l.terrain[row][x];
+                    }
+                    map.backdrops.Add(bd);
+                }
 
             Vector2Int P(int[] a) => new Vector2Int(a[0], h - 1 - a[1]); // JSON은 위에서부터 행 번호
             map.spawn = P(mj.spawn);

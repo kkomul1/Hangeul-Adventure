@@ -25,6 +25,7 @@ namespace HangeulAdventure.Game
             {
                 Destroy(overlay.gameObject);
                 if (_mapWorld != null) _mapWorld.RefreshStates();
+                if (_sideWorld != null) _sideWorld.RefreshStates();
                 RefreshTitleBrokenness();
             });
             UiFactory.SetRect((RectTransform)ok.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(180, 58));

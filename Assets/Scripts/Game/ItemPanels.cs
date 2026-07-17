@@ -109,7 +109,9 @@ namespace HangeulAdventure.Game
                 var le = row.gameObject.AddComponent<LayoutElement>();
                 le.preferredHeight = 78;
 
-                string stat = item.type == "weapon" ? $"공격 +{item.atk}" : $"방어 +{item.def}";
+                string stat = item.type == "weapon" ? $"공격 +{item.atk}"
+                    : item.type == "armor" ? $"방어 +{item.def}"
+                    : "2단 점프"; // mobility (갖신)
                 var name = UiFactory.CreateText(row, "Name",
                     $"{item.name}  <size=70%><color=#8A8578>[{ItemStore.TypeName(item.type)} · {stat}]</color></size>",
                     21, UiFactory.Ink, TextAlignmentOptions.Left);
@@ -144,6 +146,12 @@ namespace HangeulAdventure.Game
                             });
                         UiFactory.SetRect((RectTransform)buy.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-14, 0), new Vector2(150, 50));
                     }
+                }
+                else if (item.type != "weapon" && item.type != "armor")
+                {
+                    // mobility 등 패시브: 장착 슬롯 없음 — 보유 즉시 적용 (기획 14장-3)
+                    var passive = UiFactory.CreateText(row, "Passive", "효과 적용 중", 18, UiFactory.Dim, TextAlignmentOptions.Right);
+                    UiFactory.SetRect(passive.rectTransform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-20, 0), new Vector2(150, 32));
                 }
                 else
                 {

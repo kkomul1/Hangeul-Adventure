@@ -113,7 +113,8 @@ namespace HangeulAdventure.Game
         // ---- 맵 모드 (모험) ----
 
         private List<MapData> _maps;
-        private MapWorld _mapWorld;
+        private MapWorld _mapWorld;   // v1 탑다운
+        private SideWorld _sideWorld; // v2 사이드뷰 (사이드뷰 전환 기획 10장 — version 필드가 공존 스위치)
         private int _currentMapIndex;
         private Vector2? _mapReturnPos;
         private Engine.StageData _mapStage; // 맵에서 진입한 스테이지 (재도전용)
@@ -158,9 +159,19 @@ namespace HangeulAdventure.Game
 
             _currentMapIndex = index;
             PlayerPrefs.SetInt("last_map", _maps[index].id);
-            var go = new GameObject("MapWorld", typeof(MapWorld));
-            _mapWorld = go.GetComponent<MapWorld>();
-            _mapWorld.Enter(this, _maps[index], _stages, _cam, _canvas, playerPos);
+            if (_maps[index].version >= 2)
+            {
+                // v2 = 사이드뷰 (사이드뷰 전환 기획 10장: version 필드가 공존 스위치 — 한 맵씩 이전)
+                var go = new GameObject("SideWorld", typeof(SideWorld));
+                _sideWorld = go.GetComponent<SideWorld>();
+                _sideWorld.Enter(this, _maps[index], _stages, _cam, _canvas, playerPos);
+            }
+            else
+            {
+                var go = new GameObject("MapWorld", typeof(MapWorld));
+                _mapWorld = go.GetComponent<MapWorld>();
+                _mapWorld.Enter(this, _maps[index], _stages, _cam, _canvas, playerPos);
+            }
             BgmPlayer.Instance?.Play(string.IsNullOrEmpty(_maps[index].bgm) ? "bgm_forest" : _maps[index].bgm);
 
             // 방 보상 (D-23): 이 맵의 방을 완주했으면 자음 회수 연출
@@ -186,7 +197,11 @@ namespace HangeulAdventure.Game
                 go.transform.SetParent(transform, false);
                 _itemPanels = go.AddComponent<ItemPanels>();
                 _itemPanels.Build(_canvas);
-                _itemPanels.Closed += () => { if (_mapWorld != null) _mapWorld.RefreshStates(); };
+                _itemPanels.Closed += () =>
+                {
+                    if (_mapWorld != null) _mapWorld.RefreshStates();
+                    if (_sideWorld != null) _sideWorld.RefreshStates();
+                };
             }
             return _itemPanels;
         }
@@ -210,7 +225,7 @@ namespace HangeulAdventure.Game
 
             var go = new GameObject("BattleScreen");
             go.transform.SetParent(transform, false);
-            BgmPlayer.Instance?.Play("bgm_boss"); // 곡 미도착 시 현재 곡 유지
+            BgmPlayer.Instance?.Play(string.IsNullOrEmpty(config.bgm) ? "bgm_boss" : config.bgm); // 사천왕별 곡 (M4)
             var screen = go.AddComponent<BattleScreen>();
             screen.Finished += victory =>
             {
@@ -245,6 +260,7 @@ namespace HangeulAdventure.Game
         private void DestroyMapWorld()
         {
             if (_mapWorld != null) { Destroy(_mapWorld.gameObject); _mapWorld = null; }
+            if (_sideWorld != null) { Destroy(_sideWorld.gameObject); _sideWorld = null; }
         }
 
         // ---- 내 스테이지 관리 ----

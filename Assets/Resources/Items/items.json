@@ -5,6 +5,7 @@
     { "id": "w_eunjangdo", "name": "은장도", "type": "weapon", "price": 1200, "atk": 6, "def": 0, "desc": "은으로 장식한 날카로운 장도." },
     { "id": "a_mumyeong", "name": "무명 도포", "type": "armor", "price": 120, "atk": 0, "def": 1, "desc": "수수하지만 든든한 무명옷." },
     { "id": "a_gajuk", "name": "가죽 배자", "type": "armor", "price": 400, "atk": 0, "def": 3, "desc": "가죽을 덧댄 조끼." },
-    { "id": "a_dujeonggap", "name": "두정갑", "type": "armor", "price": 1000, "atk": 0, "def": 6, "desc": "쇠못을 박아 만든 갑옷." }
+    { "id": "a_dujeonggap", "name": "두정갑", "type": "armor", "price": 1000, "atk": 0, "def": 6, "desc": "쇠못을 박아 만든 갑옷." },
+    { "id": "m_gatsin", "name": "갖신", "type": "mobility", "price": 800, "atk": 0, "def": 0, "desc": "바람을 꿰맨 가죽신. 허공을 한 번 더 딛는다. (2단 점프)" }
   ]
 }

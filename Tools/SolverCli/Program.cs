@@ -96,6 +96,14 @@ class Program
             string name = Path.GetFileName(path);
             using var doc = JsonDocument.Parse(File.ReadAllText(path));
             var root = doc.RootElement;
+
+            // version 2(사이드뷰)는 v1 걷기 규칙('.'/'-')이 적용되지 않으므로 검증 스킵 (사이드뷰 전환 기획 3장)
+            if (root.TryGetProperty("version", out var ver) && ver.GetInt32() >= 2)
+            {
+                Console.WriteLine($"[스킵] {name}: version {ver.GetInt32()} (사이드뷰) — v1 검증 규칙 미적용");
+                continue;
+            }
+
             var terrain = root.GetProperty("terrain");
             int h = terrain.GetArrayLength();
             var t = new string[h];
