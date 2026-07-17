@@ -24,7 +24,7 @@ namespace HangeulAdventure.Game
             var header = UiFactory.CreateText(_selectPanel, "Header", "스테이지 선택", 42, UiFactory.Ink);
             UiFactory.SetRect(header.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -50), new Vector2(500, 70));
 
-            var gold = UiFactory.CreateText(_selectPanel, "Gold", $"골드  {ProgressStore.Gold}", 24, new Color(0.72f, 0.55f, 0.12f), TextAlignmentOptions.Right);
+            var gold = UiFactory.CreateText(_selectPanel, "Gold", ProgressStore.Format(ProgressStore.Coins), 24, new Color(0.72f, 0.55f, 0.12f), TextAlignmentOptions.Right);
             UiFactory.SetRect(gold.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -40), new Vector2(300, 44));
 
             var backBtn = UiFactory.CreateButton(_selectPanel, "BackBtn", "← 타이틀", 22, UiFactory.Paper, UiFactory.Ink, ShowTitle);
@@ -76,40 +76,34 @@ namespace HangeulAdventure.Game
                 // consonantLocked면 73행에서 unlocked=false가 되므로 label은 쓰이지 않는다
                 string label = isCustom ? $"C{stage.id - LevelEditor.CustomIdBase}" : stage.id.ToString();
 
+                var lockSprite = unlocked ? null : Resources.Load<Sprite>("Art/Ui/lock");
                 var btn = UiFactory.CreateButton(gridRect, $"Stage_{stage.id}",
-                    unlocked ? label : "잠김", 30, // 잠금 표기 통일 (A-⑥). 자음 게이트/진행 잠금은 색으로 구분
+                    unlocked ? label : lockSprite != null ? "" : "잠김", 30, // 잠금은 아이콘, 없으면 텍스트 폴백 (A-⑥)
                     unlocked ? UiFactory.Paper : new Color(0.82f, 0.80f, 0.76f),
                     unlocked ? UiFactory.Ink : UiFactory.Dim,
                     unlocked ? () => StartStage(index) : (System.Action)null);
                 btn.interactable = unlocked;
 
+                if (lockSprite != null)
+                {
+                    var go = new GameObject("LockIcon", typeof(Image));
+                    go.transform.SetParent(btn.transform, false);
+                    var img = go.GetComponent<Image>();
+                    img.sprite = lockSprite;
+                    img.preserveAspect = true;
+                    img.raycastTarget = false;
+                    // 자음 게이트는 진행 잠금보다 어둡게 — 두 잠금의 구분은 기존처럼 색이 담당
+                    img.color = consonantLocked ? new Color(0.45f, 0.43f, 0.41f) : UiFactory.Dim;
+                    UiFactory.SetRect((RectTransform)go.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                        Vector2.zero, new Vector2(30, 30));
+                }
+
                 if (stars > 0)
                 {
-                    var starColor = new Color(0.95f, 0.72f, 0.12f);
-
-                    // 별 수 비례 게이지 (한눈에 진행도) — 난이도 표시를 피해 왼쪽 아래
-                    var track = UiFactory.CreatePanel(btn.transform, "StarTrack", new Color(0.85f, 0.82f, 0.76f));
-                    var trackImg = track.GetComponent<Image>();
-                    trackImg.sprite = UiFactory.RoundedSprite();
-                    trackImg.type = Image.Type.Sliced;
-                    trackImg.pixelsPerUnitMultiplier = 10f; // 기본값이면 모서리 반경이 게이지를 통째로 덮는다
-                    trackImg.raycastTarget = false;
-                    UiFactory.SetRect(track, new Vector2(0, 0), new Vector2(0, 0), new Vector2(8, 4), new Vector2(40, 8));
-
-                    var fill = UiFactory.CreatePanel(track, "StarFill", starColor);
-                    var fillImg = fill.GetComponent<Image>();
-                    fillImg.sprite = UiFactory.RoundedSprite();
-                    fillImg.type = Image.Type.Sliced;
-                    fillImg.pixelsPerUnitMultiplier = 10f;
-                    fillImg.raycastTarget = false;
-                    fill.anchorMin = Vector2.zero;
-                    fill.anchorMax = new Vector2(stars / 3f, 1);
-                    fill.offsetMin = fill.offsetMax = Vector2.zero;
-
-                    // 글리프 (정확한 개수)
                     string starStr = new string('★', stars) + new string('☆', 3 - stars);
-                    var starText = UiFactory.CreateText((RectTransform)btn.transform, "Stars", starStr, 20, starColor);
-                    UiFactory.SetRect(starText.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 16), new Vector2(100, 28));
+                    var starText = UiFactory.CreateText((RectTransform)btn.transform, "Stars", starStr, 20,
+                        new Color(0.95f, 0.72f, 0.12f));
+                    UiFactory.SetRect(starText.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 8), new Vector2(100, 28));
                 }
 
                 if (unlocked)
@@ -122,15 +116,26 @@ namespace HangeulAdventure.Game
 
                 if (ruby)
                 {
-                    // 루비 별 = 빨간 테두리. 마지막 자식이라 라벨·게이지 위에 덮인다
-                    var border = UiFactory.CreatePanel(btn.transform, "RubyBorder", new Color(0.92f, 0.20f, 0.24f));
-                    var borderImg = border.GetComponent<Image>();
-                    borderImg.sprite = UiFactory.RoundedSprite();
-                    borderImg.type = Image.Type.Sliced;
-                    borderImg.fillCenter = false;
-                    borderImg.pixelsPerUnitMultiplier = 7.8f; // 두께 ≈ 4 (= 20 / (64/100 * 7.8))
-                    borderImg.raycastTarget = false;
-                    UiFactory.Stretch(border);
+                    // 루비 별 = 스테이지 번호 위 루비 아이콘. 아이콘이 없으면 ◆ 글리프로 폴백
+                    var rubySprite = Resources.Load<Sprite>("Art/Ui/ruby");
+                    if (rubySprite != null)
+                    {
+                        var go = new GameObject("RubyIcon", typeof(Image));
+                        go.transform.SetParent(btn.transform, false);
+                        var img = go.GetComponent<Image>();
+                        img.sprite = rubySprite;
+                        img.preserveAspect = true;
+                        img.raycastTarget = false;
+                        UiFactory.SetRect((RectTransform)go.transform, new Vector2(0.5f, 1), new Vector2(0.5f, 1),
+                            new Vector2(0, -8), new Vector2(22, 22));
+                    }
+                    else
+                    {
+                        var mark = UiFactory.CreateText((RectTransform)btn.transform, "RubyMark", "◆", 16,
+                            new Color(0.92f, 0.20f, 0.24f));
+                        UiFactory.SetRect(mark.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1),
+                            new Vector2(0, -10), new Vector2(30, 22));
+                    }
                 }
             }
         }

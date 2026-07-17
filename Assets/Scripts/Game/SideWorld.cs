@@ -47,6 +47,14 @@ namespace HangeulAdventure.Game
         private const int RefResolutionY = 720;
         private const float OrthoSize = RefResolutionY * 0.5f / AssetsPPU; // 5.625 — 세로 시야 11.25u
 
+        // ══ 미니맵 설정 (사이드뷰 전용) ══
+        // 설정 화면 슬라이더가 이 키를 읽고 쓴다. 슬라이더 범위가 0~1 고정이므로 Min/Max로 환산해 저장할 것.
+        // 설정은 타이틀에서만 열려 SideWorld가 없는 시점이라 실시간 반영은 없다 — 맵 진입 시 읽는다.
+        public const string MinimapSizePref = "minimap_size";    // 배율
+        public const string MinimapAlphaPref = "minimap_alpha";  // 투명도
+        public const float MinimapSizeMin = 0.6f, MinimapSizeMax = 1.6f, MinimapSizeDefault = 1.0f;
+        public const float MinimapAlphaMin = 0.2f, MinimapAlphaMax = 1.0f, MinimapAlphaDefault = 0.75f;
+
         private GameApp _app;
         private MapData _map;
         private List<StageData> _stageLookup;
@@ -78,11 +86,15 @@ namespace HangeulAdventure.Game
         private TextMeshProUGUI _hudTitle, _hudProgress, _hudHint, _hudGold;
         private RectTransform _hudRoot;
 
+        // 미니맵 지형 텍스처 — 맵마다 새로 굽는다. DontSave라 GC가 안 걷어간다 (OnDestroy에서 해제 필수)
+        private Texture2D _miniTex;
+
         private class SpotView
         {
             public GameObject Go;
             public SpriteRenderer Bg;
             public TextMeshPro Label;
+            public UnityEngine.UI.Image Mini; // 미니맵 마커 — 색은 Bg.color를 그대로 따른다
             public int StageId;      // 퍼즐 지점만 사용
             public int ExitIndex;    // 출구만 사용 (-1이면 출구 아님)
             public bool IsShop;
@@ -154,6 +166,7 @@ namespace HangeulAdventure.Game
         {
             DisablePixelPerfect(); // 안전망 — 떠나기 직전 호출을 놓친 경로 대비
             if (_hudRoot != null) Destroy(_hudRoot.gameObject);
+            if (_miniTex != null) Destroy(_miniTex);
         }
 
         // ---- 상태 갱신 (MapWorld.RefreshStates와 동일 로직 — 진행 규칙 무변경 재사용, 기획 3.6장) ----
@@ -203,11 +216,24 @@ namespace HangeulAdventure.Game
             // 세계의 글자는 미회수 자음이 깨져 보인다 (D-22 확장: 장소 이름·간판)
             // 지명은 깨뜨리지 않는다 (A-⑱) — 길을 찾는 정보라 읽을 수 있어야 한다. D-11 개정
             _hudTitle.text = $"{_map.title}  —  {_map.theme}";
-            _hudGold.text = $"골드  {ProgressStore.Gold}";
+            _hudGold.text = ProgressStore.Format(ProgressStore.Coins);
             int cleared2 = MapProgress.ClearedCount(_map);
             _hudProgress.text = tutorialDone
                 ? $"클리어 {cleared2}/{_map.spots.Count}"
                 : $"기초 배우기 진행 중 ({System.Array.IndexOf(_map.tutorialStages, nextTutorial) + 1}/{_map.tutorialStages.Length}) — 주황색 지점으로 가세요";
+
+            SyncMinimapMarkers();
+        }
+
+        /// <summary>미니맵 마커 색 = 스팟 상태색. 위 상태 규칙을 복제하지 말고 결과(Bg.color)만 받아쓴다.</summary>
+        private void SyncMinimapMarkers()
+        {
+            foreach (var v in _spotViews.Values)
+                if (v.Mini != null) v.Mini.color = v.Bg.color;
+            foreach (var v in _exitViews)
+                if (v.Mini != null) v.Mini.color = v.Bg.color;
+            if (_shopView?.Mini != null) _shopView.Mini.color = _shopView.Bg.color;
+            if (_bossView?.Mini != null) _bossView.Mini.color = _bossView.Bg.color;
         }
 
         private bool IsSpotOpen(int stageId)

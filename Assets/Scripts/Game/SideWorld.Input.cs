@@ -64,8 +64,11 @@ namespace HangeulAdventure.Game
             if (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame) _horizPressLatch = -1;
             if (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame) _horizPressLatch = 1;
 
+            if (_inputX != 0f) LearnSide(ref _learnedMove, ActSideMove);
+
             var near = NearestInteractable();
             UpdateHint(near);
+            UpdateTutorial(near);
 
             if (upPressed && !_onLadder)
             {
@@ -165,6 +168,7 @@ namespace HangeulAdventure.Game
 
         private void StartDropThrough()
         {
+            LearnSide(ref _learnedDrop, ActSideDrop);
             foreach (var col in _standingOneWay)
             {
                 Physics2D.IgnoreCollision(_bodyCol, col, true);
@@ -248,6 +252,7 @@ namespace HangeulAdventure.Game
             _ladderBottomY = bottom - 0.5f; // 맨 아래 칸 아랫변
 
             _onLadder = true;
+            LearnSide(ref _learnedLadder, ActSideLadder);
             _airJumpUsed = false; // 사다리 = 접지 취급, 2단 점프 리셋
             _horizPressLatch = 0; // 진입 직전까지 눌려 있던 좌우는 이탈로 치지 않는다 (좌우 홀드 + W 동시 진입 허용)
             _rb.position = new Vector2(cx, Mathf.Clamp(feet.y - (up ? 0f : 0.05f), _ladderBottomY, _ladderTopY - 0.01f));
@@ -406,8 +411,73 @@ namespace HangeulAdventure.Game
                 SfxPlayer.Instance?.Fail(); // 자음 게이트: 진입 불가 (D-22)
                 return;
             }
+            LearnSide(ref _learnedEnter, ActSideEnter);
             DisablePixelPerfect();
             _app.StartMapStage(stage, _rb.position);
+        }
+
+        // ---- 조작 튜토리얼 (위치 기반). 학습 기록은 퍼즐 쪽(A-⑨)의 GameHud.HasLearned/Learn을 그대로 쓴다 ----
+        //
+        // ★HasLearned의 뜻이 퍼즐 쪽과 반대로 쓰인다: 퍼즐 하단 힌트는 "배운 것만 보여주고",
+        //   여기는 "안 배운 것만 가르친다". 그래서 개발자 모드(HasLearned가 항상 true)에서는
+        //   배너가 아예 안 뜬다 — 튜토리얼을 눈으로 확인하려면 개발자 모드를 끌 것.
+
+        private const string ActSideMove = "side_move", ActSideEnter = "side_enter",
+                             ActSideLadder = "side_ladder", ActSideDrop = "side_drop";
+
+        /// <summary>사다리 안내 근접 판정 폭 (u). 부착 허용 오차(LadderSnapRange 0.45)로 띄우면
+        /// 걸어 지나가는 데 0.15초라 읽을 틈이 없다 — 안내는 부착 판정보다 넓게 잡는다.</summary>
+        private const float LadderHintRange = 2.5f;
+
+        private bool _learnedMove, _learnedEnter, _learnedLadder, _learnedDrop;
+
+        private void LoadTutorialFlags()
+        {
+            _learnedMove = GameHud.HasLearned(ActSideMove);
+            _learnedEnter = GameHud.HasLearned(ActSideEnter);
+            _learnedLadder = GameHud.HasLearned(ActSideLadder);
+            _learnedDrop = GameHud.HasLearned(ActSideDrop);
+        }
+
+        /// <summary>조작을 한 번 해봤다고 기록. 캐시 플래그로 걸러 PlayerPrefs를 매 프레임 두드리지 않는다.</summary>
+        private void LearnSide(ref bool flag, string act)
+        {
+            if (flag) return;
+            flag = true;
+            GameHud.Learn(act);
+        }
+
+        /// <summary>
+        /// 지금 서 있는 자리에서 필요한 조작 하나만 띄운다. 이미 해본 조작은 띄우지 않는다 (A-⑨와 같은 규칙) —
+        /// 맵 전체에서 같은 문구가 계속 뜨면 잔소리가 된다. 우선순위는 상황이 좁은 순:
+        /// 원웨이 발판 위 > 사다리 앞 > 스팟 앞 > 그 외(이동).
+        /// 문구의 키는 SideWorld.Input의 실제 입력과 일치해야 한다 — 여기를 고치면 Update도 같이 볼 것.
+        /// </summary>
+        private void UpdateTutorial(SpotView near)
+        {
+            string msg = null;
+            if (!_learnedDrop && _grounded && !_standingSolid && _standingOneWay.Count > 0)
+                msg = "S 를 누른 채 Space — 발판 아래로 내려간다";
+            else if (!_learnedLadder && !_onLadder && NearLadder())
+                msg = "W 로 사다리를 오른다 · S 로 내려온다";
+            else if (!_learnedEnter && near != null && !near.IsExit && !near.IsShop && near != _bossView)
+                msg = "W — 이 자리의 스테이지에 들어간다";
+            else if (!_learnedMove)
+                msg = "A · D 로 걷는다 (←→도 가능) · Space 로 점프";
+            _hudTutorial.text = msg ?? "";
+        }
+
+        /// <summary>몸 높이 안에 사다리 칸이 있고 좌우로 LadderHintRange 안이면 "사다리 앞"으로 본다.</summary>
+        private bool NearLadder()
+        {
+            Vector2 feet = _rb.position;
+            int lo = Mathf.RoundToInt(feet.y + 0.1f);
+            int hi = Mathf.RoundToInt(feet.y + PlayerHeight - 0.1f);
+            int x0 = Mathf.FloorToInt(feet.x - LadderHintRange), x1 = Mathf.CeilToInt(feet.x + LadderHintRange);
+            for (int cx = x0; cx <= x1; cx++)
+                for (int cy = lo; cy <= hi; cy++)
+                    if (_map.IsLadder(cx, cy)) return true;
+            return false;
         }
 
         // ---- 카메라 (좌우 추적 + 상하 데드존 + 맵 경계 클램프, 기획 5장) ----

@@ -6,7 +6,8 @@ ChatGPT(GPT-4o 이미지 생성)에서 사용. **하나의 새 대화**를 열�
 스타일은 두 갈래다 (2026-07-09 사용자 피드백 반영):
 - **키아트 (프롬프트 1~6)**: 고퀄리티 디지털 페인팅 일러스트 — 타이틀, 대마왕, 사천왕 4종
 - **인게임 요소 (프롬프트 7~16)**: 16비트 도트풍 — 아이템 아이콘 6종, 맵 오브젝트 3종, 파편
-- **오프닝 컷신 (프롬프트 17~21)**: 도트 시네마틱 — 오프닝 4컷 (2026-07-17 추가)
+- **오프닝 컷신 (프롬프트 22~25)**: 페인팅 — 오프닝 4컷 **[채택]** (2026-07-17)
+- ~~오프닝 컷신 (프롬프트 17~21): 도트 시네마틱~~ — **미채택**, 기록 보존
 
 ---
 
@@ -330,7 +331,283 @@ characters of any language.
 
 ---
 
-## 오프닝 4컷 (프롬프트 17~21) — 모드 C
+## 오프닝 4컷 (프롬프트 22~25) — 모드 A **[채택]**
+
+**결정 (2026-07-17)**: 오프닝 컷신은 **모드 A(페인팅)로 확정**. 픽셀(모드 C, 프롬프트 17~21)과
+컷1을 실제로 각각 뽑아 비교한 뒤 사용자가 페인팅을 선택했다. 채택 근거는 컷1 실물에서
+title_art의 붓질·먹 연기 넝쿨·균열 파편이 그대로 계승됐고, "생기 빠진 차가운 현대"라는 컷1의
+핵심 요구를 페인팅의 대기 표현이 도트보다 확실히 잘 살렸다는 점. 모드 C 절은 기록으로 남긴다.
+
+**컷1은 생성 완료·채택됨** → `ArtDrop/Generated/opening/opening_01_chaos_16x9.png`
+
+### 화면비 — 컷1 실측에서 역산한 규칙
+
+| 항목 | 실측값 |
+|---|---|
+| 나노바나나 웹 원본 | 1024×572 (**정확히 16:9**) |
+| 하단에 모델이 그려 넣은 검은 레터박스 | 69px |
+| 제거 후 실제 내용 영역 | **1024×503 = 2.04:1** (시네마스코프) |
+
+- **웹 UI 화면비는 컷1과 동일하게 16:9로 설정**하고, 결과에서 검은 띠를 잘라 **1024×503**으로 맞춘다.
+  띠가 안 생기면 하단을 크롭해 2.04:1을 만든다. 4컷이 비율이 다르면 컷신이 흔들리므로 이 수치를 고정한다.
+- **"하단 1/5를 비워두라"는 지시는 컷1에서 먹지 않았다.** 생성 모델은 빈 공간을 채우려 한다.
+  → 22~25번 프롬프트는 **"비워두라"를 버리고 "얼굴과 핵심 액션을 상단 2/3에 두라"**는 구도 지시로 바꿨다.
+  대사창을 반투명 오버레이로 얹기로 한 이상 실제 요구는 여백이 아니라 "하단 1/5에 얼굴이 없을 것"이며,
+  컷1은 이미 이 조건을 만족한다.
+
+### 참조 이미지 — 컷1을 참조로 쓴다 (title_art 아님)
+
+| 컷 | 첨부할 참조 이미지 | 이유 |
+|---|---|---|
+| 22 (컷1) | `ArtDrop/title_art.jpg` | 생성 완료. 기록용 |
+| 23 (컷2) | **컷1** | 아직 현대. 주인공·파편·먹 연기·화면비를 컷1에서 그대로 물려받는다 |
+| 24 (컷3) | **컷1 + `title_art.jpg`** | 주인공·파편은 컷1에서, 조선 팔레트·건축은 title_art에서 |
+| 25 (컷4) | **컷3 + `title_art.jpg`** | 조선 팔레트가 확정된 직전 컷을 물려받는 게 가장 가깝다 |
+
+**근거**: title_art가 아니라 **컷1을 기준 참조로 삼는다.** ① title_art의 주인공은 조선 선비 소년이라
+현대인 주인공과 다른 인물이다 — 회색 후디·머리 모양 등 **캐릭터 연속성은 컷1만 공급할 수 있다.**
+② 컷1은 이미 "title_art 화풍을 나노바나나가 해석한 결과물"이라, 컷1을 참조하면 **실제로 달성된 룩**이
+전파돼 4컷 일관성이 더 조인다. ③ 화면비·지평선 높이도 컷1이 기준이다.
+다만 조선 세계(팔레트·건축)는 컷1에 없으므로 컷3·4에서 title_art를 **함께** 첨부한다.
+
+**생성 순서: 23 → 24 → 25 (반드시 순차).** 25번이 24번 결과를 참조로 쓰는 체인이라 건너뛸 수 없다.
+
+---
+
+### 프롬프트 22 — [파일명: opening_01_chaos.png / 오프닝 컷1: 현대의 혼란 (모드 A)] **생성 완료**
+
+참조 이미지: `ArtDrop/title_art.jpg`
+
+```
+Panel 1 of 4 in a game's opening cutscene, 16:9 landscape.
+
+Use the EXACT same art style as the attached reference illustration: highly
+detailed painterly digital painting, rich visible brushwork, intricate textures,
+dramatic cinematic lighting, strong atmospheric depth, layered
+foreground-midground-background composition. Match the reference's brushwork,
+lighting drama and level of detail identically.
+
+This is the ONE panel of the opening that is NOT set in Joseon -- it is the modern
+world. So shift the palette away from the reference: make it cold and drained --
+dead concrete gray, sickly pale cyan-white fluorescent light, wet asphalt
+blue-black, and living black ink. The reference's persimmon-orange warmth is almost
+entirely absent here; the world has had its life bleached out. Keep the mood
+tranquil and ominous -- quiet dread, not loud action.
+
+Scene: a modern city street at dawn, eye level. Shop signboards, a bookshop window
+display, a road sign and a bus stop board are all COMING APART -- the marks on them
+crack into small angular geometric fragments that peel off, tumble through the air
+and dissolve into curling tendrils of glossy black ink smoke, exactly like the
+drifting cracked fragments and black ink tendrils in the reference image. Loose book
+pages and leaflets blow down the street, their surfaces already blank. In the middle
+ground, ordinary modern people stand frozen and helpless, mouths open, gesturing at
+one another -- speech has stopped working. A young modern man in a gray hoodie and
+dark jeans stands left of center with his back to us, small against the street,
+staring up at a disintegrating signboard -- the only one still trying to read,
+echoing the lone figure seen from behind in the reference.
+
+Composition: strong left-to-right depth with the street receding to the right, soft
+directional light from the LEFT. Keep the bottom fifth calm for a dialogue text box.
+
+Absolutely no text, letters, numbers or letter-like shapes anywhere -- every sign,
+book and page carries only abstract angular marks or blank surfaces.
+```
+
+### 프롬프트 23 — [파일명: opening_02_timemachine.png / 오프닝 컷2: 타임머신 (모드 A)]
+
+참조 이미지: **컷1** (`opening_01_chaos_16x9.png`)
+
+```
+Panel 2 of 4 in a game's opening cutscene. The attached image is panel 1 of the same
+cutscene.
+
+Match the attached panel EXACTLY in art style, rendering and framing: highly detailed
+painterly digital painting, rich visible brushwork, intricate textures, dramatic
+cinematic lighting, strong atmospheric depth, layered composition, and the same very
+wide cinematic aspect ratio and horizon height. Same hand, same film.
+
+Character continuity: the same young modern man from the attached panel -- gray hoodie,
+dark jeans, same build and hair -- again seen from behind.
+
+Palette: the cold modern palette of the attached panel still dominates (dead concrete
+gray, sickly pale cyan-white light, wet asphalt blue-black, living black ink), BUT a
+warm amber-brown glow now bleeds out from the machine's core and a first hint of misty
+blue-gray appears in the vortex. Roughly a quarter of the frame has turned warm -- this
+is the first real warmth in the whole opening.
+
+Scene: the interior of a hard science-fiction time-travel laboratory, eye level. A
+precision-engineered machine, unmistakably modern high technology: a machined alloy
+containment ring lined with superconducting coils and cryogenic lines venting cold
+vapour, heavy power conduits, instrument racks with glowing indicator arrays, blast
+shielding, and a raised platform at its centre. Inside the ring, spacetime is opening:
+a swirling vortex of amber and misty blue-gray light. The young man in the gray hoodie
+stands left of centre, seen from behind, stepping up onto the platform toward the
+vortex, one hand steadying himself on the ring frame. Broken angular geometric fragments
+and curling tendrils of glossy black ink smoke -- identical in look to those in the
+attached panel -- drift in from the LEFT of the frame and are being SUCKED INTO the
+vortex, spiralling as they go: the disaster is following him in. On the racks behind
+him, pinned printouts and documents are already blank, their marks eaten away.
+
+Composition: the machine on the right, the man reading left-to-right into it; the vortex
+is the brightest point and the only real warmth in the frame. Keep the man, the machine
+and all key action in the upper two-thirds of the frame -- the bottom fifth should hold
+only floor, cabling and incidental foreground, because a dialogue box will be laid over
+it.
+
+Absolutely no text, letters, numbers or letter-like shapes anywhere -- every screen,
+label, printout and control panel carries only abstract marks or blank surfaces.
+```
+
+- **담아야 할 것**: 명백한 하드SF 장치(정밀 가공 합금 링·초전도 코일·극저온 배관), 소용돌이로 빨려드는 파편(컷1의 파편이 어디로 가는지), 첫 호박색 온기, 뒷모습 유지.
+- **담지 말아야 할 것**: 수제 조악한 기계(하드SF 확정으로 폐기됨), 조선 요소, 주인공 얼굴, 화면에 읽히는 글자·숫자.
+
+### 프롬프트 24 — [파일명: opening_03_arrival.png / 오프닝 컷3: 조선 도착 (모드 A)]
+
+참조 이미지: **컷1** + **`title_art.jpg`** (2장 첨부)
+
+```
+Panel 3 of 4 in a game's opening cutscene. Two images are attached: the FIRST is panel 1
+of the same cutscene (for the character, the fragments and the ink smoke), the SECOND is
+a Joseon-era key art illustration (for the period world, its palette and its
+architecture).
+
+Match the FIRST attached panel exactly in art style, rendering and framing: highly
+detailed painterly digital painting, rich visible brushwork, intricate textures,
+dramatic cinematic lighting, strong atmospheric depth, and the same very wide cinematic
+aspect ratio and horizon height.
+
+Character continuity: the same young modern man -- gray hoodie, dark jeans, white
+sneakers, same build and hair.
+
+Palette: this is where the world turns. Take the palette from the SECOND attached
+reference -- a muted Joseon dawn: desaturated mossy green, wet earth brown, misty
+blue-gray ridges, soft dawn light from the LEFT, with a warm amber accent. It now fills
+about 85% of the frame. CRITICAL: the ONE thing that stays cold and out of palette is
+the young man's modern clothing -- keep his gray hoodie and dark jeans noticeably
+cooler, grayer and deader than everything around them, as if this world has not coloured
+him in yet. He has NOT changed clothes and wears NO hanbok.
+
+Scene: a quiet Joseon dynasty countryside path at dawn -- layered misty blue-gray
+mountain ridges far behind, a pine forest silhouette in the middle distance, a dirt path
+with mossy green verges and wet earth brown banks. The arrival has gone wrong. The time
+machine has crashed: its machined alloy ring is cracked open and half-buried in the
+earth, torn conduits sparking, cold vapour and smoke bleeding from its ruptured core --
+clearly destroyed beyond repair, no way home. Thrown clear of the wreck lies an ancient
+Korean bound manuscript, its cover split open; the crash is TEARING IT APART, and its
+pages are breaking into a rising storm of small angular geometric fragments -- the same
+fragments as in the first attached panel -- that scatter up and away toward the right,
+out over the ridges. The young man kneels left of centre in three-quarter back view amid
+the wreckage, one hand on the ground, staring after the escaping fragments. A single
+thin wisp of glossy black ink smoke lingers on the far horizon, watching.
+
+Composition: wreck and man on the left, fragments streaming right toward the ridges,
+strong left-to-right depth. Keep the man, the manuscript and the fragment storm in the
+upper two-thirds of the frame -- the bottom fifth should hold only path, earth and
+debris, because a dialogue box will be laid over it.
+
+Absolutely no text, letters, numbers or letter-like shapes anywhere -- the manuscript's
+pages and the fragments must carry only abstract brush marks, never readable characters.
+```
+
+- **담아야 할 것**: 수리 불가로 부서진 타임머신(귀환 불가 = 동기), 찢겨 파편이 되어 오른쪽으로 날아가는 해례본, 앵커 팔레트 85%, **주인공 현대복만 차갑게 남음**, 지평선의 먹 연기 한 줄.
+- **담지 말아야 할 것**: 주인공의 한복(가장 잦은 실패 — 4컷 대사의 전제가 무너진다), 읽히는 글자, 멀쩡한 타임머신, 군중.
+
+### 프롬프트 25 — [파일명: opening_04_sejong.png / 오프닝 컷4: 세종 만남 (모드 A)]
+
+참조 이미지: **컷3** + **`title_art.jpg`** (2장 첨부) — 컷3 생성 후에 진행
+
+```
+Panel 4 of 4 in a game's opening cutscene. Two images are attached: the FIRST is panel 3
+of the same cutscene (for the character and the established Joseon palette), the SECOND
+is a Joseon-era key art illustration (for the architecture and period detail).
+
+Match the attached panels exactly in art style, rendering and framing: highly detailed
+painterly digital painting, rich visible brushwork, intricate textures, dramatic
+cinematic lighting, strong atmospheric depth, and the same very wide cinematic aspect
+ratio and horizon height.
+
+Palette: the muted Joseon palette, now complete -- desaturated mossy green, wet earth
+brown, misty blue-gray, warm amber lamplight, with deep indigo and muted vermilion
+accents from the painted woodwork. CRITICAL: exactly ONE thing in the frame is still
+off-palette -- the young man's cold gray modern clothing. Make that clash obvious; it is
+the entire point of this shot. He still wears the gray hoodie, dark jeans and white
+sneakers and has NOT changed into a hanbok.
+
+Scene: inside a grand Joseon palace hall at dawn, warm amber light spilling through
+paper-screen doors on the LEFT. On the right sits a dignified Joseon king in his forties
+-- round kind face, thin beard, calm intelligent eyes -- wearing an ornate royal robe and
+a black winged official cap, behind a low writing desk with a brush, an inkstone and
+blank paper scrolls. He has just looked up from his work and is gesturing lightly toward
+the visitor's strange clothes with an amused, genuinely puzzled expression, one eyebrow
+raised -- curious, not angry. On the left the young modern man stands in profile facing
+him, stiff and awkward, one hand rubbing the back of his neck, his cold gray clothing
+glaringly wrong against the warm hall. Painted wooden beams overhead, a folding screen
+with abstract landscape brushwork behind the king. One small angular geometric fragment
+-- the same kind as in the attached panels -- floats quietly in the air above the desk
+between the two men. A single faint wisp of glossy black ink smoke slips out through the
+far right doorway, unnoticed by both.
+
+Composition: a two-shot -- the man on the left, the king on the right, facing each other
+across the frame with clear space between them. Keep both faces in the upper two-thirds
+of the frame -- the bottom fifth should hold only the floor and the base of the desk,
+because a dialogue box will be laid over it.
+
+Absolutely no text, letters, numbers or letter-like shapes anywhere -- the scrolls, the
+folding screen and the desk must be blank or carry only abstract brush marks.
+```
+
+- **담아야 할 것**: 왕의 손짓·시선이 주인공의 옷을 정확히 가리킬 것(대사 "그 이상한 옷…"의 근거), 놀림기 섞인 호기심(분노 아님 — 전연령 톤), 두 사람 사이의 파편 한 조각, 오른쪽 문으로 빠져나가는 먹 연기(본편 출발 신호).
+- **담지 말아야 할 것**: **세종의 실명**(아래 팁 참조 — 절대 프롬프트에 넣지 말 것), 신하·호위 군중, 위압적 옥좌 정면 구도(만남이 아니라 알현이 된다), 주인공의 한복, 읽히는 글자.
+
+---
+
+### 모드 A 오프닝 — 연속성 장치 (컷1 실물 기준으로 갱신)
+
+| 장치 | 컷1 | 컷2 | 컷3 | 컷4 |
+|---|---|---|---|---|
+| **① 균열 파편** | 간판에서 뜯겨 폭풍 (**결과**) | 소용돌이로 빨려듦 | **해례본에서 터져 나옴 (원인)** | 책상 위 한 조각 정지 |
+| **② 먹 연기** | 화면 가득 | 파편과 함께 빨려듦 | 지평선에 한 줄 | 오른쪽 문으로 빠져나감 |
+| **③ 팔레트** | 차가운 현대 100% | 현대 75% + 호박 25% | 앵커 85% | 앵커 100% |
+| **④ 주인공 현대복** | 회색 후디 (배경과 동색) | 동색 | **혼자 차갑게 남음** | **왕이 지적 → 해소** |
+| **⑤ 왼쪽 광원** | 형광 청백색 | 왼쪽에서 파편 유입 | 새벽빛 | 문살 사이 아침빛 |
+| **⑥ 좌→우 시선** | 거리가 우측 후퇴 | 인물 → 기계 | 인물 → 우측으로 날아가는 파편 | 인물 → 왕 (동선 종결) |
+
+- **④가 이 오프닝의 논리 축**이다. 색이 안 맞는 옷 → 왕이 지적 → 환복. 팔레트 불일치가 곧 플롯이므로,
+  컷3·4에서 주인공 옷이 조선색으로 물들면 오프닝이 무너진다. **재생성 판정 1순위.**
+- **①의 의미가 컷3 확정 설정으로 바뀌었다**: 컷1의 파편이 '결과', 컷3의 해례본 찢김이 '원인'이 되어
+  오프닝이 인과 루프로 닫힌다(주인공의 도착이 곧 글자 소멸의 발단). 의도된 것이면 강한 한 수이고,
+  아니라면 컷3에서 파괴의 주체를 먹 연기 쪽으로 옮기는 수정이 필요하다 — **기획 확인 필요 항목**.
+
+### 모드 A 오프닝 — 실패 시 재요청 문구
+
+- **주인공이 한복을 입고 나올 때** (컷3·4에서 가장 잦을 실패 — 모델이 "조선 배경 = 한복"으로 자동 보정한다):
+  → `The young man must stay in his modern gray hoodie, dark jeans and white sneakers. He has NOT changed clothes and wears no hanbok. Keep his clothing cold gray and desaturated while everything around him stays warm.`
+- **하단에 얼굴·핵심 액션이 걸릴 때** (컷1에서 "비워두라"가 안 먹힌 실패의 재발):
+  → `Raise the camera slightly and re-frame so that all faces and the key action sit in the upper two-thirds. The bottom fifth must contain only ground and incidental foreground.`
+  ※ "leave the bottom empty"는 쓰지 말 것 — 컷1에서 무시당했다. 반드시 **구도(re-frame)** 로 요구한다.
+- **화면비가 컷1과 다르게 나올 때**:
+  → `Match the exact aspect ratio, framing and horizon height of the attached panel. Same very wide cinematic frame.`
+  그래도 어긋나면 16:9로 받아 하단을 잘라 **1024×503**으로 맞춘다.
+- **팔레트가 안 물들 때 (컷3)**: → `The environment must fully adopt the muted Joseon dawn palette of the second reference -- mossy green, wet earth brown, misty blue-gray. Only the man's clothing stays cold gray.`
+- **세종은 절대 이름으로 부르지 말 것.** `King Sejong`을 쓰면 ① 생성 거부 ② 표준영정 모사 ③ 만원권 초상
+  흉내 중 하나가 나온다. 25번 프롬프트의 묘사 방식(`a dignified Joseon king in his forties, round kind
+  face, thin beard, ornate royal robe, black winged official cap`)을 그대로 유지하고 이름을 넣지 말 것.
+- **글자가 읽히게 나올 때**: → `Remove all readable characters. Every sign, page and scroll must carry only abstract brush marks or be blank.` (컷1도 간판에 글자 비슷한 추상 기호가 남았으나 판독 불가라 허용된 상태.)
+
+### 모드 A 오프닝 — 저장·후처리
+
+- `ArtDrop/Generated/opening/`에 `opening_02_timemachine.png` … 로 저장 → 검은 띠 제거·크롭본은 `_16x9.png` 접미(컷1 관례 유지. 실제 비율은 2.04:1이지만 파일명 관례는 컷1과 통일).
+- 4컷 전부 **1024×503**으로 통일한 뒤 Unity로 임포트.
+- `ArtDrop/출처.md`에 "파일명 / 나노바나나(Gemini) 웹 생성 / 날짜 / 프롬프트 번호" 기록.
+
+---
+
+## 오프닝 4컷 (프롬프트 17~21) — 모드 C **[미채택 · 기록 보존]**
+
+> **미채택 (2026-07-17)**: 컷1을 모드 A(페인팅)와 모드 C(픽셀)로 각각 실제 생성해 비교한 결과
+> **사용자가 모드 A를 선택**했다. 아래 모드 C 프롬프트는 실행하지 말 것 — 판단 근거와 설계
+> (문법/팔레트 분리, 연속성 장치)는 모드 A 절에 계승되었으므로 기록으로만 남긴다.
+> 채택된 프롬프트는 위 "오프닝 4컷 (프롬프트 22~25) — 모드 A" 절을 볼 것.
 
 게임 시작 시 재생되는 오프닝 컷신 4장. **키아트(모드 A)가 아니라 도트 시네마틱(모드 C)이다** —
 오프닝은 곧바로 인게임으로 이어지므로 타이틀 일러스트보다 **플레이 화면(사이드뷰 도트)과의

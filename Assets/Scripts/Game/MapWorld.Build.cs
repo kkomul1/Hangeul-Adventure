@@ -226,6 +226,46 @@ namespace HangeulAdventure.Game
 
             _hudGold = UiFactory.CreateText(_hudRoot, "Gold", "", 21, new Color(0.72f, 0.55f, 0.12f), TextAlignmentOptions.Right);
             UiFactory.SetRect(_hudGold.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-266, -26), new Vector2(240, 36));
+
+            BuildConsonantGauge();
+            BuildRoomBadges();
+        }
+
+        /// <summary>ㄱ~ㅎ 회수 게이지 (진행도 아래). 칸 수가 고정이라 폭을 직접 계산해 배치한다.</summary>
+        private void BuildConsonantGauge()
+        {
+            const float cell = 28f;
+            var row = UiFactory.CreateEmpty(_hudRoot, "ConsonantGauge");
+            UiFactory.SetRect(row, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -98),
+                new Vector2(AllConsonants.Length * cell + 66, 32));
+
+            _gaugeCells = new TextMeshProUGUI[AllConsonants.Length];
+            for (int i = 0; i < AllConsonants.Length; i++)
+            {
+                var t = UiFactory.CreateText(row, $"C_{i}", "", 20, UiFactory.Ink);
+                UiFactory.SetRect(t.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f),
+                    new Vector2(i * cell, 0), new Vector2(cell, 30));
+                _gaugeCells[i] = t;
+            }
+
+            _gaugeCount = UiFactory.CreateText(row, "Count", "", 17, UiFactory.Dim, TextAlignmentOptions.Left);
+            UiFactory.SetRect(_gaugeCount.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f),
+                new Vector2(AllConsonants.Length * cell + 8, 0), new Vector2(60, 30));
+        }
+
+        /// <summary>방 진행 배지 (게이지 아래). 방에는 위치 데이터가 없어 월드 표지가 아닌 HUD 목록으로 세운다.</summary>
+        private void BuildRoomBadges()
+        {
+            for (int i = 0; i < _map.rooms.Count; i++)
+            {
+                var badge = UiFactory.CreatePanel(_hudRoot, $"RoomBadge_{i}", new Color(0.96f, 0.94f, 0.89f, 0.85f));
+                UiFactory.SetRect(badge, new Vector2(0, 1), new Vector2(0, 1),
+                    new Vector2(24 + i * 190, -134), new Vector2(180, 30));
+
+                var t = UiFactory.CreateText(badge, "Label", "", 17, UiFactory.Ink);
+                UiFactory.Stretch(t.rectTransform);
+                _roomBadges.Add(t);
+            }
         }
     }
 }

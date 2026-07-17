@@ -8,10 +8,12 @@ using HangeulAdventure.Engine;
 // 엔진 코드를 그대로 컴파일해 전체 스테이지를 고속 검증하고 minMoves를 기입하는 CLI.
 // (Unity 에디터의 Mono 런타임이 느려서 대형 보드 검증용으로 사용 — 동일한 엔진 코드가 기준)
 // 모드:
-//   (없음)            : Stages 폴더 전수 검증 + minMoves 기입
-//   --consonants      : 스테이지별 사용 기본 자음
-//   --path <파일경로>  : 단일 스테이지의 최적 경로 출력 (설계 검토용)
-//   <폴더>            : 해당 폴더 전수 검증
+//   (없음)                       : Stages 폴더 전수 검증 + minMoves 기입
+//   --consonants                 : 스테이지별 사용 기본 자음
+//   --path <파일경로>             : 단일 스테이지의 최적 경로 출력 (설계 검토용)
+//   --trials                     : Resources/Battles의 보스 시련 전수 검증
+//   --bench <파일> [상태] [ms]    : 파일을 건드리지 않고 단일 스테이지 측정 (상태 수·시간·최대 메모리)
+//   <폴더>                       : 해당 폴더 전수 검증
 class Program
 {
     static int Main(string[] args)
@@ -20,6 +22,12 @@ class Program
             return PathMode(args[1]);
         if (args.Length >= 1 && args[0] == "--maps")
             return MapsMode();
+        if (args.Length >= 1 && args[0] == "--trials")
+            return TrialsMode();
+        if (args.Length >= 2 && args[0] == "--bench")
+            return BenchMode(args[1],
+                args.Length > 2 ? int.Parse(args[2]) : 5_000_000,
+                args.Length > 3 ? int.Parse(args[3]) : 120_000);
 
         bool audit = args.Length > 0 && args[0] == "--consonants";
         string folder = args.Length > (audit ? 1 : 0) ? args[audit ? 1 : 0]
@@ -54,12 +62,70 @@ class Program
             }
             else
             {
-                Console.WriteLine($"[일치] {name}: {r.MinMoves} ({sw.ElapsedMilliseconds}ms)");
+                Console.WriteLine($"[일치] {name}: {r.MinMoves} (상태 {r.ExploredStates}, {sw.ElapsedMilliseconds}ms)");
                 ok++;
             }
         }
 
         Console.WriteLine($"결과: 일치 {ok}, 기입 {updated}, 문제 {bad}");
+        return bad > 0 ? 1 : 0;
+    }
+
+    // ── 단일 스테이지 측정 모드 (파일 미변경) ─────────────────────────────
+    static int BenchMode(string file, int maxStates, int timeBudgetMs)
+    {
+        var (stage, declared) = Load(File.ReadAllText(file));
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var r = Solver.Solve(stage, maxStates, timeBudgetMs);
+        sw.Stop();
+        var proc = System.Diagnostics.Process.GetCurrentProcess();
+        double mb = proc.PeakWorkingSet64 / 1048576.0;
+        double perState = r.ExploredStates > 0 ? proc.PeakWorkingSet64 / (double)r.ExploredStates : 0;
+        Console.WriteLine($"{Path.GetFileName(file)}: " +
+            (r.Aborted ? "중단" : r.Solvable ? $"최소 {r.MinMoves}수 (선언 {declared})" : "풀이불가") +
+            $" | 상태 {r.ExploredStates:N0} | {sw.ElapsedMilliseconds:N0}ms" +
+            $" | 최대메모리 {mb:N0}MB ({perState:N1}B/상태)");
+        return r.Aborted ? 1 : 0;
+    }
+
+    // ── 보스 시련 전수 검증 모드 ─────────────────────────────
+    static int TrialsMode()
+    {
+        int ok = 0, bad = 0;
+        foreach (string path in Directory.GetFiles(Path.Combine(RepoRoot(), "Assets", "Resources", "Battles"), "*.json"))
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(path));
+            var root = doc.RootElement;
+            string id = root.GetProperty("id").GetString();
+            var trials = root.GetProperty("trials");
+            for (int i = 0; i < trials.GetArrayLength(); i++)
+            {
+                var t = trials[i];
+                var rowsEl = t.GetProperty("rows");
+                var rows = new string[rowsEl.GetArrayLength()];
+                for (int j = 0; j < rows.Length; j++) rows[j] = rowsEl[j].GetString();
+                string goalsStr = t.GetProperty("goals").GetString();
+                int limit = t.GetProperty("moveLimit").GetInt32();
+
+                // BattleScreen.StartTrialPuzzle / BattleTrialSolvableTests와 동일한 goals 파싱
+                var groups = new List<GoalGroup>();
+                foreach (string part in goalsStr.Split(','))
+                {
+                    string g = part.Trim();
+                    if (g.Length > 0) groups.Add(new GoalGroup { display = g, slots = g.ToCharArray() });
+                }
+
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                var r = Solver.Solve(StageBuilder.FromRows(rows, groups.ToArray()), 5_000_000, 120_000);
+                sw.Stop();
+                string tag = $"{id}#{i} '{goalsStr}'";
+                if (r.Aborted) { Console.WriteLine($"[중단] {tag} (상태 {r.ExploredStates})"); bad++; }
+                else if (!r.Solvable) { Console.WriteLine($"[풀이불가] {tag}"); bad++; }
+                else if (r.MinMoves > limit) { Console.WriteLine($"[제한초과] {tag}: 최소 {r.MinMoves} > 제한 {limit}"); bad++; }
+                else { Console.WriteLine($"[통과] {tag}: 최소 {r.MinMoves} / 제한 {limit} (상태 {r.ExploredStates}, {sw.ElapsedMilliseconds}ms)"); ok++; }
+            }
+        }
+        Console.WriteLine($"결과: 통과 {ok}, 문제 {bad}");
         return bad > 0 ? 1 : 0;
     }
 

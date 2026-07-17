@@ -97,9 +97,10 @@ namespace HangeulAdventure.Game
             {
                 var exit = _map.exits[near.ExitIndexil];
                 string exitName = exit.label; // 지명은 깨뜨리지 않는다 (A-⑱)
+                // 게이트 스토리: 문패의 글자를 읽을 수 있어야 문을 지난다. 조건 수치(required)는 그대로다
                 _hudHint.text = MapProgress.ExitOpen(_map, exit)
                     ? $"Space: {exitName}(으)로 이동"
-                    : $"{exitName} — 잠김 (이 지역 {MapProgress.ClearedCount(_map)}/{exit.required} 클리어)";
+                    : $"{exitName} — 문패의 글자가 아직 흐릿하다 (이 지역 {MapProgress.ClearedCount(_map)}/{exit.required} 클리어)";
                 return;
             }
 

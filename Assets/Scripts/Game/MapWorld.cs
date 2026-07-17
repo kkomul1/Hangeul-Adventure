@@ -25,6 +25,12 @@ namespace HangeulAdventure.Game
         private SpotView _bossView;
         private TextMeshProUGUI _hudTitle, _hudProgress, _hudHint, _hudGold;
         private RectTransform _hudRoot;
+        private TextMeshProUGUI[] _gaugeCells;
+        private TextMeshProUGUI _gaugeCount;
+        private readonly List<TextMeshProUGUI> _roomBadges = new List<TextMeshProUGUI>();
+
+        /// <summary>게이지 표시 순서. StageData.UsedBaseConsonants의 기본 14자와 같은 집합 (된소리 제외 — ㄲ은 ㄱ 회수로 취급).</summary>
+        private const string AllConsonants = "ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ";
 
         private SpriteRenderer _playerSr;
         private int _playerDir;   // 0=아래 1=위 2=왼쪽 3=오른쪽 (Walk 시트 열 순서 가정 — 시각 검증으로 확정)
@@ -133,11 +139,50 @@ namespace HangeulAdventure.Game
 
             // 지명은 깨뜨리지 않는다 (A-⑱) — 길을 찾는 정보라 읽을 수 있어야 한다. D-11 개정
             _hudTitle.text = $"{_map.title}  —  {_map.theme}";
-            _hudGold.text = $"골드  {ProgressStore.Gold}";
+            _hudGold.text = ProgressStore.Format(ProgressStore.Coins);
             int cleared2 = MapProgress.ClearedCount(_map);
             _hudProgress.text = tutorialDone
                 ? $"클리어 {cleared2}/{_map.spots.Count}"
                 : $"기초 배우기 진행 중 ({System.Array.IndexOf(_map.tutorialStages, nextTutorial) + 1}/{_map.tutorialStages.Length}) — 주황색 지점으로 가세요";
+
+            RefreshConsonantGauge();
+            RefreshRoomBadges();
+        }
+
+        /// <summary>
+        /// ㄱ~ㅎ 회수 게이지: 미회수 자음은 ▒로 자리를 남겨 "얼마나 남았는가"를 보여준다.
+        /// BrokenText.Apply는 음절 전용이라 낱자음에 무반응 — 여기서는 직접 치환한다.
+        /// </summary>
+        private void RefreshConsonantGauge()
+        {
+            if (_gaugeCells == null) return;
+            string recovered = ProgressStore.RecoveredConsonants;
+            int have = 0;
+            for (int i = 0; i < AllConsonants.Length; i++)
+            {
+                bool has = recovered.IndexOf(AllConsonants[i]) >= 0;
+                if (has) have++;
+                _gaugeCells[i].text = has ? AllConsonants[i].ToString() : "▒";
+                _gaugeCells[i].color = has ? UiFactory.Ink : UiFactory.Dim;
+            }
+            _gaugeCount.text = $"{have}/{AllConsonants.Length}";
+        }
+
+        /// <summary>방 진행 배지: 방의 클리어 수와 보상 자음(미회수는 ▒). 방 이름은 지명이라 깨뜨리지 않는다 (A-⑱).</summary>
+        private void RefreshRoomBadges()
+        {
+            for (int i = 0; i < _roomBadges.Count; i++)
+            {
+                var room = _map.rooms[i];
+                int cleared = 0;
+                foreach (int id in room.stages)
+                    if (ProgressStore.GetStars(id) > 0) cleared++;
+
+                char reward = room.reward[0];
+                bool got = ProgressStore.RecoveredConsonants.IndexOf(reward) >= 0;
+                _roomBadges[i].text = $"{room.label}  {cleared}/{room.stages.Length}  {(got ? reward.ToString() : "▒")}";
+                _roomBadges[i].color = got ? UiFactory.Ink : UiFactory.Dim;
+            }
         }
 
         private bool IsSpotOpen(int stageId)

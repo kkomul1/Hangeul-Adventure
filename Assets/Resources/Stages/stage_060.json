@@ -1,0 +1,10 @@
+{
+  "id": 60,
+  "title": "그늘 밑에 누구",
+  "rows": ["ㄴㄱ", "ㅜㅜ"],
+  "goals": [{ "display": "누구", "slots": "누구" }],
+  "minMoves": 2,
+  "difficulty": 1,
+  "hint": "ㅜ를 위로 밀어 올리면 위의 자음과 만나요.",
+  "stars": [0, 0, 0]
+}

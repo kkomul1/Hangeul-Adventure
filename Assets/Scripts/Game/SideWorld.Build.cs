@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HangeulAdventure.Game
 {
     /// <summary>
-    /// SideWorld의 구축 부분: 지형 콜라이더(연속 구간 병합), 배경 레이어, 스팟, 데코, 플레이어, HUD.
+    /// SideWorld의 구축 부분: 지형 콜라이더(연속 구간 병합), 배경 레이어, 스팟, 데코, 플레이어, HUD·미니맵.
     ///
     /// 아트(Art/Forest, PPU 64)가 있으면 스프라이트로, 없으면 색 블록으로 짓는다 (_art 스위치).
     /// 좌표·앵커는 승인 합성 Tools/Scripts/forest_compose.py를 그대로 옮긴 것 —
@@ -32,7 +33,7 @@ namespace HangeulAdventure.Game
 
         // ── 승인 합성에서 옮겨온 배치 상수 (단위: world u. 픽셀값은 /64) ──
         private const float SurfaceY = 0.5f;                 // 바닥 칸 윗변 = 지면 표면선
-        private const float GroundPitch = 210f / 64f;        // 청크 간격 3.28u — 폭 5u를 1.72u 겹쳐 깐다
+        private const float GroundPitch = 318f / 64f;        // 청크 간격 — 폭 5u(320px)를 2px만 겹쳐 깐다 (03은 좌우 flush라 큰 겹침이 불필요)
         private const float GroundChunkW = 320f / 64f;       // 청크 폭 5u
         private const float GroundOverhang = 4f;             // 지면·백필을 맵 밖까지 연장 — 화면비가 넓어 맵 밖이 보여도 하늘이 새지 않게
         private const float BackfillTopY = SurfaceY - 24f / 64f;  // 표면선 24px 아래부터 흙
@@ -51,15 +52,28 @@ namespace HangeulAdventure.Game
         private const float SignLabelY = 0.93f;              // 팻말 밑동 기준 한지 패널 중앙
         private const int TreeLargeMinWidth = 7;             // 배경 덩어리 이 폭 이상이면 큰 나무
 
-        /// <summary>지면 청크 순서 (승인 합성과 동일). 피벗이 표면선이라 y=0.5에 그냥 놓으면 맞는다.</summary>
-        private static readonly string[] GroundChunks = { "ground_flat_03", "ground_flat_02", "ground_flat_04" };
+        // ── 미니맵 배치 상수 (단위: UI px, 기준 해상도 1280x720) ──
+        private const float MinimapMaxW = 240f;   // 지형 영역 최대 폭 (배율 1.0 기준)
+        private const float MinimapMaxH = 120f;   // 최대 높이 — 세로로 긴 맵이 화면을 덮지 않게
+        private const float MinimapPad = 4f;      // 지형 영역 바깥 테두리 여백
+        private const float MinimapTopY = -76f;   // 우상단 나가기·가방·골드 띠(-20 ~ -66) 아래
 
         /// <summary>
-        /// 흙 백필 색 = 청크 하단의 어두운 흙 실측 픽셀 (83,57,61).
-        /// 청크 몸체(125,91,80)보다 어두워야 한다 — 밝은 색을 쓰면 어두운 청크 밑면 아래에
-        /// 밝은 판이 깔려 청크가 떠 보인다(실측 확인). 땅은 아래로 갈수록 어두운 쪽이 자연스럽다.
+        /// 지면 청크. 피벗이 중앙 표면선이라 y=0.5에 놓으면 표면이 칸 윗변에 붙는다.
+        /// ★03만 쓴다 — 02·04는 가장자리 표면선이 중앙보다 11~20px 내려앉은 "둥근 섬"이라
+        ///   (실측: 02 좌89/우86 vs 중앙69, 04 좌94/우93 vs 중앙83, 03은 좌62/우63 vs 중앙63)
+        ///   겹쳐 깔면 겹침 경계마다 그 낙차가 계단으로 드러난다. 03만 표면선이 평탄하다.
+        ///   반복감은 좌우 미러 + 데코(바위·그루터기·나무)로 완화한다.
+        ///   표면선이 평탄한 변주를 새로 뽑으면 여기에 합류시킬 것.
         /// </summary>
-        private static readonly Color DirtColor = new Color(83f / 255f, 57f / 255f, 61f / 255f);
+        private static readonly string[] GroundChunks = { "ground_flat_03" };
+
+        /// <summary>
+        /// 흙 백필 색 = ground_flat_03 하단 실측 픽셀 (125,91,80).
+        /// 지면 청크와 같은 색이어야 경계가 안 보인다 — 다른 색을 쓰면 청크가 끝나는 y에
+        /// 수평 띠가 드러난다(실측 확인).
+        /// </summary>
+        private static readonly Color DirtColor = new Color(125f / 255f, 91f / 255f, 80f / 255f);
 
         private static readonly Vector2Int[] Neighbors4 =
         {
@@ -630,12 +644,16 @@ namespace HangeulAdventure.Game
 
         // ---- HUD (MapWorld.BuildHud와 동일 패턴) ----
 
+        // 조작 튜토리얼 배너. 문구·트리거는 Input.cs가 쥔다 (조작을 읽는 쪽과 가르치는 쪽을 붙여 둔다)
+        private TextMeshProUGUI _hudTutorial;
+
         private void BuildHud()
         {
             _hudRoot = UiFactory.CreateEmpty(_canvas.transform, "SideMapHud");
             UiFactory.Stretch(_hudRoot);
 
             _hudTitle = UiFactory.CreateText(_hudRoot, "Title", "", 28, UiFactory.Ink, TextAlignmentOptions.Left);
+            if (UiFactory.PlaceFont != null) _hudTitle.font = UiFactory.PlaceFont; // 지명 서체 (본문 폰트와 분리)
             UiFactory.SetRect(_hudTitle.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -22), new Vector2(600, 44));
             BrokenTextFx.Ensure(_hudTitle); // 깨진 글자 파편 연출 (M4-3)
 
@@ -646,6 +664,13 @@ namespace HangeulAdventure.Game
             UiFactory.SetRect(_hudHint.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(900, 34));
             BrokenTextFx.Ensure(_hudHint); // 출구·장소 이름의 깨진 글자 연출
 
+            // 조작 튜토리얼 배너 (하단 힌트 바로 위). 상시 문구인 힌트와 달리 "지금 이 자리에서 필요한
+            // 조작"만 뜨고 한 번 해보면 사라진다 — 갱신은 Input.cs의 UpdateTutorial.
+            // 깨진 글자 연출(BrokenTextFx)은 붙이지 않는다: 조작 안내는 세계의 글자가 아니라 시스템 문구다
+            _hudTutorial = UiFactory.CreateText(_hudRoot, "Tutorial", "", 24, UiFactory.Accent);
+            UiFactory.SetRect(_hudTutorial.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 68), new Vector2(960, 40));
+            LoadTutorialFlags(); // 학습 기록(PlayerPrefs)은 진입 시 1회만 읽는다 — 매 프레임 읽으면 문자열이 쌓인다
+
             var exitBtn = UiFactory.CreateButton(_hudRoot, "LeaveBtn", "나가기", 19, UiFactory.Paper, UiFactory.Ink,
                 () => { DisablePixelPerfect(); _app.LeaveMapToTitle(); });
             UiFactory.SetRect((RectTransform)exitBtn.transform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-20, -20), new Vector2(120, 46));
@@ -655,6 +680,133 @@ namespace HangeulAdventure.Game
 
             _hudGold = UiFactory.CreateText(_hudRoot, "Gold", "", 21, new Color(0.72f, 0.55f, 0.12f), TextAlignmentOptions.Right);
             UiFactory.SetRect(_hudGold.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-266, -26), new Vector2(240, 36));
+
+            BuildMinimap();
+        }
+
+        // ---- 미니맵 (사이드뷰 전용, 상시 표시. 탑다운 v1에는 없다 — 이 partial에만 있으므로 자동 제외) ----
+
+        /// <summary>
+        /// 맵 전체를 축소해 우상단에 상시 표시. 크기·투명도는 PlayerPrefs 설정을 진입 시 1회 읽는다
+        /// (설정 팝업은 타이틀에서만 열려 SideWorld가 없다 — 실시간 반영 경로가 존재하지 않는다).
+        /// </summary>
+        private void BuildMinimap()
+        {
+            float size = Mathf.Clamp(PlayerPrefs.GetFloat(MinimapSizePref, MinimapSizeDefault), MinimapSizeMin, MinimapSizeMax);
+            float alpha = Mathf.Clamp(PlayerPrefs.GetFloat(MinimapAlphaPref, MinimapAlphaDefault), MinimapAlphaMin, MinimapAlphaMax);
+
+            // 칸당 px은 폭·높이 중 먼저 한계에 닿는 쪽으로 맞춘다 — 폭만 고정하면 60x9 같은 극단적
+            // 종횡비에서 세로가 뭉개지고, 반대로 세로로 긴 맵에서는 화면을 덮는다
+            float ppc = Mathf.Min(MinimapMaxW / _map.width, MinimapMaxH / _map.height) * size;
+            var area = new Vector2(_map.width * ppc, _map.height * ppc);
+
+            var root = UiFactory.CreateEmpty(_hudRoot, "Minimap");
+            UiFactory.SetRect(root, new Vector2(1, 1), new Vector2(1, 1),
+                new Vector2(-20, MinimapTopY), area + new Vector2(MinimapPad * 2, MinimapPad * 2));
+            root.gameObject.AddComponent<CanvasGroup>().alpha = alpha; // 배경·지형·마커 투명도 일괄 (개별 색 알파 금지)
+
+            var bd = UiFactory.CreatePanel(root, "Bd", new Color(UiFactory.Paper.r, UiFactory.Paper.g, UiFactory.Paper.b, 0.55f));
+            UiFactory.Stretch(bd);
+            var bdImg = bd.GetComponent<Image>();
+            bdImg.sprite = UiFactory.RoundedSprite();
+            bdImg.type = Image.Type.Sliced;
+            bdImg.raycastTarget = false;
+
+            var mapRt = UiFactory.CreateEmpty(root, "Map"); // 마커 좌표의 기준 사각형 = 지형 영역 그대로
+            UiFactory.Stretch(mapRt, MinimapPad);
+
+            _miniTex = BuildMinimapTexture();
+            var terrain = new GameObject("Terrain", typeof(RectTransform), typeof(RawImage));
+            terrain.transform.SetParent(mapRt, false);
+            UiFactory.Stretch((RectTransform)terrain.transform);
+            var raw = terrain.GetComponent<RawImage>();
+            raw.texture = _miniTex;
+            raw.raycastTarget = false;
+
+            foreach (var v in _spotViews.Values) MakeMiniMarker(mapRt, v, area, ppc);
+            foreach (var v in _exitViews) MakeMiniMarker(mapRt, v, area, ppc);
+            if (_shopView != null) MakeMiniMarker(mapRt, _shopView, area, ppc);
+            if (_bossView != null) MakeMiniMarker(mapRt, _bossView, area, ppc);
+
+            // 플레이어 마커는 마지막에 — 스팟 마커 위에 그려져야 한다 (uGUI는 자식 순서가 곧 그리기 순서)
+            var player = UiFactory.CreatePanel(mapRt, "Player", UiFactory.Accent);
+            float ps = Mathf.Clamp(ppc * 2f, 6f, 11f);
+            UiFactory.SetRect(player, Vector2.zero, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(ps, ps));
+            var pImg = player.GetComponent<Image>();
+            pImg.sprite = UiFactory.RoundedSprite();
+            pImg.raycastTarget = false;
+
+            var marker = player.gameObject.AddComponent<MinimapMarker>();
+            marker.Target = _playerT;
+            marker.MapSize = new Vector2(_map.width, _map.height);
+            marker.AreaSize = area;
+        }
+
+        /// <summary>
+        /// 지형 텍스처: 1칸 = 1픽셀. 판정 순서는 솔리드 → 사다리 → 원웨이 —
+        /// MapData.IsOneWay가 사다리 꼭대기 'H'를 포함하므로 원웨이를 먼저 보면 꼭대기가 발판색으로 찍힌다.
+        /// </summary>
+        private Texture2D BuildMinimapTexture()
+        {
+            var tex = new Texture2D(_map.width, _map.height, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.DontSave,
+            };
+            var air = new Color32(0, 0, 0, 0);
+            var pixels = new Color32[_map.width * _map.height];
+            for (int y = 0; y < _map.height; y++)
+            {
+                for (int x = 0; x < _map.width; x++)
+                {
+                    pixels[y * _map.width + x] =
+                        _map.IsSolid(x, y) ? (Color32)SolidColor
+                        : _map.IsLadder(x, y) ? (Color32)LadderColor
+                        : _map.IsOneWay(x, y) ? (Color32)PlatformColor
+                        : air;
+                }
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply();
+            return tex;
+        }
+
+        /// <summary>스팟·출구·상점·보스 마커. 초기 색만 여기서 주고 이후엔 RefreshStates가 동기화한다.</summary>
+        private void MakeMiniMarker(RectTransform parent, SpotView v, Vector2 area, float ppc)
+        {
+            var rt = UiFactory.CreatePanel(parent, "Mk", v.Bg.color);
+            float s = Mathf.Clamp(ppc * 1.5f, 5f, 9f);
+            UiFactory.SetRect(rt, Vector2.zero, new Vector2(0.5f, 0.5f),
+                new Vector2((v.Pos.x + 0.5f) / _map.width * area.x, (v.Pos.y + 0.5f) / _map.height * area.y),
+                new Vector2(s, s));
+            var img = rt.GetComponent<Image>();
+            img.sprite = UiFactory.RoundedSprite();
+            img.raycastTarget = false;
+            v.Mini = img;
+        }
+    }
+
+    /// <summary>
+    /// 미니맵 플레이어 마커 추적. SideWorld의 LateUpdate는 카메라(Input.cs)가 쓰고 있어
+    /// 마커에 직접 붙인다. 부모 사각형(지형 영역) 좌하단 기준으로 칸 좌표를 정규화해 찍는다.
+    /// </summary>
+    public class MinimapMarker : MonoBehaviour
+    {
+        public Transform Target;
+        public Vector2 MapSize;   // 맵 칸 수
+        public Vector2 AreaSize;  // 지형 영역 px
+
+        private RectTransform _rt;
+
+        private void Awake() => _rt = (RectTransform)transform;
+
+        private void LateUpdate()
+        {
+            if (Target == null) return;
+            _rt.anchoredPosition = new Vector2(
+                (Target.position.x + 0.5f) / MapSize.x * AreaSize.x,
+                (Target.position.y + 0.5f) / MapSize.y * AreaSize.y);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace HangeulAdventure.Game
         public string id;
         public string name;
         public string type;   // "weapon" | "armor" | "mobility"
-        public int price;
+        public int price;     // 총 동전 (100동 = 은 1, 100은 = 금 1)
         public int atk;
         public int def;
         public string desc = "";
@@ -55,11 +55,11 @@ namespace HangeulAdventure.Game
 
         public static bool IsOwned(string id) => PlayerPrefs.GetInt($"item_{id}", 0) == 1;
 
-        /// <summary>골드가 충분하면 구매. 성공 여부 반환.</summary>
+        /// <summary>동전이 충분하면 구매. 성공 여부 반환.</summary>
         public static bool TryBuy(ItemJson item)
         {
             if (IsOwned(item.id)) return false;
-            if (!ProgressStore.SpendGold(item.price)) return false;
+            if (!ProgressStore.SpendCoins(item.price)) return false;
             PlayerPrefs.SetInt($"item_{item.id}", 1);
             PlayerPrefs.Save();
             return true;

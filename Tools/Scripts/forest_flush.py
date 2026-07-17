@@ -1,13 +1,25 @@
 # -*- coding: utf-8 -*-
-"""지상 청크를 좌우 flush로 보정한다.
+"""지상 청크 보정 — preflush 백업에서 원본 복원.
 
-PixelLab은 캔버스 좌우 끝까지 채우지 않아 청크가 "둥근 섬"으로 나온다(실측: 02는 80열,
-04는 40열이 빔. 03만 정상). 겹침 배치만으로는 이 빈 구간을 다 못 가려 화면에 세로 틈이 보인다.
+★결론: 청크 02·04는 타일로 쓸 수 없다. 매니페스트 실측이 이유를 말해준다.
 
-주의: 청크 좌우 끝은 아웃라인 색이다. 그대로 복제하면 검은 세로줄이 생기므로,
-아웃라인을 건너뛴 안쪽 흙 색을 캔버스 가장자리까지 복제한다.
+    청크   좌측표면선  우측표면선  중앙(median)  편차
+    03        62         63          63         1px  ← 평탄. 진짜 타일
+    02        89         86          69        20px  ← 가장자리가 푹 꺼진 "둥근 섬"
+    04        94         93          83        11px  ← 같은 문제
 
-원본은 ArtDrop/Generated/forest_main/preflush/ 에 보존한다.
+피벗이 중앙 표면선(surface_median)이라 청크를 y=0.5에 놓으면 중앙은 맞지만 가장자리가
+20px 내려앉는다. 청크를 1.72u 겹쳐 깔기 때문에 겹침 경계마다 이 낙차가 계단으로 드러난다.
+= 화면에서 보이던 "틈"의 정체.
+
+시도했다가 폐기한 것 (반복 금지):
+- 행 단위 edge extend로 좌우를 캔버스 끝까지 늘리기 → 각 행의 색이 가로로 늘어나
+  **단색 가로 줄무늬**가 생기고, 겹침 구간에서 인접 청크 위에 그려져 더 나빠졌다.
+- 하단 깊이 통일 → 하단은 맞았지만 표면선 낙차는 그대로라 계단이 남았다.
+
+채택: SideWorld의 GroundChunks를 03 하나로 좁힌다. 반복감은 데코(바위·그루터기·나무)와
+좌우 미러로 완화한다. 02·04는 에셋으로 남겨두되 지면 타일로는 쓰지 않는다
+(표면선이 평탄한 청크를 새로 뽑으면 그때 합류시킬 것).
 """
 import os
 import shutil
@@ -19,74 +31,21 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 TERRAIN = r"C:\Users\minjae\UnityProjects\HangeulAdventure\Assets\Resources\Art\Forest\Terrain"
 BACKUP = r"C:\Users\minjae\UnityProjects\HangeulAdventure\ArtDrop\Generated\forest_main\preflush"
-ALPHA = 200
-OUTLINE_SCAN = 6  # 아웃라인 두께 상한 (px)
-
-
-def inner_color(px, y, start, end, step):
-    """start에서 step 방향으로 스캔해 아웃라인 다음의 본체 색을 찾는다."""
-    first = px[start, y][:3]
-    x = start + step
-    for _ in range(OUTLINE_SCAN):
-        if (step > 0 and x > end) or (step < 0 and x < end):
-            break
-        c = px[x, y]
-        if c[3] > ALPHA and c[:3] != first:
-            return c
-        x += step
-    return px[start, y]
-
-
-def flush_row_extend(im):
-    w, h = im.size
-    px = im.load()
-    changed = 0
-    for y in range(h):
-        xs = [x for x in range(w) if px[x, y][3] > ALPHA]
-        if not xs:
-            continue
-        lo, hi = min(xs), max(xs)
-        left = inner_color(px, y, lo, hi, +1) if lo > 0 else px[lo, y]
-        right = inner_color(px, y, hi, lo, -1) if hi < w - 1 else px[hi, y]
-        for x in range(0, lo):
-            px[x, y] = left
-            changed += 1
-        for x in range(hi + 1, w):
-            px[x, y] = right
-            changed += 1
-    return changed
+CHUNKS = ("ground_flat_02.png", "ground_flat_03.png", "ground_flat_04.png")
 
 
 def main():
-    os.makedirs(BACKUP, exist_ok=True)
-    for name in ("ground_flat_02.png", "ground_flat_03.png", "ground_flat_04.png"):
+    for name in CHUNKS:
         path = os.path.join(TERRAIN, name)
         backup = os.path.join(BACKUP, name.replace(".png", "_preflush.png"))
-
-        # 이전 실행분이 있으면 원본에서 다시 시작
-        if os.path.exists(backup):
-            shutil.copy2(backup, path)
-
-        im = Image.open(path).convert("RGBA")
-        w, h = im.size
-        before = sum(1 for x in range(w) if im.getpixel((x, h - 1))[3] <= ALPHA)
-        if before == 0:
-            print(f"{name:20s} 이미 flush (빈 열 0) — 건너뜀")
-            continue
-
         if not os.path.exists(backup):
-            shutil.copy2(path, backup)
-        n = flush_row_extend(im)
-        im.save(path)
-        print(f"{name:20s} 빈 열 {before} -> 0  ({n}px 확장)")
+            print(f"{name:20s} 백업 없음 — 원본 그대로")
+            continue
+        shutil.copy2(backup, path)
+        im = Image.open(path).convert("RGBA")
+        print(f"{name:20s} 원본 복원 (bbox={im.getbbox()})")
 
-    print("\n=== 검증 (하단행 좌우 끝 색이 흙이어야 한다) ===")
-    for name in ("ground_flat_02.png", "ground_flat_03.png", "ground_flat_04.png"):
-        im = Image.open(os.path.join(TERRAIN, name)).convert("RGBA")
-        w, h = im.size
-        empty = sum(1 for x in range(w) if im.getpixel((x, h - 1))[3] <= ALPHA)
-        print(f"{name:20s} bbox={im.getbbox()} 빈열={empty} "
-              f"하단좌={im.getpixel((0, h - 1))[:3]} 하단우={im.getpixel((w - 1, h - 1))[:3]}")
+    print("\n지면 타일은 SideWorld.Build.cs의 GroundChunks에서 03만 쓴다.")
 
 
 if __name__ == "__main__":

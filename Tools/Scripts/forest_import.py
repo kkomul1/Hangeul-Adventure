@@ -8,8 +8,11 @@
 #   5) 하늘 그라데이션 / 안개 띠 생성 (승인 합성의 sky_layer/fog 스톱을 그대로 굽는다)
 #
 # 재실행 안전 (덮어쓰기). 좌표·수치 근거는 forest_compose.py 참조.
-import json, os, shutil
+import json, os, shutil, sys
 from PIL import Image
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ridge_mirror import mirror_bake  # 능선 심리스화 — ridge_x3() 주석 참조
 
 ROOT = r"C:\Users\minjae\UnityProjects\HangeulAdventure"
 SRC = os.path.join(ROOT, r"ArtDrop\Generated\forest_main")
@@ -44,9 +47,15 @@ PROPS = [
     (B2, "prop_seokdeung_b2_48x78", "Props/prop_seokdeung", True),
 ]
 
+# ★ 배경 나무는 반드시 크롭할 것 (실측 — 사용자 지적 "나무가 공중에 떠 있다"의 원인).
+#   과거엔 여기만 crop=False였다. 프롭은 전부 True인데 나무만 예외였던 게 버그다.
+#   미크롭이면 캔버스 하단 = 밑동이 아니다: large는 밑동 아래 투명 여백 31px, small은 14px.
+#   SideWorld.Build.cs는 BottomCenter 피벗을 TreeBaseY(= 표면선 8px 아래)에 놓으므로
+#   large는 31-8 = 23px(0.36u), small은 14-8 = 6px 공중에 뜬다.
+#   여백이 나무마다 달라서(31 vs 14) TreeBaseY 상수 하나로는 둘 다 못 고친다 — 크롭이 유일한 해법.
 BACKDROP = [
-    (SRC, "tree_pine_large_320x384_final", "Backdrop/tree_pine_large", False),
-    (SRC, "tree_pine_small_192x256_final", "Backdrop/tree_pine_small", False),
+    (SRC, "tree_pine_large_320x384_final", "Backdrop/tree_pine_large", True),
+    (SRC, "tree_pine_small_192x256_final", "Backdrop/tree_pine_small", True),
 ]
 
 # 한복 jump: 프레임 7~9(idx 6~8)에서 갓이 사라진다 -> 0~5만 채택 (검수 지시)
@@ -122,7 +131,17 @@ def foot_pivot(src_rel):
 
 
 def ridge_x3():
+    """원경 능선: 미러 베이크(심리스화) 후 x3 NEAREST 확대.
+
+    ★ 미러 베이크를 반드시 확대 '전'에 할 것 (실측):
+      원본은 심리스 타일이 아니다 — 좌우 끝 실루엣이 안 맞아(200x120 기준 좌우 열 평균 채널차
+      12.7, 120행 중 32행이 20 초과) SideWorld.Build.cs가 가로로 반복하면 경계에서 뚝 끊긴다.
+      확대 후에 베이크하면 T=[A|mirror(A)[1:-1]]의 1px 크롭이 x3 픽셀 블록 정렬을 깨서
+      2px짜리 어중간한 블록이 생긴다. 원본 스케일에서 베이크하면 3px 블록이 온전하다
+      (실측: 정렬 위반 0). 남는 이음매 오차 4.6은 A[0]-A[1] 자연 계단이지 불연속이 아니다.
+    """
     im = Image.open(os.path.join(B2, "bg_ridge_200x120_v2_final.png")).convert("RGBA")
+    im = mirror_bake(im)                                          # 200x120 -> 398x120, 이음매 소멸
     im = im.resize((im.width * 3, im.height * 3), Image.NEAREST)  # 승인 합성과 동일
     im.save(out("Backdrop/bg_ridge"))
     return im.size

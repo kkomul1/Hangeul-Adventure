@@ -17,249 +17,462 @@ namespace HangeulAdventure.Engine
     }
 
     /// <summary>
-    /// 0-1 BFS 솔버 (명세 10장): 풀이 가능성과 최소 행동 수를 계산한다.
-    /// 간선 비용: 밀기 = 1, 수집 = 0 (수집은 행동 수에 포함되지 않음, D-15).
-    /// 0비용 간선은 덱 앞에, 1비용 간선은 뒤에 넣어 최단성을 보장한다.
-    /// 상태 인코딩 (M3-8): string 대신 ulong[] 패킹 — 셀당 16비트 + 슬롯당 1비트, 해시는 생성 시 1회
-    /// 계산해 캐시. 후보 생성은 현재 상태 워드를 복사해 마스크 패치(재인코딩 없음), 저장 시에만 복제.
-    /// Mono(에디터) 환경의 상태당 힙 할당·O(길이) 해시 재계산을 제거한다. 알고리즘 자체는 무변경.
+    /// 계층 BFS 솔버 (명세 10장): 풀이 가능성과 최소 행동 수를 계산한다.
+    /// 간선 비용: 밀기/회전 = 1, 수집 = 0 (수집은 행동 수에 포함되지 않음, D-15).
+    ///
+    /// 알고리즘 (M6 최적화, 결과는 기존 0-1 BFS와 동일):
+    ///   0비용(수집) 간선을 계층 내부에서 폐포(closure)로 흡수해 균일비용 BFS로 환원한다.
+    ///   깊이 L의 모든 상태를 (수집 폐포까지 포함해) 확정한 뒤 L+1로 넘어가므로,
+    ///   상태의 첫 방문이 곧 최단이다 → 거리표(dist) 없이 방문 집합만 있으면 된다.
+    ///
+    /// 성능의 핵심은 알고리즘이 아니라 상태 표현이다 (아래 3가지가 메모리 폭발의 실제 원인이었다):
+    ///   1) 타일 알파벳 압축 — 스테이지에서 실제로 도달 가능한 타일 문자만 열거해(합성/분해/회전
+    ///      폐포) 작은 id로 매핑. char(16비트) → 보통 5~7비트. 대부분의 스테이지가 상태 2워드에 들어간다.
+    ///   2) 존재하는 칸만 인코딩 — '#' 칸을 상태에서 제외.
+    ///   3) 평면 해시 테이블 — 상태당 ulong[] 힙 할당과 Dictionary 엔트리를 없애고
+    ///      연속 배열(ulong[] _states)에 인라인 저장. id는 삽입 순서라 재해싱에도 불변.
+    ///
+    /// 규칙 판정(PushLogic.Resolve / Hangul.RotateCw)은 탐색 전에 전이표로 사전 계산해
+    /// 핫패스에서 Dictionary 조회가 0회다. 규칙 자체는 무변경 — 표는 Resolve로 채운다.
     /// </summary>
     public static class Solver
     {
-        // 상한 500k: 4x4+슬롯 기준 방문 메모리 수십 MB 수준. 초과(Aborted)는 "풀이 불가 확정"이 아님.
+        // 상한 500k: 기본값 유지. 초과(Aborted)는 "풀이 불가 확정"이 아님.
         // timeBudgetMs: 탐색 시간 상한 (에디터 프리즈 방지, D-07). 초과 시 Aborted.
         public static SolveResult Solve(StageData stage, int maxStates = 500_000, int timeBudgetMs = 30_000)
+            => new Search(stage).Run(maxStates, timeBudgetMs);
+
+        private sealed class Search
         {
-            var sw = System.Diagnostics.Stopwatch.StartNew();
+            // ── 보드 정적 정보 (압축 칸 인덱스 기준) ──
+            private readonly int _m;               // 존재하는 칸 수
+            private readonly int[] _neigh;         // [ci*4+d] → 이웃 압축 인덱스 (없는 칸이면 -1)
+            private readonly bool[] _pinned;       // [ci] 사슬 칸 (D-24): 밀 수 없다
+            private readonly ushort[] _initCells;  // [ci] → 초기 타일 id
 
-            int w = stage.width, h = stage.height, n = w * h;
-            var slotList = stage.AllSlots();
-            int slotCount = slotList.Count;
-            var slots = new char[slotCount];
-            for (int i = 0; i < slotCount; i++) slots[i] = slotList[i];
+            // ── 목표 슬롯 ──
+            private readonly int _slotCount;
+            private readonly ulong _slotFull;      // 전 슬롯 채움 비트
+            private readonly ulong[] _slotMaskOf;  // [tileId] → 그 문자를 요구하는 슬롯 비트마스크
 
-            int cellWords = (n + 3) >> 2;                          // 셀 4개 = 1워드
-            int slotWords = Math.Max(1, (slotCount + 63) >> 6);    // 슬롯 64개 = 1워드 (0개여도 1워드)
-            int words = cellWords + slotWords;
+            // ── 규칙 전이표 ──
+            private readonly int _tiles;           // 알파벳 크기 (id 0 = 빈칸)
+            private readonly char[] _chars;        // [tileId] → 문자
+            private readonly Dictionary<char, int> _idOf;
+            private readonly int[][] _pushRows;     // [d*_tiles + mover] → [target] → (ns<<16)|nt, 0=미계산, -1=Fail
+            private readonly int[] _rotTab;        // [tileId] → 회전 결과 id (0이면 회전 불가)
 
-            // 완료 판정: 슬롯 비트가 전부 1인 워드와 비교
-            var full = new ulong[slotWords];
-            for (int i = 0; i < slotCount; i++) full[i >> 6] |= 1UL << (i & 63);
-
-            var initial = new ulong[words];
-            for (int i = 0; i < n; i++) initial[i >> 2] |= (ulong)stage.cells[i] << ((i & 3) << 4);
-
-            var initKey = new Key(initial, Hash(initial));
-            var dist = new Dictionary<Key, int>(1024) { [initKey] = 0 };
-            var deque = new Deque(1024);
-            deque.PushFront(initKey, 0);
-
-            var cells = new char[n];
-            var filled = new bool[slotCount];
-            var scratch = new ulong[words];
-
-            while (deque.Count > 0)
+            /// <summary>밀기 판정 (지연 캐시). 규칙은 PushLogic.Resolve가 그대로 결정한다.</summary>
+            private int PushEntry(int d, int mover, int target)
             {
-                if (sw.ElapsedMilliseconds > timeBudgetMs)
-                    return new SolveResult(false, -1, true, dist.Count);
-
-                deque.PopFront(out Key state, out int depth);
-                if (depth > dist[state]) continue; // 더 짧은 경로로 이미 처리됨
-
-                if (AllFilled(state.W, cellWords, full))
-                    return new SolveResult(true, depth, false, dist.Count);
-
-                Decode(state.W, cells, filled, n, slotCount, cellWords);
-
-                for (int y = 0; y < h; y++)
+                int[] row = _pushRows[d * _tiles + mover];
+                if (row == null) _pushRows[d * _tiles + mover] = row = new int[_tiles];
+                int e = row[target];
+                if (e == 0)
                 {
-                    for (int x = 0; x < w; x++)
+                    e = PushLogic.Resolve(_chars[mover], _chars[target], true, (Direction)d,
+                            out char ns, out char nt) == PushResultType.Fail
+                        ? -1 : (_idOf[ns] << 16) | _idOf[nt];
+                    row[target] = e;
+                }
+                return e;
+            }
+
+            /// <summary>회전 순환의 대표 문자 (회전으로 서로 오갈 수 있는 자모를 한 부류로 센다).</summary>
+            private static char RotClass(char c)
+            {
+                char best = c;
+                for (char cur = Hangul.RotateCw(c); cur != Hangul.Empty && cur != c; cur = Hangul.RotateCw(cur))
+                    if (cur < best) best = cur;
+                return best;
+            }
+
+            /// <summary>타일을 기본 자모(원자)로 완전 분해해 회전류별 개수를 누적한다.</summary>
+            private static void AddAtoms(char c, Dictionary<char, int> acc)
+            {
+                if (c == Hangul.Empty || c == Hangul.Rock) return;
+                if (Hangul.IsSyllable(c))
+                {
+                    var (cho, jung, jong) = Hangul.DecomposeSyllable(c);
+                    AddAtoms(cho, acc); AddAtoms(jung, acc); AddAtoms(jong, acc);
+                    return;
+                }
+                if (Hangul.TrySplitCompound(c, out char l, out char r))
+                {
+                    AddAtoms(l, acc); AddAtoms(r, acc);
+                    return;
+                }
+                char k = RotClass(c);
+                acc[k] = acc.TryGetValue(k, out int v) ? v + 1 : 1;
+            }
+
+            // ── 상태 인코딩: 비트0..slotCount-1 = 슬롯, 그 위로 칸당 _cellBits ──
+            private readonly int _cellBits;
+            private readonly ulong _cellMask;
+            private readonly int _words;
+
+            // ── 방문 테이블 (개방 주소법 + 인라인 저장) ──
+            private ulong[] _states;   // id*_words 오프셋에 상태 워드
+            private int[] _buckets;    // 값 = id+1, 0 = 빈 슬롯
+            private int _bmask;
+            private int _count;
+
+            // ── 작업 버퍼 ──
+            private readonly ulong[] _base;
+            private readonly ulong[] _probe;
+            private readonly ushort[] _cells;
+            private bool _goalFound;
+            private bool _overflow;
+            private bool _trace;
+
+            // ulong[] 하나의 요소 수 상한. 2GB(=2^28 요소)를 넘기려면 SolverCli처럼
+            // gcAllowVeryLargeObjects가 켜져 있어야 한다. 실제 제동은 maxStates가 건다.
+            private const long MaxArray = 1L << 31;
+
+            private long _prepMs;
+
+            public Search(StageData stage)
+            {
+                var prep = System.Diagnostics.Stopwatch.StartNew();
+                int w = stage.width, h = stage.height, n = w * h;
+
+                // 1) 상태에 넣을 칸만 압축 인덱스로.
+                //    없는 칸('#')은 물론 바위 칸(@)도 제외한다 — 바위는 밀 수도, 밀려날 수도,
+                //    회전·수집될 수도 없고(D-21) 어떤 타일도 그 칸에 들어갈 수 없다
+                //    (바위를 도착지로 미는 Resolve는 언제나 Fail). 즉 바위 칸은 '없는 칸'과
+                //    행동적으로 완전히 동등하므로, 상태에서 빼도 탐색 결과가 바뀌지 않는다.
+                var compact = new int[n];
+                for (int i = 0; i < n; i++)
+                    compact[i] = stage.mask[i] && stage.cells[i] != Hangul.Rock ? _m++ : -1;
+
+                _neigh = new int[_m * 4];
+                _pinned = new bool[_m];
+                _initCells = new ushort[_m];
+                var cellOfCi = new int[_m];
+                for (int i = 0; i < n; i++)
+                {
+                    int ci = compact[i];
+                    if (ci < 0) continue;
+                    cellOfCi[ci] = i;
+                    _pinned[ci] = stage.CellPinned(i % w, i / w);
+                    for (int d = 0; d < 4; d++)
                     {
-                        if (!stage.mask[y * w + x]) continue;
-                        char tile = cells[y * w + x];
-                        if (tile == Hangul.Empty) continue;
+                        var (dx, dy) = ((Direction)d).Delta();
+                        int tx = i % w + dx, ty = i / w + dy;
+                        _neigh[ci * 4 + d] = stage.CellExists(tx, ty) ? compact[ty * w + tx] : -1; // 바위 이웃 = -1
 
-                        // 밀기 4방향 (비용 1). 사슬 칸(D-24)의 타일은 밀 수 없다
-                        if (!stage.CellPinned(x, y))
-                        foreach (Direction d in GameSession.DirectionsAll)
-                        {
-                            var (dx, dy) = d.Delta();
-                            int tx = x + dx, ty = y + dy;
-                            bool exists = stage.CellExists(tx, ty);
-                            char target = exists ? cells[ty * w + tx] : Hangul.Empty;
-
-                            var type = PushLogic.Resolve(tile, target, exists, d, out char ns, out char nt);
-                            if (type == PushResultType.Fail) continue;
-
-                            Array.Copy(state.W, scratch, words);
-                            SetCell(scratch, y * w + x, ns);
-                            SetCell(scratch, ty * w + tx, nt);
-                            Relax(scratch, words, depth + 1, front: false, dist, ref deque);
-                        }
-
-                        // 회전 (비용 1, D-21)
-                        char rotated = Hangul.RotateCw(tile);
-                        if (rotated != Hangul.Empty)
-                        {
-                            Array.Copy(state.W, scratch, words);
-                            SetCell(scratch, y * w + x, rotated);
-                            Relax(scratch, words, depth + 1, front: false, dist, ref deque);
-                        }
-
-                        // 수집: 일치하는 첫 빈 슬롯 (비용 0; 같은 문자 슬롯은 대칭이므로 대표 1개)
-                        for (int i = 0; i < slotCount; i++)
-                        {
-                            if (filled[i] || slots[i] != tile) continue;
-                            Array.Copy(state.W, scratch, words);
-                            SetCell(scratch, y * w + x, Hangul.Empty);
-                            scratch[cellWords + (i >> 6)] |= 1UL << (i & 63);
-                            Relax(scratch, words, depth, front: true, dist, ref deque);
-                            break;
-                        }
                     }
                 }
 
-                if (dist.Count > maxStates)
-                    return new SolveResult(false, -1, true, dist.Count);
+                // 2) 타일 알파벳: 원자(기본 자모) 예산으로 상한을 잡는다.
+                //
+                //    불변식 — 어떤 타일도 초기 보드의 원자 예산을 넘을 수 없다:
+                //      · 이동은 보드의 원자 다중집합을 그대로 둔다.
+                //      · 합성/분해는 원자를 재배치할 뿐 보존한다 (명세 4·6장의 조합쌍이
+                //        정확히 역연산 관계라, atoms(합성물) = atoms(왼쪽) ⊎ atoms(오른쪽)).
+                //      · 회전은 원자를 같은 회전 순환({ㅏㅜㅓㅗ}, {ㅑㅠㅕㅛ}, {ㅣㅡ}) 안에서만
+                //        바꾼다 → 회전류(RotClass)로 세면 불변.
+                //      · 수집은 원자를 덜어내기만 한다.
+                //    따라서 임의 시점의 임의 타일 t에 대해 atoms(t) ⊆ (보드 원자) ⊆ (초기 예산).
+                //
+                //    이는 상한이므로 실제로는 안 나오는 문자가 섞일 수 있다(무해 — id만 낭비).
+                //    반대로 나올 수 있는 문자가 빠지는 일은 없다. 만에 하나 빠지면 PushEntry의
+                //    _idOf 조회가 예외를 던지므로 조용한 오답이 되지 않는다.
+                //
+                //    옛 방식(모든 (mover,target) 쌍의 밀기 폐포)은 O(S²) Resolve 호출이라
+                //    알파벳이 큰 스테이지에서 준비가 탐색보다 비쌌다 (097: 637ms/Solve).
+                //    힌트 기능은 후보마다 Solve를 다시 부르므로 그 비용이 그대로 곱해진다.
+                var budget = new Dictionary<char, int>();
+                foreach (int i in cellOfCi) AddAtoms(stage.cells[i], budget);
+
+                var idOf = new Dictionary<char, int> { [Hangul.Empty] = 0 };
+                var chars = new List<char> { Hangul.Empty };
+                var atoms = new Dictionary<char, int>();
+                for (char c = 'ㄱ'; c <= 'ㅣ'; c++) Consider(c);   // 호환 자모
+                for (char c = '가'; c <= '힣'; c++) Consider(c);  // 완성 음절
+
+                void Consider(char c)
+                {
+                    if (!Hangul.IsTile(c)) return;
+                    atoms.Clear();
+                    AddAtoms(c, atoms);
+                    foreach (var kv in atoms)
+                        if (!budget.TryGetValue(kv.Key, out int have) || have < kv.Value) return;
+                    idOf[c] = chars.Count;
+                    chars.Add(c);
+                }
+
+                _tiles = chars.Count;
+                _chars = chars.ToArray();
+                _idOf = idOf;
+
+                for (int ci = 0; ci < _m; ci++) _initCells[ci] = (ushort)idOf[stage.cells[cellOfCi[ci]]];
+
+                // 3) 전이표 사전 계산 — 핫패스에서 규칙 판정 0회
+                _rotTab = new int[_tiles];
+                for (int a = 1; a < _tiles; a++)
+                {
+                    char r = Hangul.RotateCw(chars[a]);
+                    _rotTab[a] = r == Hangul.Empty ? 0 : idOf[r];
+                }
+                // 밀기표는 mover별 행을 지연 할당·지연 계산 (0 = 미계산, -1 = Fail).
+                // 알파벳이 크면 S²가 수백만이라 통짜 배열은 Solve마다 수십 MB를 잡는데,
+                // 한 보드에 동시에 존재하는 서로 다른 타일은 기껏해야 칸 수(≤25)뿐이다.
+                // 성공 결과는 nt != 빈칸이라 (ns<<16)|nt 가 0이 될 수 없어 미계산과 겹치지 않는다.
+                _pushRows = new int[4 * _tiles][];
+
+                // 4) 슬롯 (목표 단어는 최대 몇 글자 — 64슬롯이면 충분하고도 남는다)
+                var slotList = stage.AllSlots();
+                _slotCount = slotList.Count;
+                if (_slotCount > 64) throw new NotSupportedException("목표 슬롯은 64개까지 지원합니다.");
+                _slotFull = _slotCount == 64 ? ulong.MaxValue : (1UL << _slotCount) - 1;
+                _slotMaskOf = new ulong[_tiles];
+                for (int i = 0; i < _slotCount; i++)
+                    if (idOf.TryGetValue(slotList[i], out int id)) _slotMaskOf[id] |= 1UL << i;
+                // 알파벳에 없는 슬롯 문자 = 절대 만들 수 없음 → 풀이 불가 (탐색 없이 확정된다)
+
+                // 5) 인코딩 폭 결정
+                _cellBits = 1;
+                while ((1 << _cellBits) < _tiles) _cellBits++;
+                _cellMask = (1UL << _cellBits) - 1;
+                _words = (_slotCount + _m * _cellBits + 63) >> 6;
+
+                _base = new ulong[_words];
+                _probe = new ulong[_words];
+                _cells = new ushort[_m];
+                _prepMs = prep.ElapsedMilliseconds;
+                _trace = Environment.GetEnvironmentVariable("SOLVER_TRACE") == "1";
+                if (Environment.GetEnvironmentVariable("SOLVER_STATS") == "1")
+                    Console.Error.WriteLine($"  [stats] m={_m} tiles={_tiles} cellBits={_cellBits} words={_words} prep={_prepMs}ms");
             }
 
-            return new SolveResult(false, -1, false, dist.Count);
-        }
+            // ── 비트 접근 ──
+            private int BitOf(int ci) => _slotCount + ci * _cellBits;
 
-        /// <summary>패킹 상태 키: 워드 배열 참조 + 캐시된 해시.</summary>
-        private readonly struct Key : IEquatable<Key>
-        {
-            public readonly ulong[] W;
-            private readonly int _hash;
-
-            public Key(ulong[] w, int hash) { W = w; _hash = hash; }
-
-            public bool Equals(Key other)
+            private ushort GetCell(ulong[] s, int ci)
             {
-                if (_hash != other._hash || W.Length != other.W.Length) return false;
-                for (int i = 0; i < W.Length; i++)
-                    if (W[i] != other.W[i]) return false;
+                int b = BitOf(ci), w = b >> 6, o = b & 63;
+                ulong v = s[w] >> o;
+                if (o + _cellBits > 64) v |= s[w + 1] << (64 - o);
+                return (ushort)(v & _cellMask);
+            }
+
+            private void SetCell(ulong[] s, int ci, ushort val)
+            {
+                int b = BitOf(ci), w = b >> 6, o = b & 63;
+                s[w] = (s[w] & ~(_cellMask << o)) | ((ulong)val << o);
+                if (o + _cellBits > 64)
+                    s[w + 1] = (s[w + 1] & ~(_cellMask >> (64 - o))) | ((ulong)val >> (64 - o));
+            }
+
+            // ── 방문 테이블 ──
+            // 개방 주소법 + 선형 탐사는 해시의 하위 비트를 버킷 인덱스로 그대로 쓴다.
+            // FNV-1a는 하위 비트가 약해 군집(clustering)이 생기므로 splitmix64 확산을 덧댄다.
+            // (Dictionary는 소수 모듈로가 이를 가려주지만 여기선 직접 해야 한다)
+            private static ulong Mix(ulong z)
+            {
+                z += 0x9E3779B97F4A7C15UL;
+                z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;
+                z = (z ^ (z >> 27)) * 0x94D049BB133111EBUL;
+                return z ^ (z >> 31);
+            }
+
+            private int Hash(ulong[] s)
+            {
+                ulong hash = 0;
+                for (int i = 0; i < _words; i++) hash = Mix(hash ^ s[i]);
+                return (int)hash & 0x7FFFFFFF;
+            }
+
+            private int HashStored(int id)
+            {
+                ulong hash = 0;
+                int off = id * _words;
+                for (int i = 0; i < _words; i++) hash = Mix(hash ^ _states[off + i]);
+                return (int)hash & 0x7FFFFFFF;
+            }
+
+            private bool StoredEquals(int id, ulong[] s)
+            {
+                int off = id * _words;
+                for (int i = 0; i < _words; i++)
+                    if (_states[off + i] != s[i]) return false;
                 return true;
             }
 
-            public override bool Equals(object obj) => obj is Key k && Equals(k);
-            public override int GetHashCode() => _hash;
-        }
-
-        private static void Relax(ulong[] scratch, int words, int depth, bool front,
-            Dictionary<Key, int> dist, ref Deque deque)
-        {
-            var probe = new Key(scratch, Hash(scratch));
-            if (dist.TryGetValue(probe, out int known) && known <= depth) return;
-
-            // scratch는 재사용 버퍼이므로 저장/큐 적재 전에 복제 (덱에 살아있는 동안 변조 방지)
-            var stored = new ulong[words];
-            Array.Copy(scratch, stored, words);
-            var key = new Key(stored, probe.GetHashCode());
-            dist[key] = depth;
-            deque.Push(key, depth, front);
-        }
-
-        private static bool AllFilled(ulong[] state, int cellWords, ulong[] full)
-        {
-            for (int i = 0; i < full.Length; i++)
-                if (state[cellWords + i] != full[i]) return false;
-            return true;
-        }
-
-        private static void Decode(ulong[] state, char[] cells, bool[] filled, int n, int slotCount, int cellWords)
-        {
-            for (int i = 0; i < n; i++)
-                cells[i] = (char)((state[i >> 2] >> ((i & 3) << 4)) & 0xFFFF);
-            for (int i = 0; i < slotCount; i++)
-                filled[i] = ((state[cellWords + (i >> 6)] >> (i & 63)) & 1UL) != 0;
-        }
-
-        private static void SetCell(ulong[] state, int index, char value)
-        {
-            int wi = index >> 2, shift = (index & 3) << 4;
-            state[wi] = (state[wi] & ~(0xFFFFUL << shift)) | ((ulong)value << shift);
-        }
-
-        // FNV-1a 변형 (워드 단위)
-        private static int Hash(ulong[] w)
-        {
-            ulong hash = 14695981039346656037UL;
-            for (int i = 0; i < w.Length; i++)
+            /// <summary>새 상태면 id를 list에 넣고 true. 이미 있으면 false.</summary>
+            private bool AddIfNew(ulong[] s, IntList list)
             {
-                hash ^= w[i];
-                hash *= 1099511628211UL;
-            }
-            return (int)(hash ^ (hash >> 32));
-        }
-
-        /// <summary>배열 기반 덱 (0-1 BFS 전용): LinkedList의 노드 할당을 제거한다.</summary>
-        private struct Deque
-        {
-            private Key[] _keys;
-            private int[] _depths;
-            private int _head;   // 첫 원소 위치
-            private int _count;
-            private int _mask;   // 용량-1 (용량은 2의 거듭제곱)
-
-            public Deque(int capacity)
-            {
-                int cap = 4;
-                while (cap < capacity) cap <<= 1;
-                _keys = new Key[cap];
-                _depths = new int[cap];
-                _head = 0; _count = 0; _mask = cap - 1;
-            }
-
-            public int Count => _count;
-
-            public void Push(Key key, int depth, bool front)
-            {
-                if (front) PushFront(key, depth);
-                else PushBack(key, depth);
-            }
-
-            public void PushFront(Key key, int depth)
-            {
-                if (_count == _keys.Length) Grow();
-                _head = (_head - 1) & _mask;
-                _keys[_head] = key;
-                _depths[_head] = depth;
-                _count++;
-            }
-
-            public void PushBack(Key key, int depth)
-            {
-                if (_count == _keys.Length) Grow();
-                int tail = (_head + _count) & _mask;
-                _keys[tail] = key;
-                _depths[tail] = depth;
-                _count++;
-            }
-
-            public void PopFront(out Key key, out int depth)
-            {
-                key = _keys[_head];
-                depth = _depths[_head];
-                _keys[_head] = default; // 참조 해제 (GC)
-                _head = (_head + 1) & _mask;
-                _count--;
-            }
-
-            private void Grow()
-            {
-                int cap = _keys.Length << 1;
-                var nk = new Key[cap];
-                var nd = new int[cap];
-                for (int i = 0; i < _count; i++)
+                int i = Hash(s) & _bmask;
+                while (true)
                 {
-                    int src = (_head + i) & _mask;
-                    nk[i] = _keys[src];
-                    nd[i] = _depths[src];
+                    int e = _buckets[i];
+                    if (e == 0) break;
+                    if (StoredEquals(e - 1, s)) return false;
+                    i = (i + 1) & _bmask;
                 }
-                _keys = nk; _depths = nd;
-                _head = 0; _mask = cap - 1;
+
+                if ((_count + 1) * (long)_words > _states.Length)
+                {
+                    long want = Math.Min(MaxArray, _states.Length * 2L);
+                    if ((_count + 1) * (long)_words > want)
+                    {
+                        // 배열 한계 도달 — 상태를 버리면 오답(풀이불가 오판)이 되므로 중단 신호를 세운다
+                        _overflow = true;
+                        return false;
+                    }
+                    var grown = new ulong[want];
+                    Array.Copy(_states, grown, _states.Length);
+                    _states = grown;
+                }
+                int id = _count++;
+                Array.Copy(s, 0, _states, id * _words, _words);
+                _buckets[i] = id + 1;
+                list.Add(id);
+
+                if ((s[0] & _slotFull) == _slotFull) _goalFound = true;
+                if (_count * 4L >= _buckets.Length * 3L) GrowBuckets(); // 부하율 0.75
+                return true;
             }
+
+            private void GrowBuckets()
+            {
+                _buckets = new int[_buckets.Length * 2];
+                _bmask = _buckets.Length - 1;
+                for (int id = 0; id < _count; id++)
+                {
+                    int i = HashStored(id) & _bmask;
+                    while (_buckets[i] != 0) i = (i + 1) & _bmask;
+                    _buckets[i] = id + 1;
+                }
+            }
+
+            public SolveResult Run(int maxStates, int timeBudgetMs)
+            {
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+
+                // 작게 시작해 2배씩 늘린다. id는 삽입 순서라 재할당·재해싱에도 불변이므로
+                // 프런티어(IntList)가 들고 있는 id가 무효화되지 않는다.
+                _buckets = new int[1024];
+                _bmask = _buckets.Length - 1;
+                _states = new ulong[256 * _words];
+
+                var cur = new IntList();
+                var next = new IntList();
+
+                Array.Clear(_probe, 0, _words);
+                for (int ci = 0; ci < _m; ci++) SetCell(_probe, ci, _initCells[ci]);
+                AddIfNew(_probe, cur);
+                Closure(cur);
+                if (_goalFound) return new SolveResult(true, 0, false, _count);
+
+                for (int depth = 1; ; depth++)
+                {
+                    next.Clear();
+                    for (int i = 0; i < cur.Count; i++)
+                    {
+                        // 계층이 끝나기 전에도 상한을 본다 — 한 계층이 수천만 상태를 더할 수 있어
+                        // 계층 경계에서만 검사하면 상한을 크게 넘겨 메모리를 초과한다
+                        if ((i & 0x3FF) == 0 &&
+                            (_count > maxStates || sw.ElapsedMilliseconds > timeBudgetMs))
+                            return new SolveResult(false, -1, true, _count);
+                        ExpandPushes(cur[i], next);
+                    }
+                    if (_overflow) return new SolveResult(false, -1, true, _count);
+                    if (next.Count == 0) return new SolveResult(false, -1, false, _count);
+                    Closure(next);
+                    if (_goalFound) return new SolveResult(true, depth, false, _count);
+                    if (_trace) Console.Error.WriteLine($"  [layer] {depth}: +{next.Count:N0} (누적 {_count:N0}, {sw.ElapsedMilliseconds:N0}ms)");
+                    if (_overflow || _count > maxStates) return new SolveResult(false, -1, true, _count);
+                    if (sw.ElapsedMilliseconds > timeBudgetMs) return new SolveResult(false, -1, true, _count);
+
+                    var tmp = cur; cur = next; next = tmp;
+                }
+            }
+
+            /// <summary>같은 깊이 안에서 0비용(수집) 간선을 전이적으로 흡수한다. list가 자라며 순회한다.</summary>
+            private void Closure(IntList list)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    Load(list[i]);
+                    ulong filled = _base[0] & _slotFull;
+                    for (int ci = 0; ci < _m; ci++)
+                    {
+                        ushort t = _cells[ci];
+                        if (t == 0) continue;
+                        ulong avail = _slotMaskOf[t] & ~filled;
+                        if (avail == 0) continue;
+                        // 같은 문자의 슬롯은 대칭이므로 최저 인덱스 1개만 대표로 (원본 솔버와 동일)
+                        int si = TrailingZeros(avail);
+                        Array.Copy(_base, _probe, _words);
+                        SetCell(_probe, ci, 0);
+                        _probe[0] |= 1UL << si;
+                        AddIfNew(_probe, list);
+                    }
+                }
+            }
+
+            private void ExpandPushes(int id, IntList next)
+            {
+                Load(id);
+                for (int ci = 0; ci < _m; ci++)
+                {
+                    ushort t = _cells[ci];
+                    if (t == 0) continue;
+
+                    // 밀기 4방향 (비용 1). 사슬 칸(D-24)의 타일은 밀 수 없다
+                    if (!_pinned[ci])
+                        for (int d = 0; d < 4; d++)
+                        {
+                            int nci = _neigh[ci * 4 + d];
+                            if (nci < 0) continue; // 보드 밖/없는 칸 → Resolve가 Fail
+                            int e = PushEntry(d, t, _cells[nci]);
+                            if (e < 0) continue;
+                            Array.Copy(_base, _probe, _words);
+                            SetCell(_probe, ci, (ushort)(e >> 16));
+                            SetCell(_probe, nci, (ushort)(e & 0xFFFF));
+                            AddIfNew(_probe, next);
+                        }
+
+                    // 회전 (비용 1, D-21) — 사슬 칸에서도 가능
+                    int r = _rotTab[t];
+                    if (r != 0)
+                    {
+                        Array.Copy(_base, _probe, _words);
+                        SetCell(_probe, ci, (ushort)r);
+                        AddIfNew(_probe, next);
+                    }
+                }
+            }
+
+            /// <summary>상태를 작업 버퍼로 복사·해제. (이후 AddIfNew가 _states를 재할당해도 안전)</summary>
+            private void Load(int id)
+            {
+                Array.Copy(_states, id * _words, _base, 0, _words);
+                for (int ci = 0; ci < _m; ci++) _cells[ci] = GetCell(_base, ci);
+            }
+
+            private static int TrailingZeros(ulong v)
+            {
+                int c = 0;
+                while ((v & 1) == 0) { v >>= 1; c++; }
+                return c;
+            }
+        }
+
+        /// <summary>증가형 int 배열 (계층 프런티어 전용).</summary>
+        private sealed class IntList
+        {
+            private int[] _a = new int[1024];
+            public int Count;
+            public int this[int i] => _a[i];
+            public void Add(int v)
+            {
+                if (Count == _a.Length) Array.Resize(ref _a, _a.Length * 2);
+                _a[Count++] = v;
+            }
+            public void Clear() => Count = 0;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace HangeulAdventure.Game
         private Canvas _canvas;
         private RectTransform _panel;
         private RectTransform _listContent;
-        private TextMeshProUGUI _title, _gold, _status, _equipped;
+        private TextMeshProUGUI _title, _money, _status, _equipped;
         private bool _shopMode;
 
         public bool IsOpen => _panel != null && _panel.gameObject.activeSelf;
@@ -31,8 +31,8 @@ namespace HangeulAdventure.Game
             _title = UiFactory.CreateText(box, "Title", "", 30, UiFactory.Ink);
             UiFactory.SetRect(_title.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -22), new Vector2(300, 44));
 
-            _gold = UiFactory.CreateText(box, "Gold", "", 22, new Color(0.72f, 0.55f, 0.12f), TextAlignmentOptions.Right);
-            UiFactory.SetRect(_gold.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -26), new Vector2(240, 36));
+            _money = UiFactory.CreateText(box, "Money", "", 22, new Color(0.72f, 0.55f, 0.12f), TextAlignmentOptions.Right);
+            UiFactory.SetRect(_money.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -26), new Vector2(240, 36));
 
             var closeBtn = UiFactory.CreateButton(box, "CloseBtn", "닫기", 20, UiFactory.Paper, UiFactory.Ink, Close);
             UiFactory.SetRect((RectTransform)closeBtn.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(18, -18), new Vector2(100, 44));
@@ -91,7 +91,7 @@ namespace HangeulAdventure.Game
         private void Refresh()
         {
             _title.text = _shopMode ? "상점" : "가방";
-            _gold.text = $"골드  {ProgressStore.Gold}";
+            _money.text = ProgressStore.Format(ProgressStore.Coins);
 
             var w = ItemStore.Find(ItemStore.EquippedWeapon);
             var a = ItemStore.Find(ItemStore.EquippedArmor);
@@ -130,8 +130,8 @@ namespace HangeulAdventure.Game
                     }
                     else
                     {
-                        var buy = UiFactory.CreateButton(row, "Buy", $"{item.price}G 구매", 18,
-                            ProgressStore.Gold >= item.price ? UiFactory.Accent : SpotGray(), Color.white, () =>
+                        var buy = UiFactory.CreateButton(row, "Buy", $"{ProgressStore.Format(item.price)} 구매", 18,
+                            ProgressStore.Coins >= item.price ? UiFactory.Accent : SpotGray(), Color.white, () =>
                             {
                                 if (ItemStore.TryBuy(item))
                                 {
@@ -144,7 +144,7 @@ namespace HangeulAdventure.Game
                                 else
                                 {
                                     SfxPlayer.Instance?.Fail();
-                                    _status.text = "골드가 부족합니다.";
+                                    _status.text = "돈이 부족합니다.";
                                     Refresh();
                                 }
                             });

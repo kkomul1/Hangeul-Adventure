@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using HangeulAdventure.Engine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -24,6 +26,10 @@ namespace HangeulAdventure.Game
 
         private bool _finished;
 
+        private Task<HintOutcome> _hintTask;
+        private int _boardGen;      // 보드가 바뀔 때마다 증가 (수집은 MoveCount가 안 오르므로 별도 세대)
+        private int _hintGen = -1;  // 힌트 요청 시점의 _boardGen
+
         /// <summary>분해 직후 결과 글자로 포커스를 옮긴다 (A-⑩). 설정 토글 키, 기본 켬.</summary>
         private static bool FocusAfterSplit => PlayerPrefs.GetInt("focus_after_split", 1) == 1;
 
@@ -41,6 +47,9 @@ namespace HangeulAdventure.Game
             _selX = _selY = -1;
             _dragging = false;
             _finished = false;
+            _hintTask = null;   // 이전 세션의 힌트 결과는 버린다
+            _boardGen = 0;
+            _hintGen = -1;
 
             _hud.SlotClicked -= OnSlotClicked;
             _hud.SlotClicked += OnSlotClicked;
@@ -48,11 +57,16 @@ namespace HangeulAdventure.Game
             _hud.UndoClicked += OnUndo;
             _hud.ResetClicked -= OnReset;
             _hud.ResetClicked += OnReset;
+            _hud.HintClicked -= OnHintRequested;
+            _hud.HintClicked += OnHintRequested;
         }
 
         private void Update()
         {
+            PollHint(); // 클리어 후 도착한 결과도 정리해야 하므로 아래 가드보다 앞
             if (_session == null || _finished) return;
+            // 힌트 팝업이 뜬 동안 보드를 조작하면 팝업의 "이동 전" 보드가 실제와 어긋난다
+            if (_hud.HintPopupOpen) return;
             var kb = Keyboard.current;
             var mouse = Mouse.current;
 
@@ -65,6 +79,7 @@ namespace HangeulAdventure.Game
 
                 if (kb.zKey.wasPressedThisFrame) OnUndo();
                 if (kb.rKey.wasPressedThisFrame) OnReset();
+                if (kb.hKey.wasPressedThisFrame) OnHintRequested();
 
                 // 방향키/WASD: 선택 타일 밀기
                 if (HasSelection())
@@ -249,6 +264,7 @@ namespace HangeulAdventure.Game
                 _selX = _selY = -1;
                 RefreshHighlights();
                 _hud.Refresh();
+                InvalidateHint();
             }
         }
 
@@ -259,10 +275,12 @@ namespace HangeulAdventure.Game
             _board.Bind(_session);
             _selX = _selY = -1;
             _hud.Refresh();
+            InvalidateHint();
         }
 
         private void AfterAction()
         {
+            InvalidateHint();
             _hud.Refresh();
             RefreshHighlights();
             ActionTaken?.Invoke();
@@ -280,6 +298,178 @@ namespace HangeulAdventure.Game
                     _session.MoveCount, _session.Stage.difficulty);
                 _hud.ShowClearPopup(earned);
             }
+        }
+
+        // ---- 힌트 (비동기 재솔브) ----
+
+        private const int HintMaxStates = 500_000;
+
+        /// <summary>힌트 1회 전체 예산 (기준 솔브 + 후보 재솔브 합계). 초과 시 "찾지 못했습니다".</summary>
+        private const int HintBudgetMs = 6_000;
+
+        private enum HintStatus { Move, Unsolvable, Exhausted }
+
+        private readonly struct HintOutcome
+        {
+            public readonly HintStatus Status;
+            public readonly GameHud.HintView View; // Status == Move일 때만 유효
+
+            public HintOutcome(HintStatus status, GameHud.HintView view) { Status = status; View = view; }
+        }
+
+        private void OnHintRequested()
+        {
+            if (_session == null || _finished) return;
+            if (_hintTask != null && !_hintTask.IsCompleted) return; // 계산 중 중복 요청 무시
+
+            var snap = Snapshot(_session);
+            int used = _session.MoveCount, declared = _session.Stage.minMoves;
+            _hintGen = _boardGen;
+            _hud.ShowHintPending();
+            // 워커 스레드 실행: Engine 어셈블리는 UnityEngine을 참조하지 않는 순수 C#이고
+            // (asmdef noEngineReferences) snap은 깊은 복사본이라 메인스레드와 공유 상태가 없다.
+            _hintTask = Task.Run(() => ComputeHint(snap, used, declared));
+        }
+
+        /// <summary>보드가 바뀌면 대기 중인 힌트는 낡은 보드의 답이 되므로 버린다.</summary>
+        private void InvalidateHint()
+        {
+            _boardGen++;
+            _hud.HideHintPending();
+        }
+
+        private void PollHint()
+        {
+            if (_hintTask == null || !_hintTask.IsCompleted) return;
+            var t = _hintTask;
+            _hintTask = null;
+
+            _hud.HideHintPending();
+            if (_hintGen != _boardGen) return; // 대기 중 보드가 바뀌었다
+            if (t.IsFaulted) { _hud.ShowHintMessage("힌트 계산에 실패했습니다."); return; }
+
+            var r = t.Result;
+            switch (r.Status)
+            {
+                case HintStatus.Move: _hud.ShowHintPopup(r.View); break;
+                case HintStatus.Unsolvable:
+                    _hud.ShowHintMessage("지금 상태로는 풀 수 없습니다 — 되돌리기(Z)나 재시작(R)을 해보세요.");
+                    break;
+                default:
+                    _hud.ShowHintMessage("힌트를 찾지 못했습니다 — 보드가 너무 복잡합니다.");
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 워커 스레드에서 실행. Solver.Solve는 최소 수만 알려주고 첫 수는 알려주지 않으므로,
+        /// 후보 행동마다 재솔브해 "비용 + 남은 최소 수 == 현재 최소 수"인 첫 행동을 최적 행동으로 고른다.
+        /// 후보 수만큼 솔브가 반복되므로 전체를 HintBudgetMs 하나로 묶어 제한한다.
+        /// </summary>
+        private static HintOutcome ComputeHint(StageData snap, int usedMoves, int declaredMin)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var baseline = Solver.Solve(snap, HintMaxStates, HintBudgetMs);
+            if (baseline.Aborted) return new HintOutcome(HintStatus.Exhausted, default);
+            if (!baseline.Solvable) return new HintOutcome(HintStatus.Unsolvable, default);
+
+            int remain = baseline.MinMoves;
+            // 초기 최적 수(minMoves)는 외부 CLI가 기입한 값 — 미기입(0 이하)이면 판정을 건너뛴다
+            bool notOptimal = declaredMin > 0 && usedMoves + remain > declaredMin;
+
+            foreach (var c in Candidates(snap))
+            {
+                int budget = HintBudgetMs - (int)sw.ElapsedMilliseconds;
+                if (budget <= 0) return new HintOutcome(HintStatus.Exhausted, default);
+
+                var after = Snapshot(c.After);
+                var r = Solver.Solve(after, HintMaxStates, budget);
+                if (r.Aborted) return new HintOutcome(HintStatus.Exhausted, default);
+                if (!r.Solvable || c.Cost + r.MinMoves != remain) continue;
+
+                return new HintOutcome(HintStatus.Move, new GameHud.HintView(
+                    snap.cells, after.cells, c.Fx, c.Fy, c.Tx, c.Ty, c.Desc, notOptimal));
+            }
+            return new HintOutcome(HintStatus.Exhausted, default);
+        }
+
+        /// <summary>후보 행동 열거. 비용은 엔진이 정한다 (밀기·회전 = 1, 수집 = 0, D-15).</summary>
+        private static IEnumerable<(GameSession After, int Cost, int Fx, int Fy, int Tx, int Ty, string Desc)>
+            Candidates(StageData snap)
+        {
+            for (int y = 0; y < snap.height; y++)
+            {
+                for (int x = 0; x < snap.width; x++)
+                {
+                    int i = y * snap.width + x;
+                    if (!snap.mask[i]) continue;
+                    char tile = snap.cells[i];
+                    if (tile == Hangul.Empty) continue;
+
+                    foreach (Direction d in GameSession.DirectionsAll) // 순서는 Solver의 후보 생성과 동일
+                    {
+                        var s = new GameSession(snap);
+                        var rep = s.TryPush(x, y, d);
+                        if (rep.Success)
+                            yield return (s, s.MoveCount, x, y, rep.ToX, rep.ToY, PushDesc(tile, d, rep.Type));
+                    }
+
+                    var rot = new GameSession(snap);
+                    if (rot.TryRotate(x, y))
+                        yield return (rot, rot.MoveCount, x, y, x, y, $"'{tile}' 타일 회전");
+
+                    var col = new GameSession(snap);
+                    if (col.TryCollect(x, y))
+                        yield return (col, col.MoveCount, x, y, x, y, $"'{tile}' 타일 수집");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 진행 중인 상태를 솔버 입력용 StageData로 (미수집 슬롯만 목표로).
+        /// 워커가 읽는 동안 메인스레드가 보드를 바꿔도 안전하도록 전부 새 배열로 복제한다.
+        /// </summary>
+        private static StageData Snapshot(GameSession s)
+        {
+            var st = s.Stage;
+            var cells = new char[st.width * st.height];
+            for (int y = 0; y < st.height; y++)
+                for (int x = 0; x < st.width; x++)
+                    cells[y * st.width + x] = s.GetCell(x, y);
+
+            var left = new List<char>();
+            for (int i = 0; i < s.SlotCount; i++)
+                if (!s.IsSlotFilled(i)) left.Add(s.SlotChar(i));
+
+            return new StageData
+            {
+                width = st.width,
+                height = st.height,
+                mask = (bool[])st.mask.Clone(),
+                pinnedMask = st.pinnedMask == null ? null : (bool[])st.pinnedMask.Clone(),
+                cells = cells,
+                // 같은 문자 슬롯은 대칭이므로 그룹 분해 없이 하나로 (Solver의 수집 루프)
+                goals = new[] { new GoalGroup { slots = left.ToArray() } },
+            };
+        }
+
+        private static string PushDesc(char tile, Direction d, PushResultType type)
+        {
+            string dir = d switch
+            {
+                Direction.Up => "위로",
+                Direction.Down => "아래로",
+                Direction.Left => "왼쪽으로",
+                _ => "오른쪽으로",
+            };
+            string suffix = type switch
+            {
+                PushResultType.Compose => " (합성)",
+                PushResultType.SplitCompose => " (분해 + 연쇄 합성)",
+                PushResultType.SplitMove => " (분해)",
+                _ => "",
+            };
+            return $"'{tile}' 타일을 {dir} 밀기{suffix}";
         }
     }
 }
