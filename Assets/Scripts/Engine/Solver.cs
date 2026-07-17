@@ -25,15 +25,24 @@ namespace HangeulAdventure.Engine
     ///   깊이 L의 모든 상태를 (수집 폐포까지 포함해) 확정한 뒤 L+1로 넘어가므로,
     ///   상태의 첫 방문이 곧 최단이다 → 거리표(dist) 없이 방문 집합만 있으면 된다.
     ///
-    /// 성능의 핵심은 알고리즘이 아니라 상태 표현이다 (아래 3가지가 메모리 폭발의 실제 원인이었다):
-    ///   1) 타일 알파벳 압축 — 스테이지에서 실제로 도달 가능한 타일 문자만 열거해(합성/분해/회전
-    ///      폐포) 작은 id로 매핑. char(16비트) → 보통 5~7비트. 대부분의 스테이지가 상태 2워드에 들어간다.
-    ///   2) 존재하는 칸만 인코딩 — '#' 칸을 상태에서 제외.
+    /// 성능의 핵심은 알고리즘이 아니라 상태 표현이다 (측정 결과 병목은 분기 수가 아니라
+    /// 상태당 메모리와 해시였다. 99 스테이지 전수: 59.6초 → 23.7초, 상태당 ~180B → ~25B):
+    ///   1) 타일 알파벳 압축 — 이 스테이지에서 나올 수 있는 문자만 원자 예산으로 추려 작은 id로
+    ///      매핑 (아래 생성자 2번 참조). char 16비트 → 보통 5~8비트.
+    ///   2) 상태에 넣을 칸만 인코딩 — 없는 칸('#')과 바위 칸(@)을 제외 (생성자 1번 참조).
     ///   3) 평면 해시 테이블 — 상태당 ulong[] 힙 할당과 Dictionary 엔트리를 없애고
-    ///      연속 배열(ulong[] _states)에 인라인 저장. id는 삽입 순서라 재해싱에도 불변.
+    ///      연속 배열(_states)에 인라인 저장. id는 삽입 순서라 재해싱에도 불변이므로
+    ///      프런티어가 id만 들고 있어도 된다.
+    ///   4) 해시 확산 — 개방 주소법 + 선형 탐사는 해시 하위 비트를 그대로 버킷 인덱스로 쓴다.
+    ///      FNV-1a만 쓰면 군집이 생겨 일부 스테이지가 5배 느려졌다 (Mix 참조).
     ///
-    /// 규칙 판정(PushLogic.Resolve / Hangul.RotateCw)은 탐색 전에 전이표로 사전 계산해
-    /// 핫패스에서 Dictionary 조회가 0회다. 규칙 자체는 무변경 — 표는 Resolve로 채운다.
+    /// 규칙 판정(PushLogic.Resolve / Hangul.RotateCw)은 전이표에 캐시해 핫패스에서 Dictionary
+    /// 조회가 0회다. 규칙 자체는 무변경 — 표는 언제나 Resolve가 채운다.
+    ///
+    /// 한계: 비용은 '수(minMoves)'가 아니라 '깊이 minMoves까지의 도달 가능 상태 수'로 정해진다.
+    /// 개방된 5×4 보드는 계층마다 상태가 ~3.5배씩 늘어 10수 근처에서 벽에 부딪히고,
+    /// 바위·사슬로 분기를 묶은 보드(예: stage_104)는 전체 공간이 70만이라 27수(그 보드의 지름)를
+    /// 2초에 완전 소진한다. 즉 깊은 스테이지를 만들려면 보드를 넓히지 말고 통로를 좁혀야 한다.
     /// </summary>
     public static class Solver
     {
@@ -41,6 +50,11 @@ namespace HangeulAdventure.Engine
         // timeBudgetMs: 탐색 시간 상한 (에디터 프리즈 방지, D-07). 초과 시 Aborted.
         public static SolveResult Solve(StageData stage, int maxStates = 500_000, int timeBudgetMs = 30_000)
             => new Search(stage).Run(maxStates, timeBudgetMs);
+
+        // 진단 출력 (SolverCli 측정용). 프로세스당 1회만 읽는다 — 힌트 기능은 후보마다
+        // Solve를 다시 부르므로 Solve당 환경변수 조회를 남기지 않는다.
+        private static readonly bool StatsOn = Environment.GetEnvironmentVariable("SOLVER_STATS") == "1";
+        private static readonly bool TraceOn = Environment.GetEnvironmentVariable("SOLVER_TRACE") == "1";
 
         private sealed class Search
         {
@@ -123,13 +137,10 @@ namespace HangeulAdventure.Engine
             private readonly ushort[] _cells;
             private bool _goalFound;
             private bool _overflow;
-            private bool _trace;
 
             // ulong[] 하나의 요소 수 상한. 2GB(=2^28 요소)를 넘기려면 SolverCli처럼
             // gcAllowVeryLargeObjects가 켜져 있어야 한다. 실제 제동은 maxStates가 건다.
             private const long MaxArray = 1L << 31;
-
-            private long _prepMs;
 
             public Search(StageData stage)
             {
@@ -160,7 +171,6 @@ namespace HangeulAdventure.Engine
                         var (dx, dy) = ((Direction)d).Delta();
                         int tx = i % w + dx, ty = i / w + dy;
                         _neigh[ci * 4 + d] = stage.CellExists(tx, ty) ? compact[ty * w + tx] : -1; // 바위 이웃 = -1
-
                     }
                 }
 
@@ -235,15 +245,15 @@ namespace HangeulAdventure.Engine
                 _cellBits = 1;
                 while ((1 << _cellBits) < _tiles) _cellBits++;
                 _cellMask = (1UL << _cellBits) - 1;
-                _words = (_slotCount + _m * _cellBits + 63) >> 6;
+                // 워드는 최소 1개 — 슬롯도 칸도 없는 퇴화 보드에서 s[0] 접근이 깨지지 않게 한다
+                _words = Math.Max(1, (_slotCount + _m * _cellBits + 63) >> 6);
 
                 _base = new ulong[_words];
                 _probe = new ulong[_words];
                 _cells = new ushort[_m];
-                _prepMs = prep.ElapsedMilliseconds;
-                _trace = Environment.GetEnvironmentVariable("SOLVER_TRACE") == "1";
-                if (Environment.GetEnvironmentVariable("SOLVER_STATS") == "1")
-                    Console.Error.WriteLine($"  [stats] m={_m} tiles={_tiles} cellBits={_cellBits} words={_words} prep={_prepMs}ms");
+                if (StatsOn)
+                    Console.Error.WriteLine($"  [stats] m={_m} tiles={_tiles} cellBits={_cellBits}" +
+                                            $" words={_words} prep={prep.ElapsedMilliseconds}ms");
             }
 
             // ── 비트 접근 ──
@@ -382,7 +392,7 @@ namespace HangeulAdventure.Engine
                     if (next.Count == 0) return new SolveResult(false, -1, false, _count);
                     Closure(next);
                     if (_goalFound) return new SolveResult(true, depth, false, _count);
-                    if (_trace) Console.Error.WriteLine($"  [layer] {depth}: +{next.Count:N0} (누적 {_count:N0}, {sw.ElapsedMilliseconds:N0}ms)");
+                    if (TraceOn) Console.Error.WriteLine($"  [layer] {depth}: +{next.Count:N0} (누적 {_count:N0}, {sw.ElapsedMilliseconds:N0}ms)");
                     if (_overflow || _count > maxStates) return new SolveResult(false, -1, true, _count);
                     if (sw.ElapsedMilliseconds > timeBudgetMs) return new SolveResult(false, -1, true, _count);
 

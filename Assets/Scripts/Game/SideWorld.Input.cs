@@ -566,11 +566,14 @@ namespace HangeulAdventure.Game
             }
 
             if (_backdropRoots.Count == 0) return;
-            var center = new Vector2((_map.width - 1) * 0.5f, (_map.height - 1) * 0.5f);
+            float centerX = (_map.width - 1) * 0.5f;
             foreach (var (root, parallax) in _backdropRoots)
             {
-                Vector2 off = (cam - center) * (1f - parallax);
-                root.localPosition = new Vector3(off.x, off.y, 0);
+                // 가로만 패럴랙스. 배경 나무는 지면에 뿌리내린 물체라 Y는 0 고정 —
+                // 세로로 짧은 맵(cam.y가 클램프로 상수 고정)에서 Y 오프셋을 주면 지면과 어긋나 떠 보인다.
+                // (안개·능선도 같은 원칙으로 세로를 고정한다)
+                float offX = (cam.x - centerX) * (1f - parallax);
+                root.localPosition = new Vector3(offX, 0f, 0);
             }
         }
     }

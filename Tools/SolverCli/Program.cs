@@ -13,7 +13,13 @@ using HangeulAdventure.Engine;
 //   --path <파일경로>             : 단일 스테이지의 최적 경로 출력 (설계 검토용)
 //   --trials                     : Resources/Battles의 보스 시련 전수 검증
 //   --bench <파일> [상태] [ms]    : 파일을 건드리지 않고 단일 스테이지 측정 (상태 수·시간·최대 메모리)
+//   --maps                       : 맵/스테이지 무결성 검증
 //   <폴더>                       : 해당 폴더 전수 검증
+// 분석 모드 (Analyze.cs — 역방향/양방향 타당성 측정용, 실사용 솔버 아님):
+//   --atoms [폴더]                : 원자 수지 → 목표 상태 집합 크기. 스테이지 설계 시 유용
+//   --goalstates <파일>           : 도달 가능한 목표 상태 완전 열거 (작은 보드)
+//   --bidi <파일>                 : 정답 그래프로 양방향 이득 시뮬레이션 (작은 보드)
+//   --backward <파일> [상태]      : 진짜 역방향 BFS 프로토타입 (잔여 원자 0인 스테이지)
 class Program
 {
     static int Main(string[] args)
@@ -24,10 +30,30 @@ class Program
             return MapsMode();
         if (args.Length >= 1 && args[0] == "--trials")
             return TrialsMode();
+        if (args.Length >= 1 && args[0] == "--atoms")
+            return Analyze.AtomsMode(args.Length > 1 ? args[1]
+                : Path.Combine(RepoRoot(), "Assets", "Resources", "Stages"));
+        if (args.Length >= 2 && args[0] == "--backward")
+            return Analyze.BackwardMode(args[1], args.Length > 2 ? int.Parse(args[2]) : 3_000_000);
+        if (args.Length >= 2 && args[0] == "--bidi")
+            return Analyze.BidiMode(args[1]);
+        if (args.Length >= 2 && args[0] == "--goalstates")
+            return Analyze.GoalStatesMode(args[1]);
         if (args.Length >= 2 && args[0] == "--bench")
             return BenchMode(args[1],
                 args.Length > 2 ? int.Parse(args[2]) : 5_000_000,
                 args.Length > 3 ? int.Parse(args[3]) : 120_000);
+
+        // 안전장치: 아래 기본 모드는 Stages 폴더의 minMoves를 덮어쓴다. 오타나 미지원 플래그가
+        // 여기로 흘러들면(예: 오래된 빌드에 새 플래그를 줬을 때) 99개 스테이지가 조용히 재기입된다.
+        if (args.Length > 0 && args[0].StartsWith("--") && args[0] != "--consonants")
+        {
+            Console.Error.WriteLine($"알 수 없는 모드: {args[0]}");
+            Console.Error.WriteLine("사용법: (없음)=전수 기입 | --consonants | --path <파일> | --trials"
+                                    + " | --bench <파일> [상태] [ms] | --maps | --atoms [폴더]"
+                                    + " | --goalstates <파일> | --bidi <파일> | --backward <파일> [상태]");
+            return 2;
+        }
 
         bool audit = args.Length > 0 && args[0] == "--consonants";
         string folder = args.Length > (audit ? 1 : 0) ? args[audit ? 1 : 0]
@@ -239,6 +265,8 @@ class Program
         if (dir == null) throw new DirectoryNotFoundException("Assets 폴더를 찾지 못함 — 저장소 안에서 실행하세요.");
         return dir.FullName;
     }
+
+    internal static (StageData, int) LoadPublic(string json) => Load(json);
 
     static (StageData, int) Load(string json)
     {

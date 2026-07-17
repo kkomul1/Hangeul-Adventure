@@ -7,6 +7,12 @@
     <AssemblyName>SolverCli</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <!-- 대형 보드를 크게 잡고 돌리면 상태 배열 하나가 2GB를 넘을 수 있다.
+         없으면 OutOfMemoryException으로 죽고, 켜두면 maxStates 상한이 정상적으로 제동을 건다.
+         (ServerGC는 측정상 오히려 조금 느려서 넣지 않는다: 25.0초 vs 23.6초) -->
+    <RuntimeHostConfigurationOption Include="System.GC.AllowVeryLargeObjects" Value="true" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\..\Assets\Scripts\Engine\*.cs" />
   </ItemGroup>
 </Project>

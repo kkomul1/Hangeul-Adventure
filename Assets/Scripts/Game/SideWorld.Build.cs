@@ -39,11 +39,11 @@ namespace HangeulAdventure.Game
         private const float BackfillTopY = SurfaceY - 24f / 64f;  // 표면선 24px 아래부터 흙
         private const float BackfillBottomY = -8f;           // 맵 바닥(-0.5)보다 한참 아래 — 시야가 넓어져도 하늘이 비치지 않게
         private const float MoundLiftY = 4f / 64f;           // 단차 블록을 칸 윗변보다 4px 위에서 시작
-        private const float PlatformLiftY = 40f / 64f;       // 발판 아트 상단 = 상면보다 40px 위 (풀·이끼 두께)
+        private const float PlatformLiftY = 0f;              // 신규 슬래브는 풀이 아트 top(y0)에 있어 상면=콜라이더 상면. 옛 40px는 발판을 0.625u 띄웠다
         private const float PlatformCapW = 96f / 64f;        // 발판 마구리 폭 1.5u
-        private const float PlatformMidW = 160f / 64f;       // 발판 중간 타일 유효 간격 2.5u (192px 캔버스 중 겹침 제외)
+        private const float PlatformMidW = 166f / 64f;       // 발판 중간 슬래브 유효 폭 (신규 아트 166px, 이음 flush)
         private const float BushOverlapY = 6f / 64f;         // 경계 수풀 세로 겹침
-        private const float LadderCapSinkY = 6f / 64f;       // 사다리 갓머리를 상면 6px 아래로 묻는다
+        private const float LadderCapSinkY = 0f;             // 신규 캡 하단(가로대 중간)이 최상단 세그 top과 정확히 이어진다. 옛 6px는 겹침을 만들었다
         private const float DecoSinkY = 3f / 64f;            // 데코 발치를 지면 3px 아래로 묻어 붕 뜸 방지
         private const float TreeBaseY = SurfaceY - 8f / 64f; // 배경 나무 캔버스 하단
         private const float RidgeTopY = 6.0f;                // 원경 능선 상단

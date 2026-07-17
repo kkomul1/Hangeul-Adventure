@@ -1,9 +1,16 @@
 # PixelLab MCP JSON-RPC helper (Streamable HTTP)
-import json, sys, urllib.request, os
+import json, sys, time, urllib.error, urllib.request, os
 
 URL = "https://api.pixellab.ai/mcp"
 TOKEN = "5c6adfcc-8231-47c5-9ab8-76dd44e46ac7"
 SESSION_FILE = os.path.join(os.path.dirname(__file__), "mcp_session_id.txt")
+
+# The API returns transient 502/503/504 under load. Without a retry a single blip kills a long
+# batch mid-run (measured: a 96-job prop batch died at job 27 on one HTTP 502), and the rolls
+# already paid for in that batch are stranded. Retry transient failures only -- never 4xx, which
+# are real errors worth surfacing immediately.
+_RETRY_STATUS = {429, 500, 502, 503, 504}
+_RETRIES = 5
 
 def _post(payload, session_id=None, timeout=300):
     headers = {
@@ -13,11 +20,28 @@ def _post(payload, session_id=None, timeout=300):
     }
     if session_id:
         headers["Mcp-Session-Id"] = session_id
-    req = urllib.request.Request(URL, data=json.dumps(payload).encode(), headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        sid = resp.headers.get("Mcp-Session-Id") or resp.headers.get("mcp-session-id")
-        ctype = resp.headers.get("Content-Type", "")
-        body = resp.read().decode("utf-8", "replace")
+    data = json.dumps(payload).encode()
+    last = None
+    for attempt in range(_RETRIES):
+        req = urllib.request.Request(URL, data=data, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                sid = resp.headers.get("Mcp-Session-Id") or resp.headers.get("mcp-session-id")
+                ctype = resp.headers.get("Content-Type", "")
+                body = resp.read().decode("utf-8", "replace")
+            break
+        except urllib.error.HTTPError as e:
+            last = e
+            if e.code not in _RETRY_STATUS:
+                raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            last = e
+        wait = min(60, 5 * (2 ** attempt))
+        print(f"  [mcp] {type(last).__name__} {getattr(last,'code','')} -> retry in {wait}s "
+              f"({attempt+1}/{_RETRIES})", file=sys.stderr, flush=True)
+        time.sleep(wait)
+    else:
+        raise last
     if "text/event-stream" in ctype:
         # parse SSE: take last data: line that is valid JSON
         result = None

@@ -51,3 +51,24 @@
  "prop_fern_tuft": "619576cd-6a31-4d2c-9f4c-99cc8720ce75",
  "prop_fallen_log": "315bcd0d-14a0-4b97-8495-f91b12c1da29"
 }
+{
+ "rock_step_a_256x128": "5935775a-fcd2-44e5-a853-efcd8379579e",
+ "rock_step_b_256x128": "ef25a45d-38db-4fbe-81fd-9d6dc3eaf019",
+ "rock_step_c_256x128": "aa5882d7-0bc6-471f-9c89-1ee1868143ae",
+ "ladder_body_v2_96x128": "ac531f32-377d-4dd5-baa2-be12560315ef",
+ "ladder_cap_v2_96x64": "0d4f3ddc-4aec-4986-92c7-9e4fe4689e5e",
+ "platform_mid_v2_192x96": "f98be71d-66ed-45e6-8368-3246f328c5ef",
+ "platform_cap_L_v2_96x96": "0644d473-1be7-4119-8f3a-011dfce766dd"
+}
+{
+ "rock_step_d_256x128": "d3db9c23-5a98-4448-8b0d-721c010854a1",
+ "rock_step_e_256x128": "713491e5-bcf1-487f-8d65-f33a745322e9"
+}
+{
+ "rock_step_f_256x128": "a5c89af4-68ca-4698-99f4-c7190690b1e8"
+}
+{
+ "rock_step_g_256x128": "5949c08d-6230-409d-a3ca-f4621b8a7043",
+ "rock_step_h_256x128": "8861409e-c697-463f-b248-1a8a3c0f6e96",
+ "rock_step_i_256x128": "b09f85f2-bfdf-454b-ae60-319bc87ad42e"
+}
