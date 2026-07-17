@@ -113,3 +113,4 @@ InitTestScene*.unity*
 !Tools/SolverCli/SolverCli.csproj
 Tools/SolverCli/bin/
 Tools/SolverCli/obj/
+Tools/Scripts/__pycache__/
