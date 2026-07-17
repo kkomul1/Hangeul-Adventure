@@ -238,71 +238,144 @@ namespace HangeulAdventure.Game
             _titleText.text = IntroSeen ? BrokenText.Apply(TitleString) : TitleString;
         }
 
-        // ---- 오프닝 ----
+        // ---- 오프닝 (4컷 컷신 — 스토리기획 2장 확정본, 묵음 대왕 세계관) ----
 
-        private static readonly string[] IntroPages =
+        // 컷 = Resources/Art/Opening/opening_01~04.png (1024×503 ≈ 2:1). 캡션은 스토리기획 2장 컷별 내용.
+        private static readonly string[] IntroCaptions =
         {
-            "조선의 어느 날.\n가나다 대마왕이 나타나 훈민정음 해례본을 훔쳐\n산산조각 내버렸다.",
-            "그가 흩뿌린 어둠에 세상의 글자들이 하나둘 깨져나갔다.\n\n남은 것은  ㄱ, ㄴ, ㄷ  과 모음들뿐...",
-            "어린 선비인 당신은 잃어버린 자음을 되찾아\n훈민정음을 복원하기 위해 길을 나선다.\n\n— 시작의 숲에서 —",
+            "어느 날부터, 사람들의 말이 소리가 되지 못했다.\n간판도, 책도, 화면의 글자도 — 하나둘 부서져 사라졌다.",
+            "글자가 사라지는 원인은 과거에 있었다.\n나는 훈민정음 해례본을 품에 안고, 1443년으로 향하는 타임머신에 올랐다.",
+            "조선의 숲에 불시착한 순간, 충격으로 해례본이 찢겨\n빛나는 파편이 사방으로 흩날렸다. 돌아갈 타임머신은 이미 부서져 있었다.",
+            "글자가 쏟아진 하늘을 좇아, 한 사람이 숲에 나와 있었다.\n낯선 옷차림의 나를, 그가 가만히 바라본다.",
         };
 
         private void ShowIntro(System.Action onDone)
         {
             BgmPlayer.Instance?.Play("bgm_intro"); // 오프닝 전용 곡 (M4-2) — 미도착 시 현재 곡 유지
-            var overlay = UiFactory.CreatePanel(_canvas.transform, "Intro", new Color(0.08f, 0.07f, 0.06f, 0.97f));
+
+            // 레터박스 배경(불투명 검정): 2:1 컷을 가로에 맞춰 세로 중앙 배치하면 위아래가 검게 남는다.
+            var overlay = UiFactory.CreatePanel(_canvas.transform, "Intro", Color.black);
             UiFactory.Stretch(overlay);
 
-            // 대마왕 일러스트 (1~2페이지 등장 연출, 마지막 페이지에서 숨김)
-            Image villain = null;
-            var villainSprite = Resources.Load<Sprite>("Art/Portraits/boss_daemawang");
-            if (villainSprite != null)
+            // 화면 아무 곳이나 눌러도 다음 컷(버튼·Space와 동일). 맨 뒤에 깔고, 위 요소는 raycast를 끈다.
+            var clickCatcher = UiFactory.CreateButton(overlay, "ClickCatcher", "", 0, new Color(0, 0, 0, 0), Color.clear, null);
+            UiFactory.Stretch((RectTransform)clickCatcher.transform);
+
+            // 컷 뷰(이미지+캡션): 이 그룹을 통째로 페이드해 컷을 전환한다.
+            var cutView = UiFactory.CreateEmpty(overlay, "CutView");
+            UiFactory.Stretch(cutView);
+            var cutGroup = cutView.gameObject.AddComponent<CanvasGroup>();
+            cutGroup.blocksRaycasts = false; // 클릭이 뒤의 ClickCatcher로 통과하게
+
+            var cutGo = new GameObject("Cut", typeof(Image), typeof(AspectRatioFitter));
+            cutGo.transform.SetParent(cutView, false);
+            var img = cutGo.GetComponent<Image>();
+            img.raycastTarget = false;
+            UiFactory.Stretch((RectTransform)cutGo.transform);
+            var fitter = cutGo.GetComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent; // 이미지 전체를 담고 위아래 레터박스
+
+            // 캡션 가독용 하단 암막(전폭) + 내레이션
+            var scrim = UiFactory.CreatePanel(cutView, "CaptionScrim", new Color(0, 0, 0, 0.5f));
+            scrim.GetComponent<Image>().raycastTarget = false;
+            scrim.anchorMin = new Vector2(0, 0);
+            scrim.anchorMax = new Vector2(1, 0);
+            scrim.pivot = new Vector2(0.5f, 0);
+            scrim.sizeDelta = new Vector2(0, 156);
+            scrim.anchoredPosition = Vector2.zero;
+            var caption = UiFactory.CreateText(cutView, "Caption", IntroCaptions[0], 26, new Color(0.95f, 0.93f, 0.87f));
+            UiFactory.SetRect(caption.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 58), new Vector2(1120, 96));
+
+            // 진행/스킵 버튼은 페이드에 포함되지 않게 overlay 직속(항상 위).
+            var next = UiFactory.CreateButton(overlay, "Next", "다음", 22, UiFactory.Accent, Color.white, null);
+            UiFactory.SetRect((RectTransform)next.transform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-40, 40), new Vector2(170, 56));
+            var nextLabel = next.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+
+            var skip = UiFactory.CreateButton(overlay, "Skip", "건너뛰기 ▶▶", 16, new Color(0.12f, 0.11f, 0.10f, 0.7f), new Color(0.85f, 0.83f, 0.78f), null);
+            UiFactory.SetRect((RectTransform)skip.transform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-32, -30), new Vector2(150, 46));
+
+            int cut = 0;
+            bool transitioning = false;
+
+            void SetCut()
             {
-                var vGo = new GameObject("Villain", typeof(Image));
-                vGo.transform.SetParent(overlay, false);
-                villain = vGo.GetComponent<Image>();
-                villain.sprite = villainSprite;
-                villain.preserveAspect = true;
-                UiFactory.SetRect((RectTransform)vGo.transform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -30), new Vector2(320, 470));
+                var sprite = Resources.Load<Sprite>($"Art/Opening/opening_0{cut + 1}");
+                if (sprite != null)
+                {
+                    img.sprite = sprite;
+                    fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+                }
+                caption.text = IntroCaptions[cut];
+                if (nextLabel != null) nextLabel.text = cut == IntroCaptions.Length - 1 ? "출발" : "다음";
             }
 
-            var text = UiFactory.CreateText(overlay, "Text", IntroPages[0], 30, new Color(0.92f, 0.89f, 0.82f));
-            UiFactory.SetRect(text.rectTransform, new Vector2(0.5f, villain != null ? 0.32f : 0.55f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 240));
-
-            int page = 0;
-            var btn = UiFactory.CreateButton(overlay, "Next", "다음", 24, UiFactory.Accent, Color.white, null);
-            UiFactory.SetRect((RectTransform)btn.transform, new Vector2(0.5f, villain != null ? 0.12f : 0.22f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(180, 60));
-            btn.onClick.AddListener(() =>
+            void Finish()
             {
-                page++;
-                if (page < IntroPages.Length)
-                {
-                    text.text = IntroPages[page];
-                    if (page == IntroPages.Length - 1)
-                    {
-                        btn.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "출발";
-                        if (villain != null)
-                        {
-                            // 마지막 페이지(선비의 출발)에서는 대마왕을 치우고 본문을 중앙으로
-                            villain.gameObject.SetActive(false);
-                            UiFactory.SetRect(text.rectTransform, new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 240));
-                        }
-                    }
-                    if (page == 1)
-                    {
-                        // 이 순간 세상의 글자가 깨진다
-                        PlayerPrefs.SetInt("intro_seen", 1);
-                        PlayerPrefs.Save();
-                        RefreshTitleBrokenness();
-                        SfxPlayer.Instance?.Split();
-                    }
-                }
-                else
-                {
-                    Destroy(overlay.gameObject);
-                    onDone();
-                }
-            });
+                // 오프닝을 봤으므로 다음부터 타이틀 글자가 깨진다 (스토리기획 4장). 스킵·완주 양쪽에서 보장.
+                PlayerPrefs.SetInt("intro_seen", 1);
+                PlayerPrefs.Save();
+                RefreshTitleBrokenness();
+                Destroy(overlay.gameObject);
+                onDone();
+            }
+
+            System.Collections.IEnumerator CrossFade()
+            {
+                transitioning = true;
+                yield return FadeGroup(cutGroup, 1f, 0f, 0.22f);
+                cut++;
+                SetCut();
+                if (cut == 1) SfxPlayer.Instance?.Split(); // 컷1→2: 세상의 글자가 깨지는 순간의 효과음
+                yield return FadeGroup(cutGroup, 0f, 1f, 0.22f);
+                transitioning = false;
+            }
+
+            void Advance()
+            {
+                if (transitioning) return;
+                if (cut >= IntroCaptions.Length - 1) { Finish(); return; }
+                StartCoroutine(CrossFade());
+            }
+
+            next.onClick.AddListener(Advance);
+            clickCatcher.onClick.AddListener(Advance);
+            skip.onClick.AddListener(Finish);
+
+            SetCut();
+            cutGroup.alpha = 0f;
+            StartCoroutine(IntroFadeIn()); // 첫 컷 페이드 인 (전환 잠금 포함)
+            StartCoroutine(SpaceToAdvance(overlay, Advance));   // Space로도 진행
+
+            // 초기 페이드인 동안에도 transitioning을 잠근다 — 안 그러면 첫 0.35초에 클릭 시
+            // 페이드인과 CrossFade가 겹쳐 cut 증가가 덮이고 컷이 안 넘어간다 (실측 버그)
+            System.Collections.IEnumerator IntroFadeIn()
+            {
+                transitioning = true;
+                yield return FadeGroup(cutGroup, 0f, 1f, 0.35f);
+                transitioning = false;
+            }
+        }
+
+        private static System.Collections.IEnumerator FadeGroup(CanvasGroup g, float from, float to, float dur)
+        {
+            float t = 0f;
+            g.alpha = from;
+            while (t < dur)
+            {
+                t += Time.unscaledDeltaTime;
+                g.alpha = Mathf.Lerp(from, to, t / dur);
+                yield return null;
+            }
+            g.alpha = to;
+        }
+
+        private static System.Collections.IEnumerator SpaceToAdvance(RectTransform overlay, System.Action advance)
+        {
+            while (overlay != null) // Destroy 후에는 Unity의 fake-null로 루프 종료
+            {
+                if (Input.GetKeyDown(KeyCode.Space)) advance();
+                yield return null;
+            }
         }
 
         // ---- 글자 도감 ----

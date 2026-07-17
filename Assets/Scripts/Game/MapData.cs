@@ -45,6 +45,7 @@ namespace HangeulAdventure.Game
         public float x;
         public float y = 0.5f;
         public bool flip;        // 좌우 반전
+        public int order;        // 데코끼리 앞뒤 정렬 (0=기본, 클수록 앞). 데코 편집기에서 조절
     }
 
     /// <summary>

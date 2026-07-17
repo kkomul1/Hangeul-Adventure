@@ -60,6 +60,20 @@ namespace HangeulAdventure.Game
         public static Sprite ForestProp(string name)
             => Get($"{ForestRoot}/Props/{name}", name);
 
+        private static List<string> _forestPropNames;
+        /// <summary>Props 폴더의 모든 프롭 이름 (데코 편집기 팔레트용). 정렬됨.</summary>
+        public static IReadOnlyList<string> ForestPropNames()
+        {
+            if (_forestPropNames == null)
+            {
+                _forestPropNames = new List<string>();
+                foreach (var sp in Resources.LoadAll<Sprite>($"{ForestRoot}/Props"))
+                    _forestPropNames.Add(sp.name);
+                _forestPropNames.Sort();
+            }
+            return _forestPropNames;
+        }
+
         /// <summary>배경: ForestBackdrop("tree_pine_large"), ("sky_gradient"), ("bg_ridge"), ("fog_band")</summary>
         public static Sprite ForestBackdrop(string name)
             => Get($"{ForestRoot}/Backdrop/{name}", name);

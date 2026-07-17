@@ -580,15 +580,20 @@ namespace HangeulAdventure.Game
 
         // ---- 데코 (충돌 없는 전경 장식, 맵 데이터 decorations) ----
 
+        // 데코 편집기(SideWorld.DecoEdit.cs)가 배치를 추적·조작하기 위한 뷰 목록. 인덱스 = _map.decorations 인덱스
+        private readonly List<SpriteRenderer> _decoViews = new List<SpriteRenderer>();
+
         private void BuildDecorations()
         {
             if (!_art) return; // 색 블록 폴백에는 장식이 없다 (지형만으로 읽히게)
+            _decoViews.Clear();
             for (int i = 0; i < _map.decorations.Count; i++)
             {
                 var d = _map.decorations[i];
                 var sp = ArtLibrary.ForestProp(d.art);
-                if (sp == null) { Debug.LogWarning($"데코 아트 없음: Art/Forest/Props/{d.art}"); continue; }
-                PlaceSprite(transform, $"Deco_{i}_{d.art}", sp, new Vector2(d.x, d.y - DecoSinkY), OrderDeco, d.flip);
+                if (sp == null) { Debug.LogWarning($"데코 아트 없음: Art/Forest/Props/{d.art}"); _decoViews.Add(null); continue; }
+                var sr = PlaceSprite(transform, $"Deco_{i}_{d.art}", sp, new Vector2(d.x, d.y - DecoSinkY), OrderDeco + d.order, d.flip);
+                _decoViews.Add(sr);
             }
         }
 

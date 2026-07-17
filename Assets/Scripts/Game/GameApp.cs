@@ -168,6 +168,8 @@ namespace HangeulAdventure.Game
                 var go = new GameObject("SideWorld", typeof(SideWorld));
                 _sideWorld = go.GetComponent<SideWorld>();
                 _sideWorld.Enter(this, _maps[index], _stages, _cam, _canvas, playerPos);
+                if (ProgressStore.DevMode) _sideWorld.EnableDecoEditing(); // 개발자 모드: F9로 데코 편집기
+
             }
             else
             {

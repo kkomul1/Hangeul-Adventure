@@ -38,6 +38,16 @@ namespace HangeulAdventure.Game
         private void Update()
         {
             if (_rb == null) return;
+
+            DecoEditUpdate(); // F9 편집 토글 + 편집 모드 조작 (개발자 모드에서만)
+            if (_decoEditMode)
+            {
+                // 데코 편집 중에는 플레이어 이동을 멈춘다 (편집 입력과 충돌 방지)
+                _inputX = 0f;
+                _running = _inputUpHeld = _inputDownHeld = false;
+                return;
+            }
+
             var kb = Keyboard.current;
             if (_app.IsPanelOpen || kb == null)
             {
