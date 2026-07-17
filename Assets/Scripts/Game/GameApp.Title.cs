@@ -47,8 +47,9 @@ namespace HangeulAdventure.Game
                 UiFactory.Stretch((RectTransform)dimGo.transform);
             }
 
-            var title = UiFactory.CreateText(_titlePanel, "Title", TitleString, 72,
+            var title = UiFactory.CreateText(_titlePanel, "Title", TitleString, 76,
                 hasArt ? new Color(0.97f, 0.94f, 0.87f) : UiFactory.Ink);
+            if (UiFactory.TitleFont != null) title.font = UiFactory.TitleFont; // 정묵바위체 (M4-4)
             UiFactory.SetRect(title.rectTransform, new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(800, 120));
             _titleText = title;
             RefreshTitleBrokenness();
@@ -61,29 +62,41 @@ namespace HangeulAdventure.Game
             // 히든 개발자 모드 토글: 타이틀의 '어' 글자 위에 투명 버튼 배치 (TMP 글리프 좌표 기반)
             StartCoroutine(PlaceDevToggle(title));
 
-            var adventure = UiFactory.CreateButton(_titlePanel, "AdventureBtn", "모험 시작", 30, UiFactory.Accent, Color.white, StartAdventure);
-            UiFactory.SetRect((RectTransform)adventure.transform, new Vector2(0.5f, 0.38f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(240, 72));
+            // M4-1 개편 (승인안): 모험 시작을 주인공으로, 목록·도감 나란히, 에디터는 작게,
+            // 설정은 우상단 톱니 아이콘, 진행 초기화는 설정 팝업 안으로 이동
+            var adventure = UiFactory.CreateButton(_titlePanel, "AdventureBtn", "모험 시작", 34, UiFactory.Accent, Color.white, StartAdventure);
+            UiFactory.SetRect((RectTransform)adventure.transform, new Vector2(0.5f, 0.40f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(300, 84));
 
             var start = UiFactory.CreateButton(_titlePanel, "StartBtn", "스테이지 목록", 22, UiFactory.Paper, UiFactory.Ink, ShowStageSelect);
-            UiFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0.28f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(200, 56));
-
-            var editorBtn = UiFactory.CreateButton(_titlePanel, "EditorBtn", "레벨 에디터", 22, UiFactory.Paper, UiFactory.Ink, ShowLevelEditor);
-            UiFactory.SetRect((RectTransform)editorBtn.transform, new Vector2(0.5f, 0.20f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(200, 56));
+            UiFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0.28f), new Vector2(0.5f, 0.5f), new Vector2(-115, 0), new Vector2(210, 58));
 
             var codexBtn = UiFactory.CreateButton(_titlePanel, "CodexBtn", "글자 도감", 22, UiFactory.Paper, UiFactory.Ink, OpenCodex);
-            UiFactory.SetRect((RectTransform)codexBtn.transform, new Vector2(0.5f, 0.20f), new Vector2(0.5f, 0.5f), new Vector2(220, 0), new Vector2(180, 56));
+            UiFactory.SetRect((RectTransform)codexBtn.transform, new Vector2(0.5f, 0.28f), new Vector2(0.5f, 0.5f), new Vector2(115, 0), new Vector2(210, 58));
 
-            var settings = UiFactory.CreateButton(_titlePanel, "SettingsBtn", "설정", 18, UiFactory.Paper, UiFactory.Ink, ShowSettings);
-            UiFactory.SetRect((RectTransform)settings.transform, new Vector2(0.5f, 0.11f), new Vector2(0.5f, 0.5f), new Vector2(185, 0), new Vector2(120, 48));
+            var editorBtn = UiFactory.CreateButton(_titlePanel, "EditorBtn", "레벨 에디터", 18, UiFactory.Paper, UiFactory.Dim, ShowLevelEditor);
+            UiFactory.SetRect((RectTransform)editorBtn.transform, new Vector2(0.5f, 0.17f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(170, 48));
 
-            var wipe = UiFactory.CreateButton(_titlePanel, "WipeBtn", "진행 초기화", 18, UiFactory.Paper, UiFactory.Dim, () =>
+            var settings = UiFactory.CreateButton(_titlePanel, "SettingsBtn", "", 0, new Color(0.09f, 0.07f, 0.05f, 0.55f), Color.white, ShowSettings);
+            UiFactory.SetRect((RectTransform)settings.transform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -24), new Vector2(56, 56));
+            var settingsImg = settings.GetComponent<Image>();
+            settingsImg.sprite = UiFactory.RoundedSprite();
+            settingsImg.type = Image.Type.Sliced;
+            var gearSprite = Resources.Load<Sprite>("Art/Ui/gear");
+            if (gearSprite != null)
             {
-                PlayerPrefs.DeleteAll();
-                PlayerPrefs.Save();
-                _subtitle.text = SubtitleDefault;
-                RefreshTitleBrokenness(); // 인트로 전 상태로 돌아가므로 온전한 타이틀 복원
-            });
-            UiFactory.SetRect((RectTransform)wipe.transform, new Vector2(0.5f, 0.11f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(170, 48));
+                var gearGo = new GameObject("Icon", typeof(Image));
+                gearGo.transform.SetParent(settings.transform, false);
+                var gearImg = gearGo.GetComponent<Image>();
+                gearImg.sprite = gearSprite;
+                gearImg.preserveAspect = true;
+                gearImg.raycastTarget = false;
+                UiFactory.SetRect((RectTransform)gearGo.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(38, 38));
+            }
+            else
+            {
+                var gearLabel = settings.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                if (gearLabel != null) { gearLabel.text = "설정"; gearLabel.fontSize = 16; }
+            }
         }
 
         /// <summary>추출된 프리팹으로 타이틀 구성: 이름으로 텍스트·버튼을 다시 배선한다
@@ -103,6 +116,7 @@ namespace HangeulAdventure.Game
                 }
 
             _titleText = FindDeep(go.transform, "Title")?.GetComponent<TMPro.TextMeshProUGUI>();
+            if (_titleText != null && UiFactory.TitleFont != null) _titleText.font = UiFactory.TitleFont;
             _subtitle = FindDeep(go.transform, "Subtitle")?.GetComponent<TMPro.TextMeshProUGUI>();
             if (_subtitle != null && ProgressStore.DevMode) _subtitle.text = "개발자 모드 ON — 전체 스테이지 잠금 해제";
 

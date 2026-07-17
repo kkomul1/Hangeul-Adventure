@@ -52,6 +52,9 @@ namespace HangeulAdventure.Game
             var font = Resources.Load<TMP_FontAsset>("Fonts/PretendardSDF");
             if (font != null) UiFactory.KoreanFont = font;
             else Debug.LogWarning("한글 TMP 폰트를 찾지 못함: Resources/Fonts/PretendardSDF");
+
+            // 타이틀·연출용 서체 (M4-4: 정묵바위체). 없으면 본문 폰트로 폴백
+            UiFactory.TitleFont = Resources.Load<TMP_FontAsset>("Fonts/SSRockSDF");
         }
 
         private void SetupCamera()

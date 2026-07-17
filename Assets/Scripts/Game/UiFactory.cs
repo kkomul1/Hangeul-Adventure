@@ -9,6 +9,9 @@ namespace HangeulAdventure.Game
     {
         public static TMP_FontAsset KoreanFont { get; set; }
 
+        /// <summary>타이틀 로고·챕터 제목·보스명용 서체 (M4-4: 정묵바위체). null이면 KoreanFont 사용.</summary>
+        public static TMP_FontAsset TitleFont { get; set; }
+
         public static readonly Color Ink = new Color(0.16f, 0.14f, 0.12f);
         public static readonly Color Paper = new Color(0.96f, 0.94f, 0.89f);
         public static readonly Color Accent = new Color(0.85f, 0.33f, 0.16f); // 주황

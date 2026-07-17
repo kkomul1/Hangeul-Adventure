@@ -50,6 +50,7 @@ namespace HangeulAdventure.Game
             UiFactory.Stretch(_panel);
 
             _enemyName = UiFactory.CreateText(_panel, "EnemyName", config.name, 40, new Color(0.95f, 0.85f, 0.70f));
+            if (UiFactory.TitleFont != null) _enemyName.font = UiFactory.TitleFont; // 보스명 = 연출 서체 (M4-4)
             UiFactory.SetRect(_enemyName.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -40), new Vector2(600, 60));
 
             // 보스 초상: Resources/Art/Portraits/{portrait|id}. 일러스트 미도착 보스는 임시 초상 유지

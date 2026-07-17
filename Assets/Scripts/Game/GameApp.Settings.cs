@@ -33,6 +33,16 @@ namespace HangeulAdventure.Game
                 Destroy(overlay.gameObject);
             });
             UiFactory.SetRect((RectTransform)close.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 28), new Vector2(160, 54));
+
+            // 진행 초기화 — 타이틀에서 이곳으로 이동 (M4-1 승인안)
+            var wipe = UiFactory.CreateButton(box, "WipeBtn", "진행 초기화", 15, UiFactory.Paper, UiFactory.Dim, () =>
+            {
+                PlayerPrefs.DeleteAll();
+                PlayerPrefs.Save();
+                if (_subtitle != null) _subtitle.text = SubtitleDefault;
+                RefreshTitleBrokenness(); // 인트로 전 상태로 돌아가므로 온전한 타이틀 복원
+            });
+            UiFactory.SetRect((RectTransform)wipe.transform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(26, 28), new Vector2(126, 44));
         }
 
         private void MakeVolumeRow(RectTransform box, string label, float anchorY, float initial, System.Action<float> onChange)
