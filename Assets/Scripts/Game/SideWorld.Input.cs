@@ -40,13 +40,8 @@ namespace HangeulAdventure.Game
             if (_rb == null) return;
 
             DecoEditUpdate(); // F9 편집 토글 + 편집 모드 조작 (개발자 모드에서만)
-            if (_decoEditMode)
-            {
-                // 데코 편집 중에는 플레이어 이동을 멈춘다 (편집 입력과 충돌 방지)
-                _inputX = 0f;
-                _running = _inputUpHeld = _inputDownHeld = false;
-                return;
-            }
+            // 편집 모드에서도 W/S/Space로 이동한다 — 배치를 이동하며 확인할 수 있게 (사용자 요청).
+            // 편집 조작키(F/Del/[/]/G/F9)는 이동키(WASD/Space/Shift)와 겹치지 않아 병행 가능.
 
             var kb = Keyboard.current;
             if (_app.IsPanelOpen || kb == null)

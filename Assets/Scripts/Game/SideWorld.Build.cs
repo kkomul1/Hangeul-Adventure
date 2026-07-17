@@ -38,7 +38,7 @@ namespace HangeulAdventure.Game
         private const float GroundOverhang = 4f;             // 지면·백필을 맵 밖까지 연장 — 화면비가 넓어 맵 밖이 보여도 하늘이 새지 않게
         private const float BackfillTopY = SurfaceY - 24f / 64f;  // 표면선 24px 아래부터 흙
         private const float BackfillBottomY = -8f;           // 맵 바닥(-0.5)보다 한참 아래 — 시야가 넓어져도 하늘이 비치지 않게
-        private const float MoundLiftY = -3f / 64f;          // 단차 밑동을 칸 윗변보다 3px 아래로 묻는다 (지면과의 틈 제거 — 실측: +4px면 4px 뜬다)
+        private const float MoundLiftY = 0f;                 // 단차 아트(2u)를 콜라이더(0.5~2.5, 2u)에 정확히 맞춘다. 상면 2.5=캐릭터 딛는 면, 밑동 0.5=지면 표면선. 어긋나면 캐릭터가 뜨거나 밑동에 틈이 생긴다
         private const float PlatformLiftY = 0f;              // 신규 슬래브는 풀이 아트 top(y0)에 있어 상면=콜라이더 상면. 옛 40px는 발판을 0.625u 띄웠다
         private const float PlatformCapW = 96f / 64f;        // 발판 마구리 폭 1.5u
         private const float PlatformMidW = 166f / 64f;       // 발판 중간 슬래브 유효 폭 (신규 아트 166px, 이음 flush)
