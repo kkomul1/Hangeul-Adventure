@@ -11,6 +11,10 @@
     { "rows": ["ㄱㅏ.", "..ㄴ"], "goals": "간", "moveLimit": 4 },
     { "rows": ["ㅁㅏ.", "..ㄹ"], "goals": "말", "moveLimit": 4 },
     { "rows": ["간", "ㅗ"], "goals": "노", "moveLimit": 2 },
-    { "rows": ["ㅂㅏㅂ", "..."], "goals": "밥", "moveLimit": 5 }
+    { "rows": ["ㅂㅏㅂ", "..."], "goals": "밥", "moveLimit": 5 },
+    { "rows": ["ㄱ.ㅏ", "...", "ㅂㅅ."], "goals": "값", "moveLimit": 6 },
+    { "rows": ["ㄷ.ㅏ", "...", "ㄹ.ㄱ"], "goals": "닭", "moveLimit": 7 },
+    { "rows": ["ㅇ.ㅏ", "ㄴ..", "..ㅈ"], "goals": "앉", "moveLimit": 7 },
+    { "rows": ["ㄴㅓ.", "...", "...", "ㄱ.ㅅ"], "goals": "넋", "moveLimit": 7 }
   ]
 }

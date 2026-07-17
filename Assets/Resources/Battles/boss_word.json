@@ -12,6 +12,13 @@
     { "rows": ["ㄷㅈ.", "ㅗㅜ.", "ㄴㄹ."], "goals": "돈줄", "moveLimit": 5 },
     { "rows": ["ㅎ.", "ㅣ.", "ㅇ."], "goals": "흥", "moveLimit": 4 },
     { "rows": ["ㅈㅏ.ㅂ", "ㅇ..ㅜ"], "goals": "장부", "moveLimit": 4 },
-    { "rows": ["ㅎㅏ.", "..ㄱ"], "goals": "학", "moveLimit": 4 }
+    { "rows": ["ㅎㅏ.", "..ㄱ"], "goals": "학", "moveLimit": 4 },
+    { "rows": ["ㅇㅕㅈㅓ", "..ㅂㄴ"], "goals": "엽전", "moveLimit": 6 },
+    { "rows": ["ㅇ.ㅈㅓ", "ㅡ...", "ㄴ..ㄴ"], "goals": "은전", "moveLimit": 6 },
+    { "rows": ["ㅂ.ㄷㅏ", "ㅣ..ㄴ"], "goals": "비단", "moveLimit": 6 },
+    { "rows": ["ㅅ.ㄱㅡ", "ㅗ...", "...ㅁ"], "goals": "소금", "moveLimit": 6 },
+    { "rows": ["ㅈ.ㅓ.", "...ㅇ", "...ㅜ", "..ㄹ."], "goals": "저울", "moveLimit": 6 },
+    { "rows": ["ㅂ.ㄷㄷ", "ㅗ..ㅏ", "ㄹㅣ.."], "goals": "보따리", "moveLimit": 6 },
+    { "rows": ["ㅈ.ㅁ.", "ㅜ..ㅓ", "ㄴ..ㅣ"], "goals": "주머니", "moveLimit": 7 }
   ]
 }

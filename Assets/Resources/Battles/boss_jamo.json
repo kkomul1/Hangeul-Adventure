@@ -12,6 +12,11 @@
     { "rows": ["ㅊㅏㅣ."], "goals": "채", "moveLimit": 3 },
     { "rows": ["ㅅㅏ.", "ㄹㅁ."], "goals": "삶", "moveLimit": 4 },
     { "rows": ["ㅈ.", "ㅏ.", ".ㄱ"], "goals": "죽", "moveLimit": 5 },
-    { "rows": ["ㅋㅏ.", "..ㄹ"], "goals": "칼", "moveLimit": 4 }
+    { "rows": ["ㅋㅏ.", "..ㄹ"], "goals": "칼", "moveLimit": 4 },
+    { "rows": ["ㅅ..", "...", "...", "ㅗ.ㅣ"], "goals": "쇠", "moveLimit": 6 },
+    { "rows": ["ㅁ..", "..ㅜ", "..ㅓ"], "goals": "뭐", "moveLimit": 6 },
+    { "rows": ["ㅇ..", "...", "ㅣ.ㅣ"], "goals": "의", "moveLimit": 6 },
+    { "rows": ["ㅂ..", "...", "...", "과.."], "goals": "봐", "moveLimit": 6 },
+    { "rows": ["..ㅇ", "ㅗ..", "ㅏ.ㅣ"], "goals": "왜", "moveLimit": 7 }
   ]
 }

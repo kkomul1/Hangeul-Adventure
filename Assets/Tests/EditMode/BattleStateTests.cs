@@ -12,6 +12,70 @@ namespace HangeulAdventure.Engine.Tests
             trials = new[] { new TrialConfig { rows = new[] { "ㄱㅏ" }, goals = "가", moveLimit = 3 } },
         };
 
+        /// <summary>시련이 여러 개인 설정 (셔플백 검증용). goals가 곧 시련 식별자.</summary>
+        private static BattleConfig MultiConfig(int trialCount)
+        {
+            var trials = new TrialConfig[trialCount];
+            for (int i = 0; i < trialCount; i++)
+                trials[i] = new TrialConfig { rows = new[] { "ㄱㅏ" }, goals = $"t{i}", moveLimit = 3 };
+            return new BattleConfig
+            {
+                id = "multi", name = "시험 사범", maxHp = 999, atk = 5, def = 1, trials = trials,
+            };
+        }
+
+        [Test]
+        public void 셔플백_한_주기_내_중복_없음()
+        {
+            const int n = 8;
+            var b = new BattleState(MultiConfig(n), 0, 0, seed: 12345);
+
+            var seen = new System.Collections.Generic.HashSet<string>();
+            for (int i = 0; i < n; i++)
+            {
+                var (trial, _) = b.NextTrial();
+                Assert.IsTrue(seen.Add(trial.goals), $"한 주기 안에서 시련 중복 출제: {trial.goals}");
+            }
+            Assert.AreEqual(n, seen.Count); // 주기 = 풀 전체를 한 번씩
+        }
+
+        [Test]
+        public void 셔플백_경계에서_직전_시련이_연속되지_않음()
+        {
+            const int n = 4;
+            // 시드를 바꿔가며 백 경계(주기 이음매)에서 같은 시련이 연달아 나오지 않는지 확인
+            for (int seed = 0; seed < 50; seed++)
+            {
+                var b = new BattleState(MultiConfig(n), 0, 0, seed);
+                string prev = null;
+                for (int i = 0; i < n * 4; i++)
+                {
+                    var (trial, _) = b.NextTrial();
+                    Assert.AreNotEqual(prev, trial.goals,
+                        $"시드 {seed}, {i}번째: 직전 시련({prev})이 연속 재출제됨");
+                    prev = trial.goals;
+                }
+            }
+        }
+
+        [Test]
+        public void 시련이_하나뿐이면_계속_같은_시련()
+        {
+            // trials 길이 1에서 셔플백이 깨지지 않아야 한다 (예외/무한루프 없이 항상 그 시련)
+            var b = new BattleState(Config(), 0, 0, seed: 7);
+            for (int i = 0; i < 5; i++)
+                Assert.AreEqual("가", b.NextTrial().trial.goals);
+        }
+
+        [Test]
+        public void 같은_시드는_같은_출제_순서()
+        {
+            var a = new BattleState(MultiConfig(6), 0, 0, seed: 99);
+            var b = new BattleState(MultiConfig(6), 0, 0, seed: 99);
+            for (int i = 0; i < 12; i++)
+                Assert.AreEqual(a.NextTrial().trial.goals, b.NextTrial().trial.goals);
+        }
+
         [Test]
         public void 공격_최소피해_보정()
         {

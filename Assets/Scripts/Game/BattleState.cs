@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace HangeulAdventure.Game
 {
     /// <summary>
     /// 전투 설정 (Resources/Battles/*.json). 사천왕/보스 정의 (스토리기획 4장·4.5절).
-    /// trials: 몬스터가 제시하는 퍼즐 시련 목록 (순환).
+    /// trials: 몬스터가 제시하는 퍼즐 시련 목록 (셔플백 — 한 주기 내 중복 없음, 순서 무작위).
     /// </summary>
     [Serializable]
     public class BattleConfig
@@ -56,11 +57,16 @@ namespace HangeulAdventure.Game
         private bool _guarding;          // 수비: 다음 피격 절반 + 다음 시련 제한 수 +2
         private bool _skillCharged;      // 기술(된소리 일격): 다음 카운터 2배, 다음 시련 제한 수 -2
         private int _trialIndex = -1;
+        private int _lastTrialIndex = -1;        // 백 경계에서 직전 시련의 연속 재출제를 막기 위한 기억
+        private readonly List<int> _bag = new List<int>();
+        private readonly System.Random _rng;
 
         public string Log { get; private set; } = "";
 
-        public BattleState(BattleConfig config, int weaponAtk, int armorDef)
+        /// <param name="seed">null이면 비결정 시드. 테스트에서 셔플 순서를 고정할 때만 지정한다.</param>
+        public BattleState(BattleConfig config, int weaponAtk, int armorDef, int? seed = null)
         {
+            _rng = seed.HasValue ? new System.Random(seed.Value) : new System.Random();
             Config = config;
             PlayerMaxHp = PlayerBaseHp + armorDef * 2; // 방어구가 체력에도 기여
             PlayerHp = PlayerMaxHp;
@@ -102,13 +108,36 @@ namespace HangeulAdventure.Game
             Phase = BattlePhase.Trial;
         }
 
-        /// <summary>다음 시련 (전조 포함). Act 이후 호출.</summary>
+        /// <summary>다음 시련 (전조 포함). Act 이후 호출. 셔플백에서 뽑으므로 한 주기 내 중복이 없다.</summary>
         public (TrialConfig trial, int effectiveLimit) NextTrial()
         {
-            _trialIndex = (_trialIndex + 1) % Config.trials.Length;
+            if (_bag.Count == 0) RefillBag();
+            _trialIndex = _bag[_bag.Count - 1];
+            _bag.RemoveAt(_bag.Count - 1);
+            _lastTrialIndex = _trialIndex;
             var trial = Config.trials[_trialIndex];
             int limit = trial.moveLimit + (_guarding ? 2 : 0) + (_skillCharged ? -2 : 0);
             return (trial, Mathf.Max(1, limit));
+        }
+
+        /// <summary>시련 인덱스 전체를 무작위 순서로 백에 채운다 (뽑기는 뒤에서부터 = O(1)).</summary>
+        private void RefillBag()
+        {
+            int n = Config.trials.Length;
+            for (int i = 0; i < n; i++) _bag.Add(i);
+
+            // Fisher-Yates
+            for (int i = n - 1; i > 0; i--)
+            {
+                int j = _rng.Next(i + 1);
+                int tmp = _bag[i]; _bag[i] = _bag[j]; _bag[j] = tmp;
+            }
+
+            // 백 경계에서 직전 시련이 곧바로 다시 나오는 것 방지 (시련이 1개뿐이면 불가능하므로 건너뜀)
+            if (n >= 2 && _bag[n - 1] == _lastTrialIndex)
+            {
+                int tmp = _bag[n - 1]; _bag[n - 1] = _bag[0]; _bag[0] = tmp;
+            }
         }
 
         /// <summary>시련 결과 판정. 반환: 플레이어에게 들어간 피해 (0이면 카운터 성공).</summary>
