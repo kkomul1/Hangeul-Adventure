@@ -41,6 +41,8 @@ namespace HangeulAdventure.Game
         public event Action RetryClicked;       // 클리어 후 재도전 (스테이지 재시작)
         public event Action NextClicked;
         public event Action ExitClicked;
+        /// <summary>ESC 등 나가기 버튼 외 경로에서 나가기를 발화 (event는 외부에서 직접 못 부른다).</summary>
+        public void RaiseExit() => ExitClicked?.Invoke();
         public event Action SettingsClicked;    // 인게임 상시 설정 버튼 (A-⑯)
         public event Action HintClicked;
 
@@ -176,7 +178,7 @@ namespace HangeulAdventure.Game
             hintStatusRect.offsetMin = new Vector2(612, -28);
             hintStatusRect.offsetMax = new Vector2(-190, 28);
 
-            var exitBtn = UiFactory.CreateButton(bottom, "ExitBtn", "나가기", 22, UiFactory.Paper, UiFactory.Ink, () => ExitClicked?.Invoke());
+            var exitBtn = UiFactory.CreateButton(bottom, "ExitBtn", "나가기 (ESC)", 22, UiFactory.Paper, UiFactory.Ink, () => ExitClicked?.Invoke());
             UiFactory.SetRect((RectTransform)exitBtn.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-24, 0), new Vector2(150, 56));
 
             _hint = UiFactory.CreateText(bottom, "Hint", "", 17, UiFactory.Dim);

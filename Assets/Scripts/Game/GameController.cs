@@ -64,6 +64,14 @@ namespace HangeulAdventure.Game
         private void Update()
         {
             PollHint(); // 클리어 후 도착한 결과도 정리해야 하므로 아래 가드보다 앞
+
+            // ESC = 퍼즐 나가기 (나가기 버튼과 같은 경로). 클리어 후에도 동작해야 하므로 _finished 가드 앞에 둔다
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                _hud.RaiseExit();
+                return;
+            }
+
             if (_session == null || _finished) return;
             // 힌트 팝업이 뜬 동안 보드를 조작하면 팝업의 "이동 전" 보드가 실제와 어긋난다
             if (_hud.HintPopupOpen) return;
