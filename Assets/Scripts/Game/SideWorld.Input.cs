@@ -54,22 +54,25 @@ namespace HangeulAdventure.Game
                 return;
             }
 
+            // 편집 모드에선 화살표를 "1픽셀 넛지" 전용으로 쓴다 — 캐릭터 이동은 WASD만. (사용자 요청)
+            bool useArrows = !_decoEditMode;
+
             _inputX = 0f;
-            if (kb.leftArrowKey.isPressed || kb.aKey.isPressed) _inputX -= 1f;
-            if (kb.rightArrowKey.isPressed || kb.dKey.isPressed) _inputX += 1f;
+            if ((useArrows && kb.leftArrowKey.isPressed) || kb.aKey.isPressed) _inputX -= 1f;
+            if ((useArrows && kb.rightArrowKey.isPressed) || kb.dKey.isPressed) _inputX += 1f;
             _running = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
-            _inputUpHeld = kb.upArrowKey.isPressed || kb.wKey.isPressed;
-            _inputDownHeld = kb.downArrowKey.isPressed || kb.sKey.isPressed;
+            _inputUpHeld = (useArrows && kb.upArrowKey.isPressed) || kb.wKey.isPressed;
+            _inputDownHeld = (useArrows && kb.downArrowKey.isPressed) || kb.sKey.isPressed;
 
             if (kb.spaceKey.wasPressedThisFrame) _jumpBufferTimer = JumpBufferTime; // 점프 버퍼 (기획 1.3장)
             if (kb.spaceKey.wasReleasedThisFrame && !_onLadder) _jumpCutQueued = true; // 가변 점프
 
-            bool upPressed = kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame;
-            bool downPressed = kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame;
+            bool upPressed = (useArrows && kb.upArrowKey.wasPressedThisFrame) || kb.wKey.wasPressedThisFrame;
+            bool downPressed = (useArrows && kb.downArrowKey.wasPressedThisFrame) || kb.sKey.wasPressedThisFrame;
 
             // 사다리 이탈은 "새로 눌린" 좌우만 (홀드 중 진입을 막지 않기 위해 — 홀드값 _inputX와 별개)
-            if (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame) _horizPressLatch = -1;
-            if (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame) _horizPressLatch = 1;
+            if ((useArrows && kb.leftArrowKey.wasPressedThisFrame) || kb.aKey.wasPressedThisFrame) _horizPressLatch = -1;
+            if ((useArrows && kb.rightArrowKey.wasPressedThisFrame) || kb.dKey.wasPressedThisFrame) _horizPressLatch = 1;
 
             if (_inputX != 0f) LearnSide(ref _learnedMove, ActSideMove);
 

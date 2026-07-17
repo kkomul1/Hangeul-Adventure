@@ -40,6 +40,17 @@ namespace HangeulAdventure.Game
         private SpriteRenderer _terrainHighlight;
         private bool _mapDirty;                     // 지형이 편집됐으면 저장 시 격자도 쓴다
 
+        // 화살표 넛지 (데코 1픽셀 / 지형 1칸) — 누르고 있으면 키 반복
+        private bool _nudgeHeld;
+        private float _nudgeRepeatTimer;
+
+        // 팔레트 페이지 (에셋이 한 화면에 안 들어와 여러 쪽으로 나눔)
+        private int _palettePage;
+        private const int PalettePageSize = 10;
+        private RectTransform _paletteRow;
+        private TextMeshProUGUI _paletteLabel;
+        private IReadOnlyList<string> _paletteNames;
+
         private const float DecoGrid = 0.5f;      // 스냅 격자 (반 칸)
 
         /// <summary>개발자 모드에서만 데코 편집을 켤 수 있다. GameApp이 진입 시 호출.</summary>
@@ -142,6 +153,46 @@ namespace HangeulAdventure.Game
             {
                 if (kb.gKey.wasPressedThisFrame) { _decoGridSnap = !_decoGridSnap; RefreshDecoStatus(); }
                 if ((kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed) && kb.sKey.wasPressedThisFrame) SaveDecorations();
+                HandleArrowNudge(kb);
+            }
+        }
+
+        /// <summary>화살표 = 선택 대상 미세 이동. 데코는 1픽셀(1/64u), 지형은 1칸. 누르고 있으면 반복.</summary>
+        private void HandleArrowNudge(UnityEngine.InputSystem.Keyboard kb)
+        {
+            int nx = (kb.rightArrowKey.isPressed ? 1 : 0) - (kb.leftArrowKey.isPressed ? 1 : 0);
+            int ny = (kb.upArrowKey.isPressed ? 1 : 0) - (kb.downArrowKey.isPressed ? 1 : 0);
+            if (nx == 0 && ny == 0) { _nudgeHeld = false; _nudgeRepeatTimer = 0f; return; }
+
+            if (!_nudgeHeld)
+            {
+                NudgeSelection(nx, ny);
+                _nudgeHeld = true;
+                _nudgeRepeatTimer = 0.35f;   // 첫 반복까지 지연
+            }
+            else
+            {
+                _nudgeRepeatTimer -= Time.deltaTime;
+                if (_nudgeRepeatTimer <= 0f) { NudgeSelection(nx, ny); _nudgeRepeatTimer = 0.05f; }
+            }
+        }
+
+        /// <summary>지형이 선택돼 있으면 1칸씩, 데코가 선택돼 있으면 1픽셀씩 이동.</summary>
+        private void NudgeSelection(int nx, int ny)
+        {
+            if (_terrainSel != null)
+            {
+                var desired = new List<Vector2Int>(_terrainSel.Count);
+                foreach (var c in _terrainSel) desired.Add(new Vector2Int(c.x + nx, c.y + ny));
+                RelocateTerrain(desired);
+            }
+            else if (_decoSelected >= 0)
+            {
+                var d = _map.decorations[_decoSelected];
+                d.x += nx / 64f;   // PPU 64 → 1픽셀 = 1/64 유닛
+                d.y += ny / 64f;
+                ApplyDecoTransform(_decoSelected);
+                RefreshDecoStatus();
             }
         }
 
@@ -475,26 +526,64 @@ namespace HangeulAdventure.Game
             var saveBtn = UiFactory.CreateButton(_decoEditRoot, "DecoSave", "저장 (Ctrl+S)", 20, UiFactory.Accent, Color.white, SaveDecorations);
             UiFactory.SetRect((RectTransform)saveBtn.transform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -140), new Vector2(200, 46));
 
-            // 하단 팔레트 (Props 스프라이트 목록)
+            // 하단 팔레트 (Props 스프라이트 목록 — 여러 쪽으로 나눠 ◀ ▶로 넘긴다)
             var strip = UiFactory.CreatePanel(_decoEditRoot, "Palette", new Color(0f, 0f, 0f, 0.55f));
             strip.anchorMin = new Vector2(0, 0);
             strip.anchorMax = new Vector2(1, 0);
             strip.pivot = new Vector2(0.5f, 0);
-            strip.sizeDelta = new Vector2(0, 108);
+            strip.sizeDelta = new Vector2(0, 128);
 
-            var scroll = UiFactory.CreateEmpty(strip, "Row");
-            var hlg = scroll.gameObject.AddComponent<HorizontalLayoutGroup>();
-            hlg.spacing = 6; hlg.padding = new RectOffset(10, 10, 8, 8);
-            hlg.childAlignment = TextAnchor.MiddleLeft;
+            _paletteNames = ArtLibrary.ForestPropNames();
+
+            // 페이지 라벨 (팔레트 상단 중앙)
+            _paletteLabel = UiFactory.CreateText(strip, "PalPage", "", 18, Color.white, TextAlignmentOptions.Center);
+            UiFactory.SetRect(_paletteLabel.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -14), new Vector2(160, 22));
+
+            // 프롭 버튼이 놓일 행 (좌우 ◀ ▶ 버튼 자리만큼 여백)
+            var rowGo = UiFactory.CreateEmpty(strip, "Row");
+            _paletteRow = (RectTransform)rowGo.transform;
+            _paletteRow.anchorMin = new Vector2(0, 0);
+            _paletteRow.anchorMax = new Vector2(1, 1);
+            _paletteRow.offsetMin = new Vector2(64, 4);
+            _paletteRow.offsetMax = new Vector2(-64, -26);
+            var hlg = rowGo.gameObject.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 6; hlg.padding = new RectOffset(6, 6, 4, 4);
+            hlg.childAlignment = TextAnchor.MiddleCenter;
             hlg.childForceExpandWidth = false; hlg.childForceExpandHeight = false;
-            UiFactory.Stretch(scroll);
 
+            // ◀ 이전 / ▶ 다음 페이지 (좌·우 끝, 프롭 행 높이에 맞춤)
+            var prev = UiFactory.CreateButton(strip, "PalPrev", "◀", 30, new Color(1, 1, 1, 0.15f), Color.white, () => ChangePalettePage(-1));
+            UiFactory.SetRect((RectTransform)prev.transform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(8, 8), new Vector2(52, 90));
+            var next = UiFactory.CreateButton(strip, "PalNext", "▶", 30, new Color(1, 1, 1, 0.15f), Color.white, () => ChangePalettePage(1));
+            UiFactory.SetRect((RectTransform)next.transform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-8, 8), new Vector2(52, 90));
+
+            BuildPaletteRow();
+            RefreshDecoStatus();
+        }
+
+        /// <summary>현재 페이지의 프롭 썸네일만 행에 다시 채운다.</summary>
+        private void BuildPaletteRow()
+        {
+            if (_paletteRow == null) return;
+
+            // 기존 버튼 즉시 제거 (Destroy는 한 프레임 겹쳐 레이아웃이 튄다 → DestroyImmediate)
+            var kids = new List<GameObject>();
+            foreach (Transform c in _paletteRow) kids.Add(c.gameObject);
+            foreach (var g in kids) DestroyImmediate(g);
             _paletteButtons.Clear();
-            foreach (var name in ArtLibrary.ForestPropNames())
+
+            int total = _paletteNames?.Count ?? 0;
+            int pages = Mathf.Max(1, Mathf.CeilToInt(total / (float)PalettePageSize));
+            _palettePage = Mathf.Clamp(_palettePage, 0, pages - 1);
+
+            int start = _palettePage * PalettePageSize;
+            int stop = Mathf.Min(start + PalettePageSize, total);
+            for (int i = start; i < stop; i++)
             {
+                var name = _paletteNames[i];
                 var sp = ArtLibrary.ForestProp(name);
                 if (sp == null) continue;
-                var b = UiFactory.CreateButton(scroll, $"P_{name}", "", 0, Color.white, Color.white, null);
+                var b = UiFactory.CreateButton(_paletteRow, $"P_{name}", "", 0, Color.white, Color.white, null);
                 var le = b.gameObject.AddComponent<LayoutElement>();
                 le.preferredWidth = 84; le.preferredHeight = 84;
                 var img = b.GetComponent<Image>();
@@ -504,7 +593,16 @@ namespace HangeulAdventure.Game
                 _paletteButtons.Add(b);
             }
 
-            RefreshDecoStatus();
+            if (_paletteLabel != null) _paletteLabel.text = $"팔레트 {_palettePage + 1} / {pages}";
+            HighlightPalette(_decoBrush);
+        }
+
+        private void ChangePalettePage(int delta)
+        {
+            int total = _paletteNames?.Count ?? 0;
+            int pages = Mathf.Max(1, Mathf.CeilToInt(total / (float)PalettePageSize));
+            _palettePage = (_palettePage + delta + pages) % pages; // 순환
+            BuildPaletteRow();
         }
 
         private void HighlightPalette(string selected)
@@ -526,7 +624,8 @@ namespace HangeulAdventure.Game
             else
                 sel = _decoSelected >= 0 ? _map.decorations[_decoSelected].art : "(없음)";
             _decoStatus.text = $"편집 | 브러시: {brush} · 선택: {sel} · 스냅: {(_decoGridSnap ? "켬" : "끔")}"
-                + "  |  데코: 클릭배치·드래그이동·F반전·Del삭제·[ ]앞뒤  ·  지형(단차/발판/사다리): 드래그로 칸단위 이동  ·  W/A/S/D·Space 이동 · G스냅 · Ctrl+S저장 · F9끝";
+                + "  |  데코: 클릭배치·드래그이동·F반전·Del삭제·[ ]앞뒤  ·  지형: 드래그로 칸단위 이동"
+                + "  ·  ←↑↓→ 미세이동(데코 1px·지형 1칸)  ·  W/A/S/D·Space 이동 · G스냅 · Ctrl+S저장 · F9끝";
         }
 
         private void SetStatus(string msg) { if (_decoStatus != null) _decoStatus.text = msg; Debug.Log("[DecoEdit] " + msg); }
@@ -534,8 +633,8 @@ namespace HangeulAdventure.Game
         /// <summary>편집 UI 위에 마우스가 있는지 (배치 클릭이 UI를 뚫지 않게).</summary>
         private bool IsPointerOverEditUi(Vector2 screenPos)
         {
-            // 하단 팔레트(108px)와 상단 띠(y>화면-186)만 막으면 충분
-            return screenPos.y < 108 || screenPos.y > Screen.height - 186;
+            // 하단 팔레트(128px)와 상단 띠(y>화면-186)만 막으면 충분
+            return screenPos.y < 128 || screenPos.y > Screen.height - 186;
         }
     }
 }
