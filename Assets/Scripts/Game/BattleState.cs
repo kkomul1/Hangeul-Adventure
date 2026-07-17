@@ -18,6 +18,7 @@ namespace HangeulAdventure.Game
         public int def = 1;
         public string rewardConsonant = ""; // 격파 시 회수하는 자음
         public string portrait = "";        // 초상 (Resources/Art/Portraits/{portrait}, 생략 시 id로 탐색)
+        public string bgm = "";             // 전투 곡 (Resources/Audio/{bgm}, 생략 시 bgm_boss 폴백 — M4 사천왕별 곡)
         public TrialConfig[] trials;
     }
 

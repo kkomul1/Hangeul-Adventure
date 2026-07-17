@@ -1,0 +1,22 @@
+status: completed
+id: a06be2ac-0e59-4732-83df-a2170b3d1ced
+name: Seonbi B-look 128
+directions: 4 (south, east, north, west)
+size: 180x180px
+view: low top-down
+style: basic shading, single color outline, high detail
+
+rotations:
+  south: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/a06be2ac-0e59-4732-83df-a2170b3d1ced/rotations/south.png?t=1784256519
+  east: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/a06be2ac-0e59-4732-83df-a2170b3d1ced/rotations/east.png?t=1784256519
+  north: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/a06be2ac-0e59-4732-83df-a2170b3d1ced/rotations/north.png?t=1784256519
+  west: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/a06be2ac-0e59-4732-83df-a2170b3d1ced/rotations/west.png?t=1784256519
+
+animations: none
+
+download: https://api.pixellab.ai/mcp/characters/a06be2ac-0e59-4732-83df-a2170b3d1ced/download
+
+available_animations: backflip, breathing-idle, cross-punch, crouched-walking, crouching, drinking, falling-back-death, fight-stance-idle-8-frames, fireball, flying-kick, front-flip, getting-up +37 more
+
+actions: animate_character(character_id="a06be2ac-0e59-4732-83df-a2170b3d1ced", ...) | create_character_state(character_id="a06be2ac-0e59-4732-83df-a2170b3d1ced", ...) | delete_character(character_id="a06be2ac-0e59-4732-83df-a2170b3d1ced")
+hint: animate_character(character_id="a06be2ac-0e59-4732-83df-a2170b3d1ced", template_animation_id="backflip")
