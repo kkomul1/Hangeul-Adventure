@@ -58,6 +58,12 @@ Short instrumental victory jingle: a bright gayageum glissando sweep into a triu
 ```
 ※ Suno는 짧은 징글도 긴 곡으로 뽑는 경우가 많음 — 그대로 다운로드해서 주면 앞부분 5~8초만 잘라서 사용함.
 
+## 10. bgm_intro.mp3 — 오프닝 스토리 (대마왕의 습격)
+```
+Instrumental opening story theme for a Korean folk puzzle adventure. Majestic and ominous royal court gugak-chiptune hybrid: ceremonial taepyeongso and piri fanfare motif over massive buk war drums, deep 8-bit bass drone and a slow janggu march, haegeum tremolo swelling like gathering storm clouds, sparse gayageum notes flickering out like breaking letters. A demon king descends on Joseon and the world's letters begin to crack — grand, solemn, foreboding storytelling. 80 BPM, minor pentatonic, builds in waves but stays loopable, wide solemn mix, seamless loop, no vocals, no choir.
+```
+※ 타이틀(1번)과 확실히 구분되도록 "웅장·불길" 방향. 인트로 3페이지 동안 루프되므로 기승전결보다 파도형 고조가 맞음. 너무 밝게 나오면 맨 앞에 `dark, ominous,` 추가.
+
 ---
 
 ## 팁
