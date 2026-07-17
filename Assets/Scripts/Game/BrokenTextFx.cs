@@ -50,8 +50,8 @@ namespace HangeulAdventure.Game
             _lastText = _tmp.text;
             if (string.IsNullOrEmpty(_tmp.text) || !_tmp.text.Contains("\"brk\"")) return;
 
-            // 파편이 옆 글자와 겹치지 않도록 자간 확보 (확인 카드 피드백)
-            if (_tmp.characterSpacing < 6f) _tmp.characterSpacing = 6f;
+            // 파편이 옆 글자와 겹치지 않도록 자간 확보 (재확인 카드 피드백: "살짝 더 넓게" — 6→11)
+            if (_tmp.characterSpacing < 11f) _tmp.characterSpacing = 11f;
 
             _tmp.ForceMeshUpdate();
             var info = _tmp.textInfo;
