@@ -328,6 +328,7 @@ namespace HangeulAdventure.Game
             _hud.Build(_canvas);
             string nextLabel = index == -1 ? "에디터로" : index == -2 ? "목록으로" : index == -3 ? "지도로" : null;
             _hud.Bind(session, isTest ? 0 : index + 1, _stages.Count, nextLabel);
+            _hud.SettingsClicked += ShowSettings; // 인게임 상시 설정 버튼 (A-⑯)
             if (index == -1)
             {
                 _hud.NextClicked += ShowLevelEditor;

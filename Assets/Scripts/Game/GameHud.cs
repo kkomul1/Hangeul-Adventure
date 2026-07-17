@@ -20,6 +20,7 @@ namespace HangeulAdventure.Game
         private bool _isTest;
         private TextMeshProUGUI _tutorialHint;
         private TextMeshProUGUI _moveText;
+        private TextMeshProUGUI _targetText;
         private TextMeshProUGUI _stageText;
         private TextMeshProUGUI _hint;
         private RectTransform _goalBar;
@@ -36,6 +37,7 @@ namespace HangeulAdventure.Game
         public event Action RetryClicked;       // 클리어 후 재도전 (스테이지 재시작)
         public event Action NextClicked;
         public event Action ExitClicked;
+        public event Action SettingsClicked;    // 인게임 상시 설정 버튼 (A-⑯)
 
         private static readonly Color SlotEmpty = new Color(0.90f, 0.88f, 0.83f);
         private static readonly Color SlotFilled = new Color(1.00f, 0.83f, 0.45f);
@@ -83,10 +85,39 @@ namespace HangeulAdventure.Game
             top.GetComponent<Image>().raycastTarget = false;
 
             _stageText = UiFactory.CreateText(top, "StageText", "", 28, UiFactory.Ink, TextAlignmentOptions.Left);
-            UiFactory.SetRect(_stageText.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(24, 0), new Vector2(300, 60));
+            // 폭 460 — "스테이지 31/98  뽀뽀  ·  난이도 1"이 한 줄에 들어가야 한다 (300이면 줄바꿈)
+            UiFactory.SetRect(_stageText.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(24, 0), new Vector2(460, 60));
+
+            // 설정 버튼 (A-⑯): 우상단 톱니. 타이틀 화면(GameApp.Title.cs)과 같은 구성
+            var gearBtn = UiFactory.CreateButton(top, "SettingsBtn", "", 0, UiFactory.Paper, UiFactory.Ink,
+                () => SettingsClicked?.Invoke());
+            UiFactory.SetRect((RectTransform)gearBtn.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f),
+                new Vector2(-24, 0), new Vector2(48, 48));
+            var gearSprite = Resources.Load<Sprite>("Art/Ui/gear");
+            if (gearSprite != null)
+            {
+                var gearGo = new GameObject("Icon", typeof(Image));
+                gearGo.transform.SetParent(gearBtn.transform, false);
+                var gearImg = gearGo.GetComponent<Image>();
+                gearImg.sprite = gearSprite;
+                gearImg.color = UiFactory.Ink;
+                gearImg.preserveAspect = true;
+                gearImg.raycastTarget = false;
+                UiFactory.SetRect((RectTransform)gearGo.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                    Vector2.zero, new Vector2(32, 32));
+            }
+            else
+            {
+                var gearLabel = gearBtn.GetComponentInChildren<TextMeshProUGUI>();
+                if (gearLabel != null) { gearLabel.text = "설정"; gearLabel.fontSize = 15; }
+            }
 
             _moveText = UiFactory.CreateText(top, "MoveText", "0", 34, UiFactory.Ink, TextAlignmentOptions.Right);
-            UiFactory.SetRect(_moveText.rectTransform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-24, 0), new Vector2(360, 60));
+            UiFactory.SetRect(_moveText.rectTransform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-80, 0), new Vector2(360, 60));
+
+            // 목표 수 상시 표시 (A-⑰): 별3·루비 기준을 플레이 내내 보여준다
+            _targetText = UiFactory.CreateText(top, "TargetText", "", 19, UiFactory.Dim, TextAlignmentOptions.Right);
+            UiFactory.SetRect(_targetText.rectTransform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-80, -30), new Vector2(360, 26));
 
             // 목표 진행도 판 (상단 중앙)
             _goalBar = UiFactory.CreateEmpty(root, "GoalBar");
@@ -217,6 +248,7 @@ namespace HangeulAdventure.Game
         public void Refresh()
         {
             _moveText.text = $"행동 수  {_session.MoveCount}";
+            RefreshTargetText();
             RefreshHintBar();
             foreach (var (_, label, bg, idx) in _slotButtons)
             {
@@ -228,6 +260,23 @@ namespace HangeulAdventure.Game
                 bg.color = filled ? SlotFilled : SlotEmpty;
             }
         }
+
+        /// <summary>
+        /// 목표 수 상시 표시 (A-⑰): 별3·루비 기준을 플레이 내내 보여준다.
+        /// 루비 = 최소 수와 정확히 일치 (GameSession.IsRuby). 이미 넘긴 기준은 흐리게 처리.
+        /// </summary>
+        private void RefreshTargetText()
+        {
+            int[] th = _session.Stage.starThresholds ?? Engine.StageData.DefaultStarThresholds(_session.Stage.minMoves);
+            int star3 = th[2], ruby = _session.Stage.minMoves;
+            int used = _session.MoveCount;
+
+            string star3Tag = used <= star3 ? ColorTag(StarYellow) : ColorTag(StarOff);
+            string rubyTag = used <= ruby ? ColorTag(StarRuby) : ColorTag(StarOff);
+            _targetText.text = $"{rubyTag}◆ {ruby}</color>   {star3Tag}★★★ {star3}</color>";
+        }
+
+        private static string ColorTag(Color c) => $"<color=#{ColorUtility.ToHtmlStringRGB(c)}>";
 
         // ---- 클리어 팝업 ----
 
