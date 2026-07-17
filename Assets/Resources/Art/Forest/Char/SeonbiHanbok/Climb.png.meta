@@ -17,6 +17,21 @@ TextureImporter:
   - first:
       213: 3328522658917692499
     second: Climb_4
+  - first:
+      213: 7057973410219489113
+    second: Climb_0_0
+  - first:
+      213: 5864201015959256683
+    second: Climb_0_1
+  - first:
+      213: -4996839288945094267
+    second: Climb_0_2
+  - first:
+      213: -2482462443825551827
+    second: Climb_0_3
+  - first:
+      213: 3346383374437344923
+    second: Climb_0_4
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -49,7 +64,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -63,7 +78,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 64
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -87,7 +102,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -125,111 +140,111 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Climb_0
+      name: Climb_0_0
       rect:
         serializedVersion: 2
-        x: 43
-        y: 15
-        width: 51
-        height: 106
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6ba25808357719860800000000000000
-      internalID: 7534934852089752246
+      spriteID: 957f84efb65f2f160800000000000000
+      internalID: 7057973410219489113
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Climb_1
+      name: Climb_0_1
       rect:
         serializedVersion: 2
-        x: 179
-        y: 15
-        width: 51
-        height: 104
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 136
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 051ee84d122be2d50800000000000000
-      internalID: 6714499952825786704
+      spriteID: b6e7cbf01c3d16150800000000000000
+      internalID: 5864201015959256683
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Climb_2
+      name: Climb_0_2
       rect:
         serializedVersion: 2
-        x: 315
-        y: 15
-        width: 51
-        height: 104
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 272
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 54c7a37ebc703e900800000000000000
-      internalID: 712421738393795653
+      spriteID: 58156be1429a7aab0800000000000000
+      internalID: -4996839288945094267
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Climb_3
+      name: Climb_0_3
       rect:
         serializedVersion: 2
-        x: 451
-        y: 15
-        width: 51
-        height: 103
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 408
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1ab5758b84e6759f0800000000000000
-      internalID: -479793576682234975
+      spriteID: d26a78b5f858c8dd0800000000000000
+      internalID: -2482462443825551827
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Climb_4
+      name: Climb_0_4
       rect:
         serializedVersion: 2
-        x: 587
-        y: 15
-        width: 51
-        height: 101
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 544
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 354b0a719b9413e20800000000000000
-      internalID: 3328522658917692499
+      spriteID: b966c9bf2fdb07e20800000000000000
+      internalID: 3346383374437344923
       vertices: []
       indices: 
       edges: []
@@ -249,6 +264,11 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       Climb_0: 7534934852089752246
+      Climb_0_0: 7057973410219489113
+      Climb_0_1: 5864201015959256683
+      Climb_0_2: -4996839288945094267
+      Climb_0_3: -2482462443825551827
+      Climb_0_4: 3346383374437344923
       Climb_1: 6714499952825786704
       Climb_2: 712421738393795653
       Climb_3: -479793576682234975

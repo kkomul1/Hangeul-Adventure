@@ -54,8 +54,12 @@ namespace HangeulAdventure.Game
         /// <summary>지면 청크 순서 (승인 합성과 동일). 피벗이 표면선이라 y=0.5에 그냥 놓으면 맞는다.</summary>
         private static readonly string[] GroundChunks = { "ground_flat_03", "ground_flat_02", "ground_flat_04" };
 
-        /// <summary>흙 백필 색 = ground_flat_03의 흙 몸체 실측 픽셀 (125,91,80).</summary>
-        private static readonly Color DirtColor = new Color(125f / 255f, 91f / 255f, 80f / 255f);
+        /// <summary>
+        /// 흙 백필 색 = 청크 하단의 어두운 흙 실측 픽셀 (83,57,61).
+        /// 청크 몸체(125,91,80)보다 어두워야 한다 — 밝은 색을 쓰면 어두운 청크 밑면 아래에
+        /// 밝은 판이 깔려 청크가 떠 보인다(실측 확인). 땅은 아래로 갈수록 어두운 쪽이 자연스럽다.
+        /// </summary>
+        private static readonly Color DirtColor = new Color(83f / 255f, 57f / 255f, 61f / 255f);
 
         private static readonly Vector2Int[] Neighbors4 =
         {

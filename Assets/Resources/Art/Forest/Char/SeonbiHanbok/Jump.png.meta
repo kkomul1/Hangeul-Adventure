@@ -20,6 +20,24 @@ TextureImporter:
   - first:
       213: 3630178267427638470
     second: Jump_5
+  - first:
+      213: 1696586742563112557
+    second: Jump_0_0
+  - first:
+      213: -7120750449821753996
+    second: Jump_0_1
+  - first:
+      213: 6854104997194314431
+    second: Jump_0_2
+  - first:
+      213: 8041064847621423971
+    second: Jump_0_3
+  - first:
+      213: -357459788972370370
+    second: Jump_0_4
+  - first:
+      213: 9015793894960785136
+    second: Jump_0_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -52,7 +70,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -66,7 +84,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 64
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -90,7 +108,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -128,133 +146,133 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Jump_0
+      name: Jump_0_0
       rect:
         serializedVersion: 2
-        x: 41
-        y: 21
-        width: 58
-        height: 103
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f63fdb7b598678760800000000000000
-      internalID: 7460046300004610927
+      spriteID: d668c1947ac7b8710800000000000000
+      internalID: 1696586742563112557
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Jump_1
+      name: Jump_0_1
       rect:
         serializedVersion: 2
-        x: 177
-        y: 21
-        width: 62
-        height: 95
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 136
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7ffd4217aadfe9160800000000000000
-      internalID: 7034338576483803127
+      spriteID: 47ddb2871330e2d90800000000000000
+      internalID: -7120750449821753996
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Jump_2
+      name: Jump_0_2
       rect:
         serializedVersion: 2
-        x: 307
-        y: 22
-        width: 69
-        height: 75
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 272
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ec35e2de34d150450800000000000000
-      internalID: 6054277451648750542
+      spriteID: fb23ffa2e2cae1f50800000000000000
+      internalID: 6854104997194314431
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Jump_3
+      name: Jump_0_3
       rect:
         serializedVersion: 2
-        x: 449
-        y: 12
-        width: 52
-        height: 98
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 408
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5b5b81156e3f64060800000000000000
-      internalID: 6937500446539429301
+      spriteID: 3630b5220e9979f60800000000000000
+      internalID: 8041064847621423971
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Jump_4
+      name: Jump_0_4
       rect:
         serializedVersion: 2
-        x: 578
-        y: 45
-        width: 70
-        height: 73
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 544
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: eeffd98fab50fa130800000000000000
-      internalID: 3580086529375993838
+      spriteID: e36d0d0473c0a0bf0800000000000000
+      internalID: -357459788972370370
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Jump_5
+      name: Jump_0_5
       rect:
         serializedVersion: 2
-        x: 717
-        y: 46
-        width: 64
-        height: 68
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 680
+        y: 0
+        width: 136
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1176}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6cc0e5596ebf06230800000000000000
-      internalID: 3630178267427638470
+      spriteID: 0f6e54d97c88e1d70800000000000000
+      internalID: 9015793894960785136
       vertices: []
       indices: 
       edges: []
@@ -274,6 +292,12 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       Jump_0: 7460046300004610927
+      Jump_0_0: 1696586742563112557
+      Jump_0_1: -7120750449821753996
+      Jump_0_2: 6854104997194314431
+      Jump_0_3: 8041064847621423971
+      Jump_0_4: -357459788972370370
+      Jump_0_5: 9015793894960785136
       Jump_1: 7034338576483803127
       Jump_2: 6054277451648750542
       Jump_3: 6937500446539429301
