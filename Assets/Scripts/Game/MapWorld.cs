@@ -104,8 +104,9 @@ namespace HangeulAdventure.Game
                 bool consonantLocked = stage != null && ProgressStore.MissingConsonants(stage).Length > 0;
                 if (consonantLocked && !cleared)
                 {
+                    // 잠금 표기는 "잠김"으로 통일 (A-⑥). 자음 게이트와 진행 잠금은 색으로 구분된다
                     v.Bg.color = new Color(0.35f, 0.33f, 0.31f);
-                    v.Label.text = "▒";
+                    v.Label.text = "잠김";
                     v.Label.color = new Color(0.55f, 0.52f, 0.48f);
                     continue;
                 }
@@ -130,8 +131,8 @@ namespace HangeulAdventure.Game
                 _bossView.Bg.color = ProgressStore.IsBossDefeated(_map.bossConfig?.Replace("boss_", ""))
                     ? SpotCleared : new Color(0.75f, 0.30f, 0.28f); // 미격파 = 붉은색
 
-            // 세계의 글자는 미회수 자음이 깨져 보인다 (D-22 확장: 장소 이름·간판)
-            _hudTitle.text = $"{BrokenText.Apply(_map.title)}  —  {BrokenText.Apply(_map.theme)}";
+            // 지명은 깨뜨리지 않는다 (A-⑱) — 길을 찾는 정보라 읽을 수 있어야 한다. D-11 개정
+            _hudTitle.text = $"{_map.title}  —  {_map.theme}";
             _hudGold.text = $"골드  {ProgressStore.Gold}";
             int cleared2 = MapProgress.ClearedCount(_map);
             _hudProgress.text = tutorialDone

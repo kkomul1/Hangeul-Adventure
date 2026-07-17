@@ -43,6 +43,39 @@ namespace HangeulAdventure.Game
         public static Sprite JoseonSeonbi(string anim, int row, int col)
             => Get($"{JoseonRoot}/Character/Seonbi/{anim}", $"{anim}_{row}_{col}");
 
+        // ---- 사이드뷰 시작의 숲 (PixelLab 생성, Art/Forest — M4-7) ----
+        // PPU 64. 피벗은 임포트 설정(ForestImportTools)이 쥐고 있다 — 호출부는 좌표만 주면 된다:
+        //   Terrain 지면 청크 = 표면선 피벗 / 단차·발판 = TopLeft / 사다리·수풀·Prop·나무 = 발치(BottomCenter)
+
+        private const string ForestRoot = "Art/Forest";
+
+        public static bool ForestAvailable
+            => Resources.Load<Sprite>($"{ForestRoot}/Terrain/ground_flat_03") != null;
+
+        /// <summary>지형: ForestTerrain("ground_flat_03"), ("ladder_body_seg") 등</summary>
+        public static Sprite ForestTerrain(string name)
+            => Get($"{ForestRoot}/Terrain/{name}", name);
+
+        /// <summary>프롭·팻말·문: ForestProp("spot_sign_hanji")</summary>
+        public static Sprite ForestProp(string name)
+            => Get($"{ForestRoot}/Props/{name}", name);
+
+        /// <summary>배경: ForestBackdrop("tree_pine_large"), ("sky_gradient"), ("bg_ridge"), ("fog_band")</summary>
+        public static Sprite ForestBackdrop(string name)
+            => Get($"{ForestRoot}/Backdrop/{name}", name);
+
+        /// <summary>캐릭터 프레임: ForestChar("SeonbiHanbok", "Walk", 2). 스트립은 1행이라 행은 항상 0.</summary>
+        public static Sprite ForestChar(string who, string anim, int frame)
+            => Get($"{ForestRoot}/Char/{who}/{anim}", $"{anim}_0_{frame}");
+
+        /// <summary>애니메이션 프레임 수 (0부터 없을 때까지). 없으면 0.</summary>
+        public static int ForestCharFrames(string who, string anim)
+        {
+            int n = 0;
+            while (ForestChar(who, anim, n) != null) n++;
+            return n;
+        }
+
         private static Sprite Get(string path, string name)
         {
             if (!_sheets.TryGetValue(path, out var dict))

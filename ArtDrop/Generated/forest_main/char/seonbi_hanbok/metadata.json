@@ -1,0 +1,83 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "f4e82336-e07f-4371-9c50-afc9a6b28328",
+        "name": "Seonbi Hanbok Forest",
+        "prompt": "Korean Joseon folk pixel art, muted dawn palette of desaturated mossy green, wet earth brown and misty blue-gray, soft dawn light from the left, dark warm brown single color outline (no pure black), gentle mid value contrast, tranquil ink-wash mood. A young Joseon dynasty scholar (seonbi): a slender man in a pale blue-gray hanbok robe with a wide dark sash and white inner collar, a black horsehair gat hat with a wide brim, black cloth shoes, a small book satchel on his hip, calm gentle face. Standing in a relaxed neutral pose.",
+        "size": {
+          "width": 136,
+          "height": 136
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "side",
+        "created_at": "2026-07-17T08:50:58.870987+00:00"
+      },
+      "folder": "Seonbi_Hanbok_Forest",
+      "frames": {
+        "rotations": {
+          "south": "Seonbi_Hanbok_Forest/rotations/south.png",
+          "west": "Seonbi_Hanbok_Forest/rotations/west.png",
+          "east": "Seonbi_Hanbok_Forest/rotations/east.png",
+          "north": "Seonbi_Hanbok_Forest/rotations/north.png"
+        },
+        "animations": {
+          "walk": {
+            "east": [
+              "Seonbi_Hanbok_Forest/animations/walk/east/frame_000.png",
+              "Seonbi_Hanbok_Forest/animations/walk/east/frame_001.png",
+              "Seonbi_Hanbok_Forest/animations/walk/east/frame_002.png",
+              "Seonbi_Hanbok_Forest/animations/walk/east/frame_003.png",
+              "Seonbi_Hanbok_Forest/animations/walk/east/frame_004.png",
+              "Seonbi_Hanbok_Forest/animations/walk/east/frame_005.png"
+            ]
+          },
+          "jump": {
+            "east": [
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_000.png",
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_001.png",
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_002.png",
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_003.png",
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_004.png",
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_005.png",
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_006.png",
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_007.png",
+              "Seonbi_Hanbok_Forest/animations/jump/east/frame_008.png"
+            ]
+          },
+          "idle": {
+            "east": [
+              "Seonbi_Hanbok_Forest/animations/idle/east/frame_000.png",
+              "Seonbi_Hanbok_Forest/animations/idle/east/frame_001.png",
+              "Seonbi_Hanbok_Forest/animations/idle/east/frame_002.png",
+              "Seonbi_Hanbok_Forest/animations/idle/east/frame_003.png"
+            ]
+          },
+          "run": {
+            "east": [
+              "Seonbi_Hanbok_Forest/animations/run/east/frame_000.png",
+              "Seonbi_Hanbok_Forest/animations/run/east/frame_001.png",
+              "Seonbi_Hanbok_Forest/animations/run/east/frame_002.png",
+              "Seonbi_Hanbok_Forest/animations/run/east/frame_003.png",
+              "Seonbi_Hanbok_Forest/animations/run/east/frame_004.png",
+              "Seonbi_Hanbok_Forest/animations/run/east/frame_005.png"
+            ]
+          },
+          "climb": {
+            "north": [
+              "Seonbi_Hanbok_Forest/animations/climb/north/frame_000.png",
+              "Seonbi_Hanbok_Forest/animations/climb/north/frame_001.png",
+              "Seonbi_Hanbok_Forest/animations/climb/north/frame_002.png",
+              "Seonbi_Hanbok_Forest/animations/climb/north/frame_003.png",
+              "Seonbi_Hanbok_Forest/animations/climb/north/frame_004.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-07-17T09:12:05.753628"
+}

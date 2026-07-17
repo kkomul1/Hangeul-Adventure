@@ -1,0 +1,25 @@
+status: completed
+id: dc90d01b-a882-447c-b0bb-a8fe919a74a5
+name: Player Modern Clothes
+directions: 4 (south, east, north, west)
+size: 136x136px
+view: side
+style: basic shading, single color outline, high detail
+
+rotations:
+  south: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/rotations/south.png?t=1784278365
+  east: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/rotations/east.png?t=1784278365
+  north: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/rotations/north.png?t=1784278365
+  west: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/rotations/west.png?t=1784278365
+
+animations (2 groups, 2 total):
+  walk — 1 dir (east), 6f 2026-07-17 [type=walking-6-frames] [group: 631dfe38-0681-4eb7-9d6b-623256ea853a]
+    east: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/797c5d8b-5a03-495e-aaee-f14734714996/east/0.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/797c5d8b-5a03-495e-aaee-f14734714996/east/1.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/797c5d8b-5a03-495e-aaee-f14734714996/east/2.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/797c5d8b-5a03-495e-aaee-f14734714996/east/3.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/797c5d8b-5a03-495e-aaee-f14734714996/east/4.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/797c5d8b-5a03-495e-aaee-f14734714996/east/5.png
+  idle — 1 dir (east), 4f 2026-07-17 [type=breathing-idle] [group: 8ca498f1-0943-49f3-9b5b-0024ab5331e1]
+    east: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/7705a16b-23a2-460d-930f-d77888d0b41b/east/0.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/7705a16b-23a2-460d-930f-d77888d0b41b/east/1.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/7705a16b-23a2-460d-930f-d77888d0b41b/east/2.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/dc90d01b-a882-447c-b0bb-a8fe919a74a5/animations/7705a16b-23a2-460d-930f-d77888d0b41b/east/3.png
+
+download: https://api.pixellab.ai/mcp/characters/dc90d01b-a882-447c-b0bb-a8fe919a74a5/download
+
+available_animations: backflip, breathing-idle, cross-punch, crouched-walking, crouching, drinking, falling-back-death, fight-stance-idle-8-frames, fireball, flying-kick, front-flip, getting-up +37 more
+
+actions: animate_character(character_id="dc90d01b-a882-447c-b0bb-a8fe919a74a5", ...) | create_character_state(character_id="dc90d01b-a882-447c-b0bb-a8fe919a74a5", ...) | delete_animation(character_id="dc90d01b-a882-447c-b0bb-a8fe919a74a5", animation_group_id="<group>") | delete_character(character_id="dc90d01b-a882-447c-b0bb-a8fe919a74a5")

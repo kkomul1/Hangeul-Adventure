@@ -12,6 +12,8 @@ namespace HangeulAdventure.Game
         private TMPro.TextMeshProUGUI _titleText;
         private const string TitleString = "한글 어드벤처";
         private const string SubtitleDefault = "자모를 밀어 글자를 만드는 퍼즐 (MVP)";
+        private const int SideProtoMapId = 101; // 사이드뷰 프로토맵 (map_101_side.json, "시작의 숲")
+        private GameObject _devMapBtn;
 
         private static bool IntroSeen => PlayerPrefs.GetInt("intro_seen", 0) == 1;
 
@@ -97,6 +99,8 @@ namespace HangeulAdventure.Game
                 var gearLabel = settings.GetComponentInChildren<TMPro.TextMeshProUGUI>();
                 if (gearLabel != null) { gearLabel.text = "설정"; gearLabel.fontSize = 16; }
             }
+
+            CreateDevMapButton(_titlePanel);
         }
 
         /// <summary>추출된 프리팹으로 타이틀 구성: 이름으로 텍스트·버튼을 다시 배선한다
@@ -131,8 +135,12 @@ namespace HangeulAdventure.Game
                 PlayerPrefs.DeleteAll();
                 PlayerPrefs.Save();
                 if (_subtitle != null) _subtitle.text = SubtitleDefault;
+                if (_devMapBtn != null) _devMapBtn.SetActive(false);
                 RefreshTitleBrokenness();
             });
+
+            // 프리팹에 DevMapBtn 노드가 없으므로 배선이 아니라 절차 생성
+            CreateDevMapButton(_titlePanel);
 
             RefreshTitleBrokenness();
         }
@@ -194,7 +202,32 @@ namespace HangeulAdventure.Game
             bool on = !ProgressStore.DevMode;
             ProgressStore.DevMode = on;
             _subtitle.text = on ? "개발자 모드 ON — 전체 스테이지 잠금 해제" : SubtitleDefault;
+            if (_devMapBtn != null) _devMapBtn.SetActive(on);
             if (on) SfxPlayer.Instance?.Collect(); else SfxPlayer.Instance?.Split();
+        }
+
+        private void CreateDevMapButton(RectTransform parent)
+        {
+            var btn = UiFactory.CreateButton(parent, "DevMapBtn", "[DEV] 사이드뷰 프로토맵", 16,
+                new Color(0.20f, 0.45f, 0.35f, 0.85f), Color.white, EnterSideProtoMap);
+            UiFactory.SetRect((RectTransform)btn.transform, Vector2.zero, Vector2.zero,
+                new Vector2(24, 24), new Vector2(230, 46));
+            _devMapBtn = btn.gameObject;
+            _devMapBtn.SetActive(ProgressStore.DevMode);
+        }
+
+        private void EnterSideProtoMap()
+        {
+            _maps ??= MapLoader.LoadAll();
+            int index = _maps.FindIndex(m => m.id == SideProtoMapId);
+            if (index < 0) { Debug.LogError($"프로토맵 없음: id {SideProtoMapId}"); return; }
+
+            // StartMap이 last_map을 덮어쓴다 — 개발용 진입이 정식 진행 상태를 오염시키지 않게 복원
+            bool hadLast = PlayerPrefs.HasKey("last_map");
+            int lastMap = PlayerPrefs.GetInt("last_map", 0);
+            StartMap(index, null);
+            if (hadLast) PlayerPrefs.SetInt("last_map", lastMap); else PlayerPrefs.DeleteKey("last_map");
+            PlayerPrefs.Save();
         }
 
         /// <summary>깨진 글자 연출 (스토리기획 2장): 오프닝 전에는 온전, 이후엔 미회수 자음 글자가 깨짐.</summary>

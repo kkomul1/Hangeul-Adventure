@@ -1,0 +1,32 @@
+status: completed
+id: f4e82336-e07f-4371-9c50-afc9a6b28328
+name: Seonbi Hanbok Forest
+directions: 4 (south, east, north, west)
+size: 136x136px
+view: side
+style: basic shading, single color outline, high detail
+
+rotations:
+  south: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/rotations/south.png?t=1784278322
+  east: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/rotations/east.png?t=1784278322
+  north: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/rotations/north.png?t=1784278322
+  west: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/rotations/west.png?t=1784278322
+
+animations (3 groups, 3 total):
+  walk — 1 dir (east), 6f 2026-07-17 [type=walking-6-frames] [group: 038e33de-7c12-4416-afb0-c6965415f9e1]
+    east: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/c2b7f72d-0d5d-48bb-b0bb-aa4282488de7/east/0.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/c2b7f72d-0d5d-48bb-b0bb-aa4282488de7/east/1.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/c2b7f72d-0d5d-48bb-b0bb-aa4282488de7/east/2.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/c2b7f72d-0d5d-48bb-b0bb-aa4282488de7/east/3.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/c2b7f72d-0d5d-48bb-b0bb-aa4282488de7/east/4.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/c2b7f72d-0d5d-48bb-b0bb-aa4282488de7/east/5.png
+  climb — 1 dir (north), 5f 2026-07-17 [type=custom-climbing a ladder, hands and f] [group: e8c74f86-5abe-4d3a-bfa9-7082e35917f7]
+    north: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/b657884e-3e33-4824-a117-c9943914e85a/north/0.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/b657884e-3e33-4824-a117-c9943914e85a/north/1.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/b657884e-3e33-4824-a117-c9943914e85a/north/2.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/b657884e-3e33-4824-a117-c9943914e85a/north/3.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/b657884e-3e33-4824-a117-c9943914e85a/north/4.png
+  idle — 1 dir (east), 4f 2026-07-17 [type=breathing-idle] [group: 5bf80d79-ec71-4389-b00c-f0d8bc4f8b76]
+    east: https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/00a57add-cf18-43d0-ab20-af450541281a/east/0.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/00a57add-cf18-43d0-ab20-af450541281a/east/1.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/00a57add-cf18-43d0-ab20-af450541281a/east/2.png, https://backblaze.pixellab.ai/file/pixellab-characters/c2a2ee8d-9b35-4df1-8990-1cdaf84c226b/f4e82336-e07f-4371-9c50-afc9a6b28328/animations/00a57add-cf18-43d0-ab20-af450541281a/east/3.png
+
+pending jobs (2):
+  jump(east): 68% ~124s
+  run(east): 65% ~150s
+
+download: https://api.pixellab.ai/mcp/characters/f4e82336-e07f-4371-9c50-afc9a6b28328/download
+  (returns HTTP 423 until jobs complete — use curl --fail)
+
+available_animations: backflip, breathing-idle, cross-punch, crouched-walking, crouching, drinking, falling-back-death, fight-stance-idle-8-frames, fireball, flying-kick, front-flip, getting-up +37 more
+
+actions: animate_character(character_id="f4e82336-e07f-4371-9c50-afc9a6b28328", ...) | create_character_state(character_id="f4e82336-e07f-4371-9c50-afc9a6b28328", ...) | delete_animation(character_id="f4e82336-e07f-4371-9c50-afc9a6b28328", animation_group_id="<group>") | delete_character(character_id="f4e82336-e07f-4371-9c50-afc9a6b28328")

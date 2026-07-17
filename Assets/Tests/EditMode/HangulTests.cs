@@ -119,8 +119,12 @@ namespace HangeulAdventure.Engine.Tests
             Assert.AreEqual((true, true), Hangul.CompositionAxes('과'));
             // 개: 가로만 (ㅐ 내부도 가로)
             Assert.AreEqual((true, false), Hangul.CompositionAxes('개'));
-            // 꼬: 양축 (ㄲ 내부 가로 + ㅗ 세로) → 가로 잠김
-            Assert.AreEqual((true, true), Hangul.CompositionAxes('꼬'));
+            // 꼬: 세로만 (겉조합 ㄲ위+ㅗ아래) → 가로 이동 가능. ㄲ 내부 가로는 축 판정에 무관 (명세 5장 표 106행)
+            Assert.AreEqual((false, true), Hangul.CompositionAxes('꼬'));
+            // 몫: 세로만 (겉조합 받침 + 속 ㅁ위+ㅗ아래) → 가로 이동 가능. ㄳ 내부 가로도 무관 (표 108행)
+            Assert.AreEqual((false, true), Hangul.CompositionAxes('몫'));
+            // 값: 양축 (받침=세로 + 속 ㄱ+ㅏ=가로) → 겹받침이어도 속이 가로면 잠김 (표 107행)
+            Assert.AreEqual((true, true), Hangul.CompositionAxes('값'));
             // 낱자모: 없음
             Assert.AreEqual((false, false), Hangul.CompositionAxes('ㄱ'));
             Assert.AreEqual((false, false), Hangul.CompositionAxes('ㅗ'));

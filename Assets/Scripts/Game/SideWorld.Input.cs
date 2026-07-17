@@ -350,7 +350,7 @@ namespace HangeulAdventure.Game
             if (near.IsExit)
             {
                 var exit = _map.exits[near.ExitIndex];
-                string exitName = BrokenText.Apply(exit.label); // 장소 이름도 깨진 글자로
+                string exitName = exit.label; // 지명은 깨뜨리지 않는다 (A-⑱)
                 _hudHint.text = MapProgress.ExitOpen(_map, exit)
                     ? $"↑: {exitName}(으)로 이동"
                     : $"{exitName} — 잠김 (이 지역 {MapProgress.ClearedCount(_map)}/{exit.required} 클리어)";
@@ -374,21 +374,27 @@ namespace HangeulAdventure.Game
 
         private void Interact(SpotView spot)
         {
+            // 맵을 떠나는 경로마다 Pixel Perfect를 먼저 내린다 — 살아 있으면 퍼즐·전투 카메라의
+            // orthographicSize를 덮어쓴다 (OnDestroy는 프레임 끝에야 돌아 한 프레임 늦다)
             if (spot == _bossView)
             {
+                DisablePixelPerfect();
                 _app.StartMapBattle(_map.bossConfig, _rb.position);
                 return;
             }
             if (spot.IsShop)
             {
-                _app.OpenShop();
+                _app.OpenShop(); // 상점은 맵 위에 패널만 띄운다 — 카메라는 그대로
                 return;
             }
             if (spot.IsExit)
             {
                 var exit = _map.exits[spot.ExitIndex];
                 if (MapProgress.ExitOpen(_map, exit))
+                {
+                    DisablePixelPerfect(); // 목적지가 v2면 Enter가 다시 켠다
                     _app.TravelTo(exit);
+                }
                 return;
             }
             if (!IsSpotOpen(spot.StageId)) return;
@@ -400,6 +406,7 @@ namespace HangeulAdventure.Game
                 SfxPlayer.Instance?.Fail(); // 자음 게이트: 진입 불가 (D-22)
                 return;
             }
+            DisablePixelPerfect();
             _app.StartMapStage(stage, _rb.position);
         }
 
@@ -426,6 +433,7 @@ namespace HangeulAdventure.Game
             _cam.transform.position = new Vector3(nx, ny, -10);
 
             UpdateBackdrops();
+            UpdateCharAnim();
         }
 
         private void SnapCameraImmediate()
@@ -453,9 +461,30 @@ namespace HangeulAdventure.Game
         /// <summary>배경 레이어 패럴랙스: 맵 중앙 기준 카메라 이동량 × (1 − 계수)만큼 따라간다.</summary>
         private void UpdateBackdrops()
         {
+            Vector2 cam = _cam.transform.position;
+
+            // 하늘·안개는 가로로 균일한 띠라 패럴랙스가 아니라 카메라에 붙여 늘린다.
+            // 크기를 매 프레임 다시 잡는 이유: Pixel Perfect는 화면 해상도가 ref(1280x720)의 정수배가
+            // 아니면 orthographicSize를 더 크게 다시 정한다 (11.25u 고정이 아니다) — 고정 스케일이면 위아래가 빈다.
+            if (_skyT != null || _fogT != null)
+            {
+                float halfH = _cam.orthographicSize;
+                float coverW = halfH * 2f * _cam.aspect + 2f;
+                if (_skyT != null)
+                {
+                    _skyT.localPosition = new Vector3(cam.x, cam.y, 0);
+                    _skyT.localScale = new Vector3(coverW / _skyBase.x,
+                        Mathf.Max(1f, (halfH * 2f + 1f) / _skyBase.y), 1f); // 설계 시야(11.25u)보다 넓어지면 세로도 늘린다
+                }
+                if (_fogT != null)
+                {
+                    _fogT.localPosition = new Vector3(cam.x, FogTopY, 0); // 안개는 월드 지형(y 4.2)이라 세로는 원본 그대로
+                    _fogT.localScale = new Vector3(coverW / _fogBase.x, 1f, 1f);
+                }
+            }
+
             if (_backdropRoots.Count == 0) return;
             var center = new Vector2((_map.width - 1) * 0.5f, (_map.height - 1) * 0.5f);
-            Vector2 cam = _cam.transform.position;
             foreach (var (root, parallax) in _backdropRoots)
             {
                 Vector2 off = (cam - center) * (1f - parallax);

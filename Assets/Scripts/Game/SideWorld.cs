@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using HangeulAdventure.Engine;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace HangeulAdventure.Game
 {
@@ -10,8 +11,8 @@ namespace HangeulAdventure.Game
     /// Rigidbody2D(dynamic) 물리 기반 좌우 이동·점프·원웨이 발판(PlatformEffector2D)·사다리(존+중력 해제).
     /// MapWorld(탑다운, v1)와 외부 계약이 동일 — Enter / PlayerPosition / RefreshStates.
     /// GameApp.StartMap이 map.version==2일 때 이 클래스를 생성한다 (공존 스위치, 기획 10장).
-    /// partial 구성: SideWorld.cs(상태·튜닝 상수·상태 갱신), Build.cs(지형 콜라이더·배경·스팟·플레이어·HUD),
-    /// Input.cs(입력·물리 이동·사다리·상호작용·카메라).
+    /// partial 구성: SideWorld.cs(상태·튜닝 상수·카메라·상태 갱신), Build.cs(지형 콜라이더·아트 배치·스팟·데코·플레이어·HUD),
+    /// Input.cs(입력·물리 이동·사다리·상호작용·카메라 추적), Anim.cs(캐릭터 애니메이션).
     /// </summary>
     public partial class SideWorld : MonoBehaviour
     {
@@ -40,11 +41,23 @@ namespace HangeulAdventure.Game
         private const float CamYOffset = 1.0f;         // 카메라 목표 y = 기준 y + 이 값 (발보다 약간 위를 본다)
         private const float CamFallCatchRatio = 0.25f; // 낙하로 화면 하단 이 비율 아래로 내려가면 기준 y 즉시 갱신 (기획 5장)
 
+        // ══ 카메라 규격 (확정 사항) ══
+        private const int AssetsPPU = 64;              // 사이드뷰 아트 전부 PPU 64
+        private const int RefResolutionX = 1280;
+        private const int RefResolutionY = 720;
+        private const float OrthoSize = RefResolutionY * 0.5f / AssetsPPU; // 5.625 — 세로 시야 11.25u
+
         private GameApp _app;
         private MapData _map;
         private List<StageData> _stageLookup;
         private Camera _cam;
         private Canvas _canvas;
+        private PixelPerfectCamera _pixelPerfect;
+
+        // 아트 스위치: Art/Forest가 임포트돼 있으면 스프라이트, 아니면 색 블록 (Build.cs)
+        private bool _art;
+        private Transform _skyT, _fogT;   // 카메라를 따라다니는 하늘·안개 (Build.cs가 만들고 Input.cs가 옮긴다)
+        private Vector2 _skyBase, _fogBase; // 원본 스프라이트 크기 (u) — 매 프레임 시야에 맞춰 늘리는 기준
 
         // 플레이어 물리 (위치 기준점 = 발 밑 중앙, 기획 1.1장)
         private Transform _playerT;
@@ -96,23 +109,50 @@ namespace HangeulAdventure.Game
             _stageLookup = stages;
             _cam = cam;
             _canvas = canvas;
+            _art = ArtLibrary.ForestAvailable;
 
+            SetupCamera();   // 하늘·안개 크기가 시야를 읽어 정해지므로 짓기 전에 먼저
             BuildBackdrops();
             BuildTerrain();
             BuildSpots();
+            BuildDecorations();
             // spawn은 발 칸 좌표 → 발 밑(칸 아래 발판 상면)으로 변환. 복귀 좌표(playerPos)는 이미 발 좌표.
             BuildPlayer(playerPos ?? new Vector2(_map.spawn.x, _map.spawn.y - 0.5f));
             BuildHud();
             RefreshStates();
-
-            _cam.orthographicSize = 5f; // 세로 시야 10u = 표준 층(4u) 2.5개 (기획 5장)
             SnapCameraImmediate();
+        }
+
+        /// <summary>
+        /// 세로 시야 11.25u (= 720px / PPU 64) + Pixel Perfect. 도트가 화면 픽셀에 1:1로 떨어져야
+        /// 청크 이음새·픽셀 라인이 흔들리지 않는다. Pixel Perfect가 orthographicSize를 같은 값으로 다시 계산하지만,
+        /// 컴포넌트가 꺼져 있는 프레임을 위해 직접도 넣어 둔다.
+        /// </summary>
+        private void SetupCamera()
+        {
+            _cam.orthographicSize = OrthoSize;
+            _pixelPerfect = _cam.GetComponent<PixelPerfectCamera>();
+            if (_pixelPerfect == null) _pixelPerfect = _cam.gameObject.AddComponent<PixelPerfectCamera>();
+            _pixelPerfect.assetsPPU = AssetsPPU;
+            _pixelPerfect.refResolutionX = RefResolutionX;
+            _pixelPerfect.refResolutionY = RefResolutionY;
+            _pixelPerfect.enabled = true;
+        }
+
+        /// <summary>
+        /// 맵을 떠나기 직전 반드시 호출. 카메라는 퍼즐·전투·타이틀과 공유하는 자원이고,
+        /// Pixel Perfect가 살아 있으면 그쪽의 orthographicSize(FitCamera 등)를 매 프레임 덮어쓴다.
+        /// </summary>
+        private void DisablePixelPerfect()
+        {
+            if (_pixelPerfect != null) _pixelPerfect.enabled = false;
         }
 
         public Vector2 PlayerPosition => _rb != null ? _rb.position : Vector2.zero;
 
         private void OnDestroy()
         {
+            DisablePixelPerfect(); // 안전망 — 떠나기 직전 호출을 놓친 경로 대비
             if (_hudRoot != null) Destroy(_hudRoot.gameObject);
         }
 
@@ -135,7 +175,7 @@ namespace HangeulAdventure.Game
                 if (consonantLocked && !cleared)
                 {
                     v.Bg.color = new Color(0.35f, 0.33f, 0.31f);
-                    v.Label.text = "▒";
+                    v.Label.text = "잠김"; // 잠금 표기 통일 (A-⑥). 자음 게이트와 진행 잠금은 색으로 구분
                     v.Label.color = new Color(0.55f, 0.52f, 0.48f);
                     continue;
                 }
@@ -161,7 +201,8 @@ namespace HangeulAdventure.Game
                     ? SpotCleared : new Color(0.75f, 0.30f, 0.28f); // 미격파 = 붉은색
 
             // 세계의 글자는 미회수 자음이 깨져 보인다 (D-22 확장: 장소 이름·간판)
-            _hudTitle.text = $"{BrokenText.Apply(_map.title)}  —  {BrokenText.Apply(_map.theme)}";
+            // 지명은 깨뜨리지 않는다 (A-⑱) — 길을 찾는 정보라 읽을 수 있어야 한다. D-11 개정
+            _hudTitle.text = $"{_map.title}  —  {_map.theme}";
             _hudGold.text = $"골드  {ProgressStore.Gold}";
             int cleared2 = MapProgress.ClearedCount(_map);
             _hudProgress.text = tutorialDone

@@ -4,7 +4,7 @@ namespace HangeulAdventure.Engine
 
     public enum PushResultType
     {
-        Fail,          // 아무 일도 일어나지 않음 (이동 수 미증가)
+        Fail,          // 아무 일도 일어나지 않음 (행동 수 미증가)
         Move,          // 통째 이동
         Compose,       // 도착지 타일과 합성
         SplitMove,     // 분해, 나간 성분이 빈칸에 안착

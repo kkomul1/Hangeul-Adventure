@@ -1,0 +1,53 @@
+{
+ "ground_flat_02_320x160": "0af1afe3-0027-4a08-8ab5-0c54b4c88a78"
+}
+{
+ "ground_flat_02_320x160": "78f6bcd6-a2b9-4dc8-ae34-bad5973be628"
+}
+{
+ "ground_flat_02_320x160": "997c0cac-8f60-4c9c-910a-c7f12a28530d"
+}
+{
+ "ground_flat_03_320x160": "52b8ab8a-7c39-4ab3-81e0-f5ed12a546c8",
+ "ground_flat_04_320x160": "c998b9e2-6448-47dc-a70a-bf91dbe6912d",
+ "step_mound_a_256x128": "e6857195-fb66-40d7-b224-96868d007bae",
+ "step_mound_b_256x128": "f4622c63-f511-403b-8314-21678a3cfa34",
+ "platform_earth_mid_192x96": "403c4949-a5ad-43dc-a255-7d0ed92ae6ea",
+ "platform_earth_cap_L_96x96": "537fe4a3-f3d1-43af-b537-3e9f64a45ad4",
+ "ladder_body_seg_96x128": "43d020fc-70b5-4972-9e64-4eac46b4f510",
+ "ladder_top_cap_96x64": "7829cc54-e4f9-435f-ba7f-98105d53c727",
+ "boundary_bush_96x256": "6c65c357-f681-4fb0-b555-f7a90c66d53e"
+}
+{
+ "tree_pine_large_320x384": "caa5f35f-02bc-4900-9237-be8929a4aca3",
+ "tree_pine_small_192x256": "4967d255-cb95-492f-a56b-3bc34d1a6c12"
+}
+{
+ "prop_mossy_boulder": "0c81c2a2-3364-42a0-b158-93e93c3b1961"
+}
+{
+ "prop_mossy_boulder": "57104546-0ad1-48d8-9a2c-ae997529de5e",
+ "prop_tree_stump": "07a69f09-2ea7-4dd6-8a2f-c4856331f45f",
+ "prop_bush_cluster": "d5d0c2ec-029b-4098-8325-c14b4b268c2f",
+ "prop_fern_tuft": "ba87e54f-b153-43e3-831a-87fc29eca7b8",
+ "prop_fallen_log": "a05c38c1-1c7d-463a-9c62-fd69483d6b7d",
+ "spot_sign_hanji": "e57262f9-23d1-4b97-90a0-a6b91248dd45",
+ "exit_gate_jangseung": "597fbfe8-24e1-4e56-b64f-aad6446fb27e"
+}
+{
+ "ground_flat_03_320x160": "4c296639-258d-4d01-89a6-a9814995a966",
+ "ground_flat_04_320x160": "31085d72-acf3-466a-8ac1-58689c145dbd",
+ "step_mound_a_256x128": "9d2c5614-f71f-46f3-806a-d00079675c21",
+ "step_mound_b_256x128": "d36d7b26-1c8d-4eae-a6f5-250349cee429",
+ "platform_earth_mid_192x96": "e4264041-af2a-4d3f-9040-d6c86c1b5ba5",
+ "platform_earth_cap_L_96x96": "6da8b3be-949b-485d-8e3b-91fd7c07e0f5",
+ "ladder_body_seg_96x128": "3c360364-56e4-4be4-bf91-f4c6035efff2",
+ "ladder_top_cap_96x64": "3b9160ca-4008-4ef8-865b-3109ef1ef303",
+ "boundary_bush_96x256": "d0ba2988-7abb-4e40-8252-36207a995a54"
+}
+{
+ "prop_mossy_boulder": "e18f77dc-9908-4742-922a-729237d52e11",
+ "prop_bush_cluster": "023783b2-c932-4d6c-b4f2-a6038da3f271",
+ "prop_fern_tuft": "619576cd-6a31-4d2c-9f4c-99cc8720ce75",
+ "prop_fallen_log": "315bcd0d-14a0-4b97-8495-f91b12c1da29"
+}

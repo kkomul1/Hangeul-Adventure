@@ -96,7 +96,7 @@ namespace HangeulAdventure.Game
             if (near.IsExit)
             {
                 var exit = _map.exits[near.ExitIndexil];
-                string exitName = BrokenText.Apply(exit.label); // 장소 이름도 깨진 글자로
+                string exitName = exit.label; // 지명은 깨뜨리지 않는다 (A-⑱)
                 _hudHint.text = MapProgress.ExitOpen(_map, exit)
                     ? $"Space: {exitName}(으)로 이동"
                     : $"{exitName} — 잠김 (이 지역 {MapProgress.ClearedCount(_map)}/{exit.required} 클리어)";

@@ -49,6 +49,7 @@ namespace HangeulAdventure.Game
             _listContent.anchorMin = new Vector2(0, 1);
             _listContent.anchorMax = new Vector2(1, 1);
             _listContent.pivot = new Vector2(0.5f, 1);
+            _listContent.sizeDelta = Vector2.zero; // CreateEmpty 기본 크기 잔여 제거 (도감 버그와 동일 함정) — 남기면 행 좌우가 잘림
             var layout = _listContent.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 8;
             layout.padding = new RectOffset(10, 10, 10, 10);
@@ -136,13 +137,16 @@ namespace HangeulAdventure.Game
                                 {
                                     SfxPlayer.Instance?.Collect();
                                     _status.text = $"'{item.name}' 구매 완료!";
+                                    Refresh();
+                                    // 팝업은 Refresh 뒤에 — 목록 재생성이 형제 순서를 건드리지 않도록
+                                    if (item.type == "weapon" || item.type == "armor") ShowEquipPrompt(item);
                                 }
                                 else
                                 {
                                     SfxPlayer.Instance?.Fail();
                                     _status.text = "골드가 부족합니다.";
+                                    Refresh();
                                 }
-                                Refresh();
                             });
                         UiFactory.SetRect((RectTransform)buy.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-14, 0), new Vector2(150, 50));
                     }
@@ -174,6 +178,40 @@ namespace HangeulAdventure.Game
                 foreach (var item in ItemStore.All) if (ItemStore.IsOwned(item.id)) { any = true; break; }
                 if (!any) _status.text = "아직 아이템이 없습니다 — 시작의 마을 상점에서 구매할 수 있어요.";
             }
+        }
+
+        /// <summary>구매 직후 장착 여부를 묻는다. 빈 슬롯이어도 항상 묻는다 (mobility는 장착 슬롯이 없어 대상 밖).</summary>
+        private void ShowEquipPrompt(ItemJson item)
+        {
+            var overlay = UiFactory.CreatePanel(_canvas.transform, "EquipPromptPopup", new Color(0, 0, 0, 0.6f));
+            UiFactory.Stretch(overlay);
+            var box = UiFactory.CreatePanel(overlay, "Box", UiFactory.Paper);
+            UiFactory.SetRect(box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 260));
+
+            var title = UiFactory.CreateText(box, "T", "구매 완료!", 30, UiFactory.Ink);
+            UiFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -30), new Vector2(480, 52));
+
+            var cur = ItemStore.Find(item.type == "weapon" ? ItemStore.EquippedWeapon : ItemStore.EquippedArmor);
+            string body = cur == null
+                ? $"{item.name}을(를) 장착할까요?"
+                : $"{item.name}을(를) 장착할까요?\n<size=80%>(현재: {cur.name})</size>";
+            var msg = UiFactory.CreateText(box, "M", body, 24, UiFactory.Dim);
+            UiFactory.SetRect(msg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -4), new Vector2(460, 80));
+
+            var equip = UiFactory.CreateButton(box, "EquipBtn", "장착", 22, UiFactory.Accent, Color.white, () =>
+            {
+                ItemStore.Equip(item);
+                SfxPlayer.Instance?.Move();
+                Destroy(overlay.gameObject);
+                Refresh();
+            });
+            UiFactory.SetRect((RectTransform)equip.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(96, 26), new Vector2(170, 54));
+
+            var later = UiFactory.CreateButton(box, "LaterBtn", "나중에", 22, UiFactory.Paper, UiFactory.Ink, () =>
+            {
+                Destroy(overlay.gameObject);
+            });
+            UiFactory.SetRect((RectTransform)later.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-96, 26), new Vector2(170, 54));
         }
 
         private static Color SpotGray() => new Color(0.72f, 0.70f, 0.66f);

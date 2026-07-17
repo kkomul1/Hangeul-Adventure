@@ -12,7 +12,7 @@ namespace HangeulAdventure.Game
             var box = UiFactory.CreatePanel(overlay, "Box", UiFactory.Paper);
             UiFactory.SetRect(box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(560, 300));
 
-            string where = string.IsNullOrEmpty(room.label) ? "이곳" : $"'{BrokenText.Apply(room.label)}'";
+            string where = string.IsNullOrEmpty(room.label) ? "이곳" : $"'{room.label}'"; // 지명은 깨뜨리지 않는다 (A-⑱)
             var title = UiFactory.CreateText(box, "T", $"{where}의 글자 조각을 모두 맞췄다!", 30, UiFactory.Ink);
             BrokenTextFx.Ensure(title);
             UiFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -34), new Vector2(520, 60));

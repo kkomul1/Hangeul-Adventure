@@ -1,0 +1,51 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "dc90d01b-a882-447c-b0bb-a8fe919a74a5",
+        "name": "Player Modern Clothes",
+        "prompt": "Korean Joseon folk pixel art rendering style, dark warm brown single color outline (no pure black), gentle mid value contrast, soft dawn light from the left. A young modern-day Korean man who has just arrived from the present day, deliberately out of place in this historical world: he wears a cold neutral gray hooded zip-up jacket over a plain white t-shirt, slim dark charcoal jeans and white sneakers, with a slate gray canvas backpack on his back. Short modern black hair, no hat. His entire outfit stays cold desaturated gray and white - it must NOT pick up any mossy green, earth brown or dawn warmth from the world around him; the gray clothing is intentionally alien to the palette. Standing in a relaxed neutral pose.",
+        "size": {
+          "width": 136,
+          "height": 136
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "side",
+        "created_at": "2026-07-17T08:51:15.119429+00:00"
+      },
+      "folder": "Player_Modern_Clothes",
+      "frames": {
+        "rotations": {
+          "south": "Player_Modern_Clothes/rotations/south.png",
+          "west": "Player_Modern_Clothes/rotations/west.png",
+          "east": "Player_Modern_Clothes/rotations/east.png",
+          "north": "Player_Modern_Clothes/rotations/north.png"
+        },
+        "animations": {
+          "walk": {
+            "east": [
+              "Player_Modern_Clothes/animations/walk/east/frame_000.png",
+              "Player_Modern_Clothes/animations/walk/east/frame_001.png",
+              "Player_Modern_Clothes/animations/walk/east/frame_002.png",
+              "Player_Modern_Clothes/animations/walk/east/frame_003.png",
+              "Player_Modern_Clothes/animations/walk/east/frame_004.png",
+              "Player_Modern_Clothes/animations/walk/east/frame_005.png"
+            ]
+          },
+          "idle": {
+            "east": [
+              "Player_Modern_Clothes/animations/idle/east/frame_000.png",
+              "Player_Modern_Clothes/animations/idle/east/frame_001.png",
+              "Player_Modern_Clothes/animations/idle/east/frame_002.png",
+              "Player_Modern_Clothes/animations/idle/east/frame_003.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-07-17T09:08:19.656498"
+}

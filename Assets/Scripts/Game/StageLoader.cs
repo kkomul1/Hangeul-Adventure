@@ -12,7 +12,7 @@ namespace HangeulAdventure.Game
     ///   "rows": ["ㄱ.ㅏ", "#.."],        // 위→아래. '.'=빈칸, '#'=없는 칸
     ///   "goals": [{"display":"가", "slots":"가"}],
     ///   "minMoves": 3,                    // 솔버 검증값 (루비 별 기준)
-    ///   "stars": [0, 5, 4]                // [1별, 2별, 3별] 이동 수 상한. 0=기본 공식 사용
+    ///   "stars": [0, 5, 4]                // [1별, 2별, 3별] 행동 수 상한. 0=기본 공식 사용
     /// }
     /// </summary>
     [Serializable]

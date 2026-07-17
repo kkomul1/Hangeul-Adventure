@@ -273,12 +273,31 @@ namespace HangeulAdventure.Engine.Tests
         }
 
         [Test]
-        public void 꼬_가로_잠김()
+        public void 쌍자음글자_가로_이동_세로_분해()
         {
-            // 꼬: ㄲ 내부가 가로 조합 → 가로 잠김, 세로는 분해
-            Assert.AreEqual(PushResultType.Fail, Push('꼬', '\0', Direction.Left, out _, out _));
+            // 꼬: 겉조합이 ㄲ위+ㅗ아래(세로)뿐 → 가로는 통째 이동, 세로는 분해 (명세 5장 표 106행).
+            // ㄲ 내부의 가로 결합은 축 판정에 관여하지 않는다 — 잠김 사유는 속 조합(ㄱ+ㅏ)이 가로일 때뿐.
+            Assert.AreEqual(PushResultType.Move, Push('꼬', '\0', Direction.Left, out _, out _));
             Assert.AreEqual(PushResultType.SplitMove, Push('꼬', '\0', Direction.Up, out var ns, out var nt));
             Assert.AreEqual(('ㅗ', 'ㄲ'), (ns, nt));
+        }
+
+        [Test]
+        public void 겹받침글자_가로_이동_세로_분해()
+        {
+            // 몫: 속 조합이 ㅁ위+ㅗ아래(세로) → 가로는 통째 이동, 세로는 받침 분해 (명세 5장 표 108행).
+            Assert.AreEqual(PushResultType.Move, Push('몫', '\0', Direction.Left, out _, out _));
+            Assert.AreEqual(PushResultType.SplitMove, Push('몫', '\0', Direction.Down, out var ns, out var nt));
+            Assert.AreEqual(('모', 'ㄳ'), (ns, nt));
+        }
+
+        [Test]
+        public void 값_좌우_잠김()
+        {
+            // 값: 겹받침이어도 속 조합(ㄱ+ㅏ)이 가로 → 여전히 잠김 (명세 5장 표 107행).
+            // 겹받침 자체는 잠김 사유가 아님을 몫과 대비해 고정한다.
+            Assert.AreEqual(PushResultType.Fail, Push('값', '\0', Direction.Left, out _, out _));
+            Assert.AreEqual(PushResultType.Fail, Push('값', '\0', Direction.Right, out _, out _));
         }
 
         // ---- 4. 실패 ----

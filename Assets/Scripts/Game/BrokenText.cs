@@ -5,7 +5,7 @@ namespace HangeulAdventure.Game
 {
     /// <summary>
     /// 깨진 글자 연출 (스토리기획 2장): 아직 되찾지 못한 자음이 초성·종성에 포함된 글자는
-    /// 깨진 형태(▒)로 표시된다. 자음을 회수할수록 세상의 글자가 복원된다.
+    /// 파편 연출로 표시된다. 자음을 회수할수록 세상의 글자가 복원된다.
     /// </summary>
     public static class BrokenText
     {

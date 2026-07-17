@@ -28,7 +28,7 @@ namespace HangeulAdventure.Game
     {
         public string[] rows;    // 스테이지 rows 형식
         public string goals;     // 쉼표 구분
-        public int moveLimit;    // 제한 이동 수 (전조로 미리 표시)
+        public int moveLimit;    // 제한 행동 수 (전조로 미리 표시)
     }
 
     public enum BattleAction { Attack, Guard, Skill }

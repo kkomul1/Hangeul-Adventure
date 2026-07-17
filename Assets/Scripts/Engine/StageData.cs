@@ -39,7 +39,7 @@ namespace HangeulAdventure.Engine
         /// <summary>튜토리얼 안내 문구 (빈 문자열이면 미표시).</summary>
         public string hint = "";
 
-        /// <summary>별 기준: 이동 수 <= 값. [1별, 2별, 3별]</summary>
+        /// <summary>별 기준: 행동 수 <= 값. [1별, 2별, 3별]</summary>
         public int[] starThresholds;
 
         public int Index(int x, int y) => y * width + x;
@@ -101,7 +101,7 @@ namespace HangeulAdventure.Engine
 
         /// <summary>
         /// 기본 별 기준 공식 (명세 7장, 2026-07-16 완화 개정): 효율 기준 + 소형 스테이지 하한.
-        /// 3별 = 이동 수 ≤ max(최소수+1, ⌈최소수/0.9⌉) (효율 90% 이상),
+        /// 3별 = 행동 수 ≤ max(최소수+1, ⌈최소수/0.9⌉) (효율 90% 이상),
         /// 2별 = ≤ max(최소수+2, ⌈최소수/0.7⌉) (효율 70% 이상), 1별 = 클리어 자체.
         /// 올림은 정수 연산으로 정확히: ⌈n/0.9⌉ = (n*10+8)/9, ⌈n/0.7⌉ = (n*10+6)/7.
         /// </summary>

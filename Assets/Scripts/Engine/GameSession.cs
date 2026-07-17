@@ -20,7 +20,7 @@ namespace HangeulAdventure.Engine
     }
 
     /// <summary>
-    /// 진행 중인 스테이지의 상태: 보드, 수집 슬롯, 이동 수, undo (명세 5, 7, 8장).
+    /// 진행 중인 스테이지의 상태: 보드, 수집 슬롯, 행동 수, undo (명세 5, 7, 8장).
     /// </summary>
     public class GameSession
     {
@@ -73,7 +73,7 @@ namespace HangeulAdventure.Engine
             _undo.Clear();
         }
 
-        /// <summary>(x,y)의 타일을 방향 d로 민다. 실패 시 상태·이동 수 불변 (명세 5장 4항, 7장).</summary>
+        /// <summary>(x,y)의 타일을 방향 d로 민다. 실패 시 상태·행동 수 불변 (명세 5장 4항, 7장).</summary>
         public PushReport TryPush(int x, int y, Direction d)
         {
             var (dx, dy) = d.Delta();
@@ -98,7 +98,7 @@ namespace HangeulAdventure.Engine
 
         /// <summary>
         /// (x,y)의 타일을 수집한다 (명세 8장). slotIndex=-1이면 첫 번째 일치 빈 슬롯.
-        /// 정확 일치하는 미수집 슬롯이 있어야 성공. 수집은 이동 수에 포함되지 않는다 (D-15).
+        /// 정확 일치하는 미수집 슬롯이 있어야 성공. 수집은 행동 수에 포함되지 않는다 (D-15).
         /// </summary>
         public bool TryCollect(int x, int y, int slotIndex = -1)
         {
@@ -125,7 +125,7 @@ namespace HangeulAdventure.Engine
         }
 
         /// <summary>
-        /// (x,y) 타일을 시계 방향 90도 회전 (D-21). 유효한 자모가 되는 회전만 성공, 이동 수 +1.
+        /// (x,y) 타일을 시계 방향 90도 회전 (D-21). 유효한 자모가 되는 회전만 성공, 행동 수 +1.
         /// </summary>
         public bool TryRotate(int x, int y)
         {

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using HangeulAdventure.Engine;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace HangeulAdventure.Game
 {
     /// <summary>
-    /// 플레이 화면 HUD: 목표 진행도 판, 이동 수, 조작 버튼, 클리어 팝업 (명세 7~9장).
+    /// 플레이 화면 HUD: 목표 진행도 판, 행동 수, 조작 버튼, 클리어 팝업 (명세 7~9장).
     /// 전부 코드로 생성.
     /// </summary>
     public class GameHud : MonoBehaviour
@@ -20,8 +21,10 @@ namespace HangeulAdventure.Game
         private TextMeshProUGUI _tutorialHint;
         private TextMeshProUGUI _moveText;
         private TextMeshProUGUI _stageText;
+        private TextMeshProUGUI _hint;
         private RectTransform _goalBar;
         private RectTransform _popup;
+        private int _popupFrame = -1;
         private bool _isLastStage;
         private readonly List<(Button btn, TextMeshProUGUI label, Image bg, int slotIndex)> _slotButtons
             = new List<(Button, TextMeshProUGUI, Image, int)>();
@@ -39,6 +42,23 @@ namespace HangeulAdventure.Game
         private static readonly Color StarYellow = new Color(1.00f, 0.78f, 0.18f);
         private static readonly Color StarRuby = new Color(0.92f, 0.20f, 0.24f);
         private static readonly Color StarOff = new Color(0.82f, 0.79f, 0.74f);
+
+        // ---- 조작 학습 기록 (A-⑨): 아직 안 배운 조작은 하단 힌트에 띄우지 않는다 ----
+
+        public const string ActCollect = "collect", ActCompose = "compose", ActSplit = "split", ActRotate = "rotate";
+
+        /// <summary>이 조작을 이미 해봤는가. 개발자 모드면 전부 표시.</summary>
+        public static bool HasLearned(string act)
+            => ProgressStore.DevMode || PlayerPrefs.GetString("learned_actions", "").Contains(act + ";");
+
+        /// <summary>조작을 학습 기록에 등록. 구분자 ';'는 부분문자열 충돌 방지용.</summary>
+        public static void Learn(string act)
+        {
+            string learned = PlayerPrefs.GetString("learned_actions", "");
+            if (learned.Contains(act + ";")) return;
+            PlayerPrefs.SetString("learned_actions", learned + act + ";");
+            PlayerPrefs.Save();
+        }
 
         private void OnDestroy()
         {
@@ -93,8 +113,9 @@ namespace HangeulAdventure.Game
             var exitBtn = UiFactory.CreateButton(bottom, "ExitBtn", "나가기", 22, UiFactory.Paper, UiFactory.Ink, () => ExitClicked?.Invoke());
             UiFactory.SetRect((RectTransform)exitBtn.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-24, 0), new Vector2(150, 56));
 
-            var hint = UiFactory.CreateText(bottom, "Hint", "드래그/방향키: 밀기 · Space: 수집 · X/우클릭: 회전 · Q: 합성 필터 · E: 분해 필터", 17, UiFactory.Dim);
-            UiFactory.SetRect(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, 14), new Vector2(900, 30));
+            _hint = UiFactory.CreateText(bottom, "Hint", "", 17, UiFactory.Dim);
+            UiFactory.SetRect(_hint.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, 14), new Vector2(900, 30));
+            RefreshHintBar();
         }
 
         private string _nextLabelOverride;
@@ -180,10 +201,23 @@ namespace HangeulAdventure.Game
             }
         }
 
-        /// <summary>이동 수와 슬롯 상태 갱신.</summary>
+        /// <summary>배운 조작만 하단 힌트에 노출 (A-⑨). 미학습 조작은 스테이지 hint가 가르친다.
+        /// 밀기는 이것 없이는 첫 스테이지가 잠기므로 무조건 표시.</summary>
+        private void RefreshHintBar()
+        {
+            var segs = new List<string> { "드래그/방향키: 밀기" };
+            if (HasLearned(ActCollect)) segs.Add("Space: 수집");
+            if (HasLearned(ActRotate)) segs.Add("X/우클릭: 회전");
+            if (HasLearned(ActCompose)) segs.Add("Q: 합성 필터");
+            if (HasLearned(ActSplit)) segs.Add("E: 분해 필터");
+            _hint.text = string.Join(" · ", segs);
+        }
+
+        /// <summary>행동 수와 슬롯 상태 갱신.</summary>
         public void Refresh()
         {
-            _moveText.text = $"이동 수  {_session.MoveCount}";
+            _moveText.text = $"행동 수  {_session.MoveCount}";
+            RefreshHintBar();
             foreach (var (_, label, bg, idx) in _slotButtons)
             {
                 bool filled = _session.IsSlotFilled(idx);
@@ -204,6 +238,7 @@ namespace HangeulAdventure.Game
             bool ruby = _session.IsRuby;
 
             _popup = UiFactory.CreatePanel(_canvas.transform, "ClearPopup", new Color(0, 0, 0, 0.55f));
+            _popupFrame = Time.frameCount;
             UiFactory.Stretch(_popup);
 
             var box = UiFactory.CreatePanel(_popup, "Box", UiFactory.Paper);
@@ -229,12 +264,12 @@ namespace HangeulAdventure.Game
             }
 
             var info = UiFactory.CreateText(box, "Info",
-                $"이동 수 {_session.MoveCount}" + (ruby ? " · 루비!" : "")
+                $"행동 수 {_session.MoveCount}" + (ruby ? " · 루비!" : "")
                 + (earnedGold > 0 ? $"  ·  +{earnedGold} 골드!" : $"  ·  보유 {ProgressStore.Gold} 골드"),
                 22, UiFactory.Dim);
             UiFactory.SetRect(info.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -38), new Vector2(440, 34));
 
-            // 별 기준 표시 (별별 요구 최대 이동 수)
+            // 별 기준 표시 (별별 요구 최대 행동 수)
             int[] th = _session.Stage.starThresholds ?? Engine.StageData.DefaultStarThresholds(_session.Stage.minMoves);
             var criteria = UiFactory.CreateText(box, "Criteria",
                 $"★★★ {th[2]}수 이하 · ★★ {th[1]}수 이하 · 루비 = 최소 {_session.Stage.minMoves}수",
@@ -244,15 +279,24 @@ namespace HangeulAdventure.Game
             var next = UiFactory.CreateButton(box, "NextBtn",
                 _nextLabelOverride ?? (_isTest ? "에디터로" : _isLastStage ? "스테이지 선택" : "다음 스테이지"), 24,
                 UiFactory.Accent, Color.white, () => NextClicked?.Invoke());
-            UiFactory.SetRect((RectTransform)next.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-95, 28), new Vector2(200, 60));
+            UiFactory.SetRect((RectTransform)next.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(95, 28), new Vector2(200, 60));
 
             var retry = UiFactory.CreateButton(box, "RetryBtn", "재도전", 24, UiFactory.Paper, UiFactory.Ink, () => RetryClicked?.Invoke());
-            UiFactory.SetRect((RectTransform)retry.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(105, 28), new Vector2(160, 60));
+            UiFactory.SetRect((RectTransform)retry.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-105, 28), new Vector2(160, 60));
         }
 
         public void HidePopup()
         {
             if (_popup != null) { Destroy(_popup.gameObject); _popup = null; }
+        }
+
+        /// <summary>클리어 팝업에서 Space = 다음 (A-②). 팝업을 띄운 프레임은 건너뛴다 —
+        /// 수집 Space(GameController)가 같은 프레임에 흘러들어와 팝업을 즉시 넘기는 것을 막기 위함.</summary>
+        private void Update()
+        {
+            if (_popup == null || Time.frameCount == _popupFrame) return;
+            var kb = Keyboard.current;
+            if (kb != null && kb.spaceKey.wasPressedThisFrame) NextClicked?.Invoke();
         }
     }
 }

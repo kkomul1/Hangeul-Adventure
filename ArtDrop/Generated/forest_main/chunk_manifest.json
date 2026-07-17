@@ -1,0 +1,401 @@
+{
+ "ground_flat_02_320x160": {
+  "baked_bg": true,
+  "palette_locked": true,
+  "canvas": [
+   320,
+   160
+  ],
+  "content_bbox": [
+   23,
+   47,
+   299,
+   160
+  ],
+  "content_w": 276,
+  "content_h": 113,
+  "fill_ratio": 0.479,
+  "surface_left": 89,
+  "surface_right": 86,
+  "surface_median": 69,
+  "edge_delta": 3
+ },
+ "ground_flat_03_320x160": {
+  "baked_bg": true,
+  "palette_locked": true,
+  "canvas": [
+   320,
+   160
+  ],
+  "content_bbox": [
+   0,
+   59,
+   320,
+   160
+  ],
+  "content_w": 320,
+  "content_h": 101,
+  "fill_ratio": 0.602,
+  "surface_left": 62,
+  "surface_right": 63,
+  "surface_median": 63,
+  "edge_delta": 1
+ },
+ "ground_flat_04_320x160": {
+  "baked_bg": true,
+  "palette_locked": true,
+  "canvas": [
+   320,
+   160
+  ],
+  "content_bbox": [
+   10,
+   79,
+   310,
+   160
+  ],
+  "content_w": 300,
+  "content_h": 81,
+  "fill_ratio": 0.441,
+  "surface_left": 94,
+  "surface_right": 93,
+  "surface_median": 83,
+  "edge_delta": 1
+ },
+ "step_mound_a_256x128": {
+  "baked_bg": false,
+  "palette_locked": true,
+  "canvas": [
+   256,
+   128
+  ],
+  "content_bbox": [
+   83,
+   60,
+   173,
+   89
+  ],
+  "content_w": 90,
+  "content_h": 29,
+  "fill_ratio": 0.04,
+  "surface_left": 63,
+  "surface_right": 69,
+  "surface_median": 64,
+  "edge_delta": 6
+ },
+ "step_mound_b_256x128": {
+  "baked_bg": false,
+  "palette_locked": true,
+  "canvas": [
+   256,
+   128
+  ],
+  "content_bbox": [
+   52,
+   47,
+   204,
+   106
+  ],
+  "content_w": 152,
+  "content_h": 59,
+  "fill_ratio": 0.265,
+  "surface_left": 70,
+  "surface_right": 71,
+  "surface_median": 47,
+  "edge_delta": 1
+ },
+ "platform_earth_mid_192x96": {
+  "baked_bg": false,
+  "palette_locked": true,
+  "canvas": [
+   192,
+   96
+  ],
+  "content_bbox": [
+   12,
+   40,
+   180,
+   77
+  ],
+  "content_w": 168,
+  "content_h": 37,
+  "fill_ratio": 0.243,
+  "surface_left": 55,
+  "surface_right": 47,
+  "surface_median": 43,
+  "edge_delta": 8
+ },
+ "platform_earth_cap_L_96x96": {
+  "baked_bg": false,
+  "palette_locked": true,
+  "canvas": [
+   96,
+   96
+  ],
+  "content_bbox": [
+   16,
+   15,
+   80,
+   86
+  ],
+  "content_w": 64,
+  "content_h": 71,
+  "fill_ratio": 0.275,
+  "surface_left": 37,
+  "surface_right": 29,
+  "surface_median": 24,
+  "edge_delta": 8
+ },
+ "ladder_body_seg_96x128": {
+  "baked_bg": false,
+  "palette_locked": true,
+  "canvas": [
+   96,
+   128
+  ],
+  "content_bbox": [
+   19,
+   9,
+   76,
+   120
+  ],
+  "content_w": 57,
+  "content_h": 111,
+  "fill_ratio": 0.254,
+  "surface_left": 118,
+  "surface_right": 118,
+  "surface_median": 27,
+  "edge_delta": 0
+ },
+ "ladder_top_cap_96x64": {
+  "baked_bg": false,
+  "palette_locked": true,
+  "canvas": [
+   96,
+   64
+  ],
+  "content_bbox": [
+   20,
+   6,
+   76,
+   57
+  ],
+  "content_w": 56,
+  "content_h": 51,
+  "fill_ratio": 0.249,
+  "surface_left": 18,
+  "surface_right": 18,
+  "surface_median": 16,
+  "edge_delta": 0
+ },
+ "boundary_bush_96x256": {
+  "baked_bg": false,
+  "palette_locked": true,
+  "canvas": [
+   96,
+   256
+  ],
+  "content_bbox": [
+   0,
+   47,
+   96,
+   209
+  ],
+  "content_w": 96,
+  "content_h": 162,
+  "fill_ratio": 0.595,
+  "surface_left": 47,
+  "surface_right": 57,
+  "surface_median": 47,
+  "edge_delta": 10
+ },
+ "tree_pine_large_320x384": {
+  "baked_bg": true,
+  "palette_locked": false,
+  "canvas": [
+   320,
+   384
+  ],
+  "content_bbox": [
+   50,
+   41,
+   285,
+   353
+  ],
+  "content_w": 235,
+  "content_h": 312,
+  "fill_ratio": 0.217,
+  "surface_left": 133,
+  "surface_right": 183,
+  "surface_median": 79,
+  "edge_delta": 50
+ },
+ "tree_pine_small_192x256": {
+  "baked_bg": true,
+  "palette_locked": false,
+  "canvas": [
+   192,
+   256
+  ],
+  "content_bbox": [
+   18,
+   16,
+   165,
+   242
+  ],
+  "content_w": 147,
+  "content_h": 226,
+  "fill_ratio": 0.225,
+  "surface_left": 238,
+  "surface_right": 239,
+  "surface_median": 60,
+  "edge_delta": 1
+ },
+ "prop_mossy_boulder": {
+  "baked_bg": false,
+  "palette_locked": false,
+  "canvas": [
+   192,
+   192
+  ],
+  "content_bbox": [
+   54,
+   68,
+   138,
+   136
+  ],
+  "content_w": 84,
+  "content_h": 68,
+  "fill_ratio": 0.117,
+  "surface_left": 120,
+  "surface_right": 102,
+  "surface_median": 78,
+  "edge_delta": 18
+ },
+ "prop_tree_stump": {
+  "baked_bg": false,
+  "palette_locked": false,
+  "canvas": [
+   192,
+   192
+  ],
+  "content_bbox": [
+   59,
+   58,
+   133,
+   126
+  ],
+  "content_w": 74,
+  "content_h": 68,
+  "fill_ratio": 0.095,
+  "surface_left": 114,
+  "surface_right": 118,
+  "surface_median": 58,
+  "edge_delta": 4
+ },
+ "prop_bush_cluster": {
+  "baked_bg": false,
+  "palette_locked": false,
+  "canvas": [
+   192,
+   192
+  ],
+  "content_bbox": [
+   53,
+   53,
+   140,
+   140
+  ],
+  "content_w": 87,
+  "content_h": 87,
+  "fill_ratio": 0.143,
+  "surface_left": 72,
+  "surface_right": 79,
+  "surface_median": 65,
+  "edge_delta": 7
+ },
+ "prop_fern_tuft": {
+  "baked_bg": false,
+  "palette_locked": false,
+  "canvas": [
+   192,
+   192
+  ],
+  "content_bbox": [
+   67,
+   62,
+   130,
+   130
+  ],
+  "content_w": 63,
+  "content_h": 68,
+  "fill_ratio": 0.058,
+  "surface_left": 67,
+  "surface_right": 95,
+  "surface_median": 65,
+  "edge_delta": 28
+ },
+ "prop_fallen_log": {
+  "baked_bg": false,
+  "palette_locked": false,
+  "canvas": [
+   192,
+   192
+  ],
+  "content_bbox": [
+   53,
+   99,
+   136,
+   137
+  ],
+  "content_w": 83,
+  "content_h": 38,
+  "fill_ratio": 0.051,
+  "surface_left": 113,
+  "surface_right": 124,
+  "surface_median": 111,
+  "edge_delta": 11
+ },
+ "spot_sign_hanji": {
+  "baked_bg": false,
+  "palette_locked": false,
+  "canvas": [
+   192,
+   192
+  ],
+  "content_bbox": [
+   45,
+   43,
+   147,
+   138
+  ],
+  "content_w": 102,
+  "content_h": 95,
+  "fill_ratio": 0.198,
+  "surface_left": 51,
+  "surface_right": 51,
+  "surface_median": 43,
+  "edge_delta": 0
+ },
+ "exit_gate_jangseung": {
+  "baked_bg": false,
+  "palette_locked": false,
+  "canvas": [
+   192,
+   192
+  ],
+  "content_bbox": [
+   28,
+   36,
+   164,
+   159
+  ],
+  "content_w": 136,
+  "content_h": 123,
+  "fill_ratio": 0.177,
+  "surface_left": 56,
+  "surface_right": 56,
+  "surface_median": 53,
+  "edge_delta": 0
+ }
+}

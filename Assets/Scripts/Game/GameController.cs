@@ -24,10 +24,13 @@ namespace HangeulAdventure.Game
 
         private bool _finished;
 
+        /// <summary>분해 직후 결과 글자로 포커스를 옮긴다 (A-⑩). 설정 토글 키, 기본 켬.</summary>
+        private static bool FocusAfterSplit => PlayerPrefs.GetInt("focus_after_split", 1) == 1;
+
         /// <summary>전투 모드: 클리어 시 기록/팝업 대신 콜백만 호출 (BattleScreen이 처리).</summary>
         public bool BattleMode;
         public event System.Action<GameSession> PuzzleCleared;
-        public event System.Action ActionTaken; // 성공한 행동마다 (전투의 이동 수 감시용)
+        public event System.Action ActionTaken; // 성공한 행동마다 (전투의 행동 수 감시용)
 
         public void Bind(GameSession session, BoardView board, GameHud hud, Camera cam)
         {
@@ -171,9 +174,13 @@ namespace HangeulAdventure.Game
             switch (report.Type)
             {
                 case PushResultType.Move: SfxPlayer.Instance?.Move(); break;
-                case PushResultType.Compose:
-                case PushResultType.SplitCompose: SfxPlayer.Instance?.Compose(); break;
-                case PushResultType.SplitMove: SfxPlayer.Instance?.Split(); break;
+                case PushResultType.Compose: SfxPlayer.Instance?.Compose(); GameHud.Learn(GameHud.ActCompose); break;
+                case PushResultType.SplitCompose:
+                    SfxPlayer.Instance?.Compose();
+                    GameHud.Learn(GameHud.ActSplit);   // 연쇄 = 분해 + 합성
+                    GameHud.Learn(GameHud.ActCompose);
+                    break;
+                case PushResultType.SplitMove: SfxPlayer.Instance?.Split(); GameHud.Learn(GameHud.ActSplit); break;
             }
 
             // 글자 도감: 합성으로 만든 완성 글자를 최초 등록 (모험 요소 1)
@@ -185,8 +192,9 @@ namespace HangeulAdventure.Game
                 _board.GetTile(report.ToX, report.ToY)?.AnimatePop();
             }
 
-            // 선택 추적: 이동/합성이면 도착 칸, 분해면 제자리(남은 성분)
-            if (report.Type == PushResultType.Move || report.Type == PushResultType.Compose)
+            // 선택 추적: 이동/합성은 도착 칸. 분해는 설정에 따라 결과 글자(도착 칸) 또는 남은 성분(제자리)
+            bool isSplit = report.Type == PushResultType.SplitMove || report.Type == PushResultType.SplitCompose;
+            if (!isSplit || FocusAfterSplit)
                 Select(report.ToX, report.ToY);
             else
                 Select(report.FromX, report.FromY);
@@ -201,6 +209,7 @@ namespace HangeulAdventure.Game
             if (_session.TryRotate(_selX, _selY))
             {
                 SfxPlayer.Instance?.Move();
+                GameHud.Learn(GameHud.ActRotate);
                 _board.SyncTiles(animate: true);
                 AfterAction();
             }
@@ -217,6 +226,7 @@ namespace HangeulAdventure.Game
             if (_session.TryCollect(_selX, _selY, slotIndex))
             {
                 SfxPlayer.Instance?.Collect();
+                GameHud.Learn(GameHud.ActCollect);
                 _board.SyncTiles(animate: true);
                 _selX = _selY = -1;
                 AfterAction();

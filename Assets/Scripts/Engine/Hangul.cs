@@ -145,7 +145,8 @@ namespace HangeulAdventure.Engine
         // ---- 축 분석 (이동 잠김 판정용, 명세 5장) ----
 
         /// <summary>
-        /// 타일의 전체 조합 트리에 가로/세로 조합이 존재하는지. (한 단계라도 있으면 그 축으로 통째 이동 불가)
+        /// 타일의 겉조합 축 (음절 구조 1단계: 초성+중성 관계와 받침 유무). 해당 축으로는 통째 이동 불가.
+        /// 명세 5장 표 기준 — 자모 내부까지 재귀하지 않는다. 이유는 Accumulate 주석 참조.
         /// </summary>
         public static (bool hasHorizontal, bool hasVertical) CompositionAxes(char t)
         {
@@ -154,18 +155,25 @@ namespace HangeulAdventure.Engine
             return (h, v);
         }
 
+        // 음절의 축 판정은 겉조합 1단계(초/중/종성의 배치 관계)만 본다. 성분 자모 내부로 재귀하지 않는다.
+        //
+        // 재귀를 넣지 말 것 (2026-07-17 확정, 명세 5장 표 106·108행이 정본):
+        //   - 106행 "세로 겉조합 (고, 구...) | 이동/합성/실패 | 분해" → 꼬(ㄲ+ㅗ)는 좌우로 움직인다
+        //   - 108행 "받침글자 — 속에 세로 조합 (곤, 굴...) | 이동/합성/실패 | 분해" → 몫(ㅁ+ㅗ+ㄳ)도 좌우로 움직인다
+        //   즉 ㄲ·ㄳ 내부의 가로 결합은 축 잠김 사유가 아니다. 잠김 사유는 107행처럼
+        //   속 조합(ㄱ+ㅏ) 자체가 가로일 때뿐이다 (간·값은 지금도 잠김).
+        //
+        // 재귀를 되살리면 TrySplit과 어긋난다: TrySplit도 겉조합 1단계만 보므로,
+        // 꼬는 "가로로 잠기는데 가로로 밀어도 분해되지 않는" 판정 불능 축이 생긴다.
         private static void Accumulate(char t, ref bool h, ref bool v)
         {
             if (IsSyllable(t))
             {
-                var (cho, jung, jong) = DecomposeSyllable(t);
+                var (_, jung, jong) = DecomposeSyllable(t);
                 if (jong != Empty) v = true;                       // 받침 결합은 세로
                 if (IsVerticalVowel(jung)) h = true;               // 자음+세로모음은 가로
                 else if (IsHorizontalVowel(jung)) v = true;        // 자음+가로모음은 세로
                 else if (IsWrapVowel(jung)) { h = true; v = true; } // 복합모음은 양축
-                Accumulate(cho, ref h, ref v);
-                Accumulate(jung, ref h, ref v);
-                if (jong != Empty) Accumulate(jong, ref h, ref v);
             }
             else if (IsCompoundJamo(t))
             {

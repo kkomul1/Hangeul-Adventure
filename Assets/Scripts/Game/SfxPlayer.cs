@@ -19,6 +19,9 @@ namespace HangeulAdventure.Game
         private AudioSource _source;
         private AudioClip _move, _compose, _split, _fail, _collect, _clear;
 
+        /// <summary>도망 효과음 — 톤 미확정이라 Awake에서 합성하지 않는다. null이면 Play()가 조용히 무시.</summary>
+        private AudioClip _flee = null;
+
         private void OnDestroy()
         {
             if (_instance == this) _instance = null;
@@ -56,6 +59,7 @@ namespace HangeulAdventure.Game
         public void Fail() => Play(_fail, 0.35f);
         public void Collect() => Play(_collect);
         public void Clear() => Play(_clear);
+        public void Flee() => Play(_flee);
 
         private void Play(AudioClip clip, float volume = 0.5f)
         {

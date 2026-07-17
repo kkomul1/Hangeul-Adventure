@@ -91,7 +91,7 @@ namespace HangeulAdventure.Game
             MakeActionBtn("수비", 0, () => OnAct(BattleAction.Guard));
             MakeActionBtn("된소리 일격", 240, () => OnAct(BattleAction.Skill));
 
-            var flee = UiFactory.CreateButton(_panel, "FleeBtn", "도망가기", 18, UiFactory.Paper, UiFactory.Ink, () => End(false));
+            var flee = UiFactory.CreateButton(_panel, "FleeBtn", "도망치기", 18, UiFactory.Paper, UiFactory.Ink, OnFlee);
             UiFactory.SetRect((RectTransform)flee.transform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(-24, 24), new Vector2(130, 48));
         }
 
@@ -169,7 +169,7 @@ namespace HangeulAdventure.Game
 
         private void OnTrialAction()
         {
-            // 제한 초과 실시간 경고는 HUD 이동 수로 충분 — 필요 시 여기서 강조 연출 추가
+            // 제한 초과 실시간 경고는 HUD 행동 수로 충분 — 필요 시 여기서 강조 연출 추가
         }
 
         private void OnTrialCleared(GameSession session)
@@ -192,6 +192,13 @@ namespace HangeulAdventure.Game
             if (_puzzleRoot != null) Destroy(_puzzleRoot);
             _puzzleRoot = null;
             _panel.gameObject.SetActive(true);
+        }
+
+        /// <summary>End(false)는 패배도 함께 타는 경로 — 도망 효과음은 반드시 여기서만 낸다.</summary>
+        private void OnFlee()
+        {
+            SfxPlayer.Instance?.Flee();
+            End(false);
         }
 
         private void End(bool victory)

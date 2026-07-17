@@ -29,6 +29,22 @@ namespace HangeulAdventure.Game
         public int[] shop;      // 상점 위치 (선택)
         public BossJson boss;   // 사천왕 (선택)
         public RoomJson[] rooms; // 자음 회수 방 (선택, D-23)
+        public DecorationJson[] decorations; // v2 전용 (선택): 충돌 없는 전경 장식
+    }
+
+    /// <summary>
+    /// v2 전경 장식 (충돌 없음): 바위·그루터기·통나무·장승 등을 지면에 세운다.
+    /// 좌표는 <b>월드 좌표</b>다 — spots/exits의 "위에서부터 센 행 번호"와 다르다.
+    /// 데코는 칸 단위가 아니라 반 칸 단위로 놓이므로(승인 룩) 행 뒤집기를 쓰지 않는 편이 읽기 쉽다.
+    /// y = 데코가 서는 지면 상면 (바닥 칸 윗변 = 0.5). 스프라이트는 발치 피벗이라 y에 그대로 세운다.
+    /// </summary>
+    [Serializable]
+    public class DecorationJson
+    {
+        public string art = "";  // Resources/Art/Forest/Props/{art}
+        public float x;
+        public float y = 0.5f;
+        public bool flip;        // 좌우 반전
     }
 
     /// <summary>
@@ -115,6 +131,7 @@ namespace HangeulAdventure.Game
         public string bossConfig;
         public List<RoomJson> rooms = new List<RoomJson>();
         public List<BackdropLayer> backdrops = new List<BackdropLayer>(); // v2 전용
+        public List<DecorationJson> decorations = new List<DecorationJson>(); // v2 전용
 
         public char Tile(int x, int y)
             => (x < 0 || x >= width || y < 0 || y >= height) ? '#' : tiles[y * width + x];
@@ -238,6 +255,10 @@ namespace HangeulAdventure.Game
                 foreach (var r in mj.rooms)
                     if (r?.stages != null && r.stages.Length > 0 && !string.IsNullOrEmpty(r.reward))
                         map.rooms.Add(r);
+            if (mj.decorations != null)
+                foreach (var d in mj.decorations)
+                    if (d != null && !string.IsNullOrEmpty(d.art))
+                        map.decorations.Add(d);
 
             return map;
 
@@ -271,7 +292,7 @@ namespace HangeulAdventure.Game
 
         /// <summary>
         /// 다음 강제 튜토리얼 스테이지. stages를 주면 자음 게이트(D-22)에 잠긴 스테이지는
-        /// 건너뛴다 — 사다리를 이탈해 진입한 맵에서 튜토리얼이 ▒에 막혀 잠기는 것 방지.
+        /// 건너뛴다 — 사다리를 이탈해 진입한 맵에서 튜토리얼이 자음 게이트에 막혀 잠기는 것 방지.
         /// </summary>
         public static int NextTutorialStage(MapData map, List<Engine.StageData> stages)
         {
