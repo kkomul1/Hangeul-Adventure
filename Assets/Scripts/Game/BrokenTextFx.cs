@@ -50,6 +50,9 @@ namespace HangeulAdventure.Game
             _lastText = _tmp.text;
             if (string.IsNullOrEmpty(_tmp.text) || !_tmp.text.Contains("\"brk\"")) return;
 
+            // 파편이 옆 글자와 겹치지 않도록 자간 확보 (확인 카드 피드백)
+            if (_tmp.characterSpacing < 6f) _tmp.characterSpacing = 6f;
+
             _tmp.ForceMeshUpdate();
             var info = _tmp.textInfo;
 
@@ -133,10 +136,11 @@ namespace HangeulAdventure.Game
     /// </summary>
     public static class BrokenGlyphs
     {
-        /// <summary>글리프 높이 대비 조각 어긋남 비율 (D3 강 = 10/110).</summary>
-        public const float OffsetRatio = 10f / 110f;
-        private const float MosaicRatio = 11f / 110f; // 모자이크 블록 크기 비율
-        private const float Alpha = 0.74f;
+        /// <summary>글리프 높이 대비 조각 어긋남 비율 (2026-07-17 확인 카드 피드백: "더 깨지게" 상향).</summary>
+        public const float OffsetRatio = 16f / 110f;
+        private const float MosaicRatio = 14f / 110f; // 모자이크 블록 크기 비율
+        private const float Alpha = 0.62f;
+        private const float LostQuadAlpha = 0.22f;    // 소실 조각(글자당 1개)의 잔상 알파
 
         private static readonly Dictionary<TMP_FontAsset, Dictionary<char, Sprite>> _cache
             = new Dictionary<TMP_FontAsset, Dictionary<char, Sprite>>();
@@ -184,7 +188,7 @@ namespace HangeulAdventure.Game
             var pixels = new Color32[w * h];
 
             var rng = new System.Random(c); // 글자별 고정 시드 (프레임 간 안정)
-            byte a = (byte)(Alpha * 255);
+            int lostQuad = rng.Next(4);     // 글자당 조각 하나는 거의 소실 ("더 깨지게" 피드백)
 
             for (int qx = 0; qx < 2; qx++)
             {
@@ -195,6 +199,9 @@ namespace HangeulAdventure.Game
                     int dx = off + rng.Next(-off, off + 1);
                     int dy = off + rng.Next(-off, off + 1);
                     bool mosaic = (qx + qy) % 2 == 0;
+                    bool lost = (qx * 2 + qy) == lostQuad;
+                    byte a = (byte)((lost ? LostQuadAlpha : Alpha) * 255);
+                    if (lost) mosaic = true; // 소실 조각은 항상 뭉개짐
 
                     for (int y = sy0; y < sy1; y++)
                     {
