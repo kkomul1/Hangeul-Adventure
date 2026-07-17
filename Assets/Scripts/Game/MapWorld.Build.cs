@@ -121,6 +121,7 @@ namespace HangeulAdventure.Game
             tmp.color = UiFactory.Ink;
             tmp.rectTransform.sizeDelta = new Vector2(1.4f, 1);
             tmp.sortingOrder = 3;
+            BrokenTextFx.Ensure(tmp); // 상점 등 월드 라벨의 깨진 글자 연출
 
             return new SpotView { Go = go, Bg = bg, Label = tmp, StageId = stageId, ExitIndexil = exitIndex, IsShop = isShop, Pos = pos };
         }
@@ -208,12 +209,14 @@ namespace HangeulAdventure.Game
 
             _hudTitle = UiFactory.CreateText(_hudRoot, "Title", "", 28, UiFactory.Ink, TextAlignmentOptions.Left);
             UiFactory.SetRect(_hudTitle.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -22), new Vector2(600, 44));
+            BrokenTextFx.Ensure(_hudTitle); // 깨진 글자 파편 연출 (M4-3)
 
             _hudProgress = UiFactory.CreateText(_hudRoot, "Progress", "", 20, UiFactory.Dim, TextAlignmentOptions.Left);
             UiFactory.SetRect(_hudProgress.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -62), new Vector2(700, 34));
 
             _hudHint = UiFactory.CreateText(_hudRoot, "Hint", "", 19, UiFactory.Ink);
             UiFactory.SetRect(_hudHint.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(900, 34));
+            BrokenTextFx.Ensure(_hudHint); // 출구·장소 이름의 깨진 글자 연출
 
             var exitBtn = UiFactory.CreateButton(_hudRoot, "LeaveBtn", "나가기", 19, UiFactory.Paper, UiFactory.Ink, () => _app.LeaveMapToTitle());
             UiFactory.SetRect((RectTransform)exitBtn.transform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-20, -20), new Vector2(120, 46));

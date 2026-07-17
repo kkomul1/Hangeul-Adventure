@@ -201,6 +201,7 @@ namespace HangeulAdventure.Game
         private void RefreshTitleBrokenness()
         {
             if (_titleText == null) return;
+            BrokenTextFx.Ensure(_titleText); // 파편 연출 (M4-3: D3 강)
             _titleText.text = IntroSeen ? BrokenText.Apply(TitleString) : TitleString;
         }
 

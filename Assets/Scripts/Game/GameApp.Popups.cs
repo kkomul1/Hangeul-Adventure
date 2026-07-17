@@ -14,6 +14,7 @@ namespace HangeulAdventure.Game
 
             string where = string.IsNullOrEmpty(room.label) ? "이곳" : $"'{BrokenText.Apply(room.label)}'";
             var title = UiFactory.CreateText(box, "T", $"{where}의 글자 조각을 모두 맞췄다!", 30, UiFactory.Ink);
+            BrokenTextFx.Ensure(title);
             UiFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -34), new Vector2(520, 60));
 
             var msg = UiFactory.CreateText(box, "M",

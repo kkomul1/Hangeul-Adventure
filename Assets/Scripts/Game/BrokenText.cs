@@ -9,7 +9,6 @@ namespace HangeulAdventure.Game
     /// </summary>
     public static class BrokenText
     {
-        private const string BrokenGlyph = "<color=#5A544C>▒</color>";
 
         /// <summary>자음(복합 자모 포함)이 회수되었는가. ㄲ은 ㄱ 회수로 취급, 겹받침은 두 성분 모두 필요.</summary>
         private static bool IsRecovered(char consonant, string recovered)
@@ -29,12 +28,20 @@ namespace HangeulAdventure.Game
             return !IsRecovered(cho, recovered) || !IsRecovered(jong, recovered);
         }
 
-        /// <summary>문자열의 깨진 글자를 ▒(리치 텍스트)로 치환.</summary>
+        /// <summary>
+        /// 깨진 글자를 &lt;link="brk"&gt; 태그로 감싼다 (원형 유지 — M4-3 보드 결정 "D3 파편 강").
+        /// 실제 파편 연출은 해당 TMP에 붙은 BrokenTextFx가 그린다. 태그는 레이아웃에 영향이 없어
+        /// 문자열 합성(제목+테마 등) 어디에 끼어도 안전하며, 연출 컴포넌트가 없으면 원형이 보인다
+        /// — 표시 대상 TMP에는 BrokenTextFx.Ensure()를 붙일 것.
+        /// </summary>
         public static string Apply(string text)
         {
             var sb = new StringBuilder(text.Length + 16);
             foreach (char c in text)
-                sb.Append(IsBroken(c) ? BrokenGlyph : c.ToString());
+            {
+                if (IsBroken(c)) sb.Append("<link=\"brk\">").Append(c).Append("</link>");
+                else sb.Append(c);
+            }
             return sb.ToString();
         }
     }
